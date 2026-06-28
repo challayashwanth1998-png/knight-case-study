@@ -1,0 +1,117 @@
+
+═══════════════════════════════════════════════════════════════
+              COMMERCIAL TRUCK FLEET APPLICATION
+              Knight Specialty Insurance Program
+═══════════════════════════════════════════════════════════════
+
+SECTION 1: GENERAL INFORMATION
+─────────────────────────────────────────────────────────────
+Business Name:           ABC Freight Systems, Inc.
+DBA:                     ABC Freight
+Business Type:           Corporation
+FEIN:                    82-4917365
+MC Number:               MC-847291
+DOT Number:              3284716
+Date Business Started:   03/15/2018
+Years in Trucking:       7
+
+SECTION 2: MAILING ADDRESS
+─────────────────────────────────────────────────────────────
+Street:                  4521 Industrial Blvd, Suite 200
+City:                    Dallas
+State:                   TX
+ZIP:                     75247
+
+SECTION 3: GARAGING ADDRESS
+─────────────────────────────────────────────────────────────
+Street:                  4521 Industrial Blvd
+City:                    Dallas
+State:                   TX
+ZIP:                     75247
+
+SECTION 4: OWNER / PRINCIPAL
+─────────────────────────────────────────────────────────────
+Owner Name:              Robert M. Chen
+Owner SSN:               XXX-XX-4829
+Owner DOB:               06/12/1975
+Owner Phone:             (214) 555-0187
+Owner Email:             rchen@abcfreight.com
+
+SECTION 5: DESCRIPTION OF OPERATIONS
+─────────────────────────────────────────────────────────────
+Operation Type:          For-Hire Carrier
+Interstate:              Yes
+Intrastate:              Yes
+Radius of Operations:    Regional / Long Haul (500+ miles)
+Commodities Hauled:      General Freight, Dry Goods, Consumer Electronics,
+                         Building Materials, Packaged Foods
+Hazmat:                  No
+Hazmat Details:          N/A
+
+SECTION 6: FLEET INFORMATION
+─────────────────────────────────────────────────────────────
+Number of Power Units:   12
+Number of Trailers:      15
+Total Vehicles:          27
+
+SECTION 7: DRIVER INFORMATION
+─────────────────────────────────────────────────────────────
+Regular Drivers:         10
+Part-Time Drivers:       2
+Owner Operators:         0
+Total Drivers:           12
+
+SECTION 8: COVERAGE REQUESTED
+─────────────────────────────────────────────────────────────
+Auto Liability Limit:    $1,000,000 CSL
+Physical Damage:         No
+Cargo Coverage:          Yes
+Cargo Limit:             $100,000
+General Liability:       No
+Medical Payments:        No
+Uninsured Motorist:      No
+Filing Required:         Yes (BMC-91)
+
+SECTION 9: PRIOR INSURANCE
+─────────────────────────────────────────────────────────────
+Current Carrier:         National Interstate Insurance
+Policy Number:           NI-TRK-2024-08847
+Policy Period:           07/01/2024 - 07/01/2025
+Premium:                 $187,500
+Cancelled/Non-Renewed:   No
+Cancellation Reason:     N/A
+
+SECTION 10: SAFETY MEASURES
+─────────────────────────────────────────────────────────────
+Employment Background Check:     Yes
+Pre-Employment Drug Test:        Yes
+Criminal Background Check:       Yes
+MVR Review (Pre-Employment):     Yes
+Road Test Required:              Yes
+PSP Report Review:               Yes
+Annual MVR Review:               Yes
+Random Drug Testing:             Yes
+Telematics/GPS:                  Yes (Samsara)
+Dash Cameras:                    Yes (Forward + Driver-Facing)
+Safety Director:                 Yes (Maria Santos)
+Written Safety Program:          Yes
+Smith System Training:           Yes
+
+SECTION 11: STATES OF OPERATION
+─────────────────────────────────────────────────────────────
+Primary: TX, AR, TN, AL, VA
+Secondary: AZ, CA, UT, WI, SC
+
+SECTION 12: METROPOLITAN AREAS
+─────────────────────────────────────────────────────────────
+Dallas-Fort Worth, Houston, San Antonio, Memphis, Nashville,
+Little Rock, Birmingham, Phoenix
+
+SECTION 13: MULTIPLE TERMINALS
+─────────────────────────────────────────────────────────────
+Terminal 1 (Primary):    Dallas, TX
+Terminal 2:              Memphis, TN
+
+═══════════════════════════════════════════════════════════════
+Applicant Signature: Robert M. Chen     Date: 06/15/2026
+═══════════════════════════════════════════════════════════════

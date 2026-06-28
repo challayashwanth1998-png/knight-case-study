@@ -1,0 +1,38 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+venv/
+.venv/
+*.db
+*.sqlite3
+
+# Node
+node_modules/
+.next/
+
+# Environment
+.env
+.env.local
+
+# OS
+.DS_Store
+
+# Logs & temp
+*.log
+out.txt
+out2.txt
+test.txt
+sample.txt
+sample_next.txt
+sample_next2.txt
+
+# Local storage
+backend/storage/submissions/
+
+# Keys
+*.pem
+
+# IDE
+.gemini/
+.agents/

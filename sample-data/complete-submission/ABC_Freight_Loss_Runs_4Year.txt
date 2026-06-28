@@ -1,0 +1,81 @@
+
+═══════════════════════════════════════════════════════════════════
+                     LOSS RUN REPORT
+                National Interstate Insurance
+═══════════════════════════════════════════════════════════════════
+Insured:           ABC Freight Systems, Inc.
+Policy Number:     NI-TRK-2024-08847
+Valuation Date:    06/10/2026
+Report Generated:  06/12/2026
+
+═══════════════════════════════════════════════════════════════════
+CURRENT POLICY PERIOD: 07/01/2024 – 07/01/2025
+═══════════════════════════════════════════════════════════════════
+
+Claim #     Date of Loss  Description                    Status   Incurred    Paid     Reserve
+─────────── ────────────  ─────────────────────────────  ──────── ─────────── ──────── ────────
+NI-24-00147 09/14/2024    Rear-end collision, I-30       Closed   $12,450     $12,450  $0
+                          Dallas TX. Minor damage.
+                          At-fault: No
+
+NI-24-00203 12/02/2024    Side-swipe on I-40 Memphis     Closed   $8,720      $8,720   $0
+                          TN. Property damage only.
+                          At-fault: Yes (Driver #6)
+
+Period Total: 2 claims | Total Incurred: $21,170 | Total Paid: $21,170
+
+═══════════════════════════════════════════════════════════════════
+PRIOR YEAR 1: 07/01/2023 – 07/01/2024
+Policy: NI-TRK-2023-07293
+═══════════════════════════════════════════════════════════════════
+
+Claim #     Date of Loss  Description                    Status   Incurred    Paid     Reserve
+─────────── ────────────  ─────────────────────────────  ──────── ─────────── ──────── ────────
+NI-23-00089 10/22/2023    Cargo shift during braking.    Closed   $4,200      $4,200   $0
+                          Minor cargo damage claim.
+                          At-fault: No
+
+Period Total: 1 claim | Total Incurred: $4,200 | Total Paid: $4,200
+
+═══════════════════════════════════════════════════════════════════
+PRIOR YEAR 2: 07/01/2022 – 07/01/2023
+Policy: NI-TRK-2022-06184
+═══════════════════════════════════════════════════════════════════
+
+Claim #     Date of Loss  Description                    Status   Incurred    Paid     Reserve
+─────────── ────────────  ─────────────────────────────  ──────── ─────────── ──────── ────────
+NI-22-00312 02/15/2023    Weather-related accident       Closed   $18,900     $18,900  $0
+                          I-20 near Abilene TX.
+                          Bodily injury third party.
+                          At-fault: Partial
+
+NI-22-00044 09/08/2022    Parking lot backing incident.  Closed   $3,100      $3,100   $0
+                          Property damage only.
+                          At-fault: Yes (Driver #3)
+
+Period Total: 2 claims | Total Incurred: $22,000 | Total Paid: $22,000
+
+═══════════════════════════════════════════════════════════════════
+PRIOR YEAR 3: 07/01/2021 – 07/01/2022
+Policy: NI-TRK-2021-05092
+═══════════════════════════════════════════════════════════════════
+
+No claims during this period.
+
+Period Total: 0 claims | Total Incurred: $0 | Total Paid: $0
+
+═══════════════════════════════════════════════════════════════════
+                        4-YEAR SUMMARY
+═══════════════════════════════════════════════════════════════════
+Total Claims:        5
+Total Incurred:      $47,370
+Total Paid:          $47,370
+Open Reserves:       $0
+Loss Ratio:          6.3% (based on $750,000 4-year premium)
+At-Fault Claims:     2 of 5 (40%)
+Bodily Injury:       1 of 5 (20%)
+
+Comments: Generally favorable loss history. No catastrophic losses.
+Average claim size: $9,474. Two at-fault incidents in 4 years
+across 12 drivers represents acceptable frequency.
+═══════════════════════════════════════════════════════════════════

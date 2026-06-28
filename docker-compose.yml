@@ -1,0 +1,34 @@
+version: '3.8'
+
+services:
+  backend:
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      # Mount the local database file into the container's expected path
+      # or mount a data directory if we update config.py to use it
+      - ./knight_data:/app/data
+    environment:
+      - DATABASE_URL=sqlite:////app/data/knight_insurance.db
+      - DEBUG=False
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - IMAP_HOST=${IMAP_HOST:-mail.privateemail.com}
+      - IMAP_PORT=${IMAP_PORT:-993}
+      - IMAP_USERNAME=${IMAP_USERNAME}
+      - IMAP_PASSWORD=${IMAP_PASSWORD}
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://54.163.197.193:8000
+    restart: unless-stopped
+    depends_on:
+      - backend

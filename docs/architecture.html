@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Knight Insurance — System Architecture</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0F172A; --surface: #1E293B; --surface2: #334155;
+    --border: #475569; --border-light: #64748B;
+    --text: #F1F5F9; --text2: #94A3B8; --text3: #64748B;
+    --blue: #3B82F6; --blue-glow: rgba(59,130,246,0.15);
+    --green: #10B981; --green-glow: rgba(16,185,129,0.15);
+    --amber: #F59E0B; --amber-glow: rgba(245,158,11,0.15);
+    --red: #EF4444; --red-glow: rgba(239,68,68,0.15);
+    --purple: #8B5CF6; --purple-glow: rgba(139,92,246,0.15);
+    --cyan: #06B6D4; --cyan-glow: rgba(6,182,212,0.15);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); color: var(--text); overflow-x: hidden; }
+
+  /* ── Header ── */
+  .header { padding: 32px 40px 20px; display: flex; justify-content: space-between; align-items: center; }
+  .header-left h1 { font-size: 20px; font-weight: 700; letter-spacing: -0.5px; }
+  .header-left h1 span { color: var(--blue); }
+  .header-left p { font-size: 12px; color: var(--text2); margin-top: 2px; }
+  .header-right { display: flex; gap: 6px; }
+  .chip { font-size: 10px; padding: 4px 10px; border-radius: 20px; border: 1px solid var(--border); color: var(--text2); background: var(--surface); }
+
+  /* ── View Tabs ── */
+  .view-tabs { display: flex; gap: 4px; padding: 0 40px 24px; }
+  .view-tab { padding: 8px 18px; font-size: 12px; font-weight: 500; border-radius: 6px; border: 1px solid var(--border); background: transparent; color: var(--text2); cursor: pointer; transition: all 0.2s; }
+  .view-tab:hover { border-color: var(--blue); color: var(--text); }
+  .view-tab.active { background: var(--blue); border-color: var(--blue); color: white; }
+
+  /* ── Main Canvas ── */
+  .canvas { padding: 0 40px 40px; }
+  .view { display: none; animation: fadeIn 0.3s ease; }
+  .view.active { display: block; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* ── Architecture Layers ── */
+  .layer { border: 1px solid var(--border); border-radius: 12px; margin-bottom: 12px; overflow: hidden; transition: all 0.25s; }
+  .layer:hover { border-color: var(--blue); box-shadow: 0 0 20px var(--blue-glow); }
+  .layer-header { padding: 14px 20px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; background: var(--surface); }
+  .layer-header h3 { font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+  .layer-tag { font-size: 9px; padding: 2px 8px; border-radius: 10px; font-weight: 600; }
+  .layer-arrow { font-size: 12px; color: var(--text3); transition: transform 0.2s; }
+  .layer.open .layer-arrow { transform: rotate(90deg); }
+  .layer-body { padding: 0 20px 16px; background: var(--surface); display: none; }
+  .layer.open .layer-body { display: block; animation: fadeIn 0.2s; }
+
+  /* ── Component Boxes ── */
+  .components { display: flex; gap: 10px; flex-wrap: wrap; }
+  .comp { flex: 1; min-width: 180px; padding: 14px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); transition: all 0.2s; }
+  .comp:hover { border-color: var(--blue); transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+  .comp-icon { font-size: 20px; margin-bottom: 6px; }
+  .comp-name { font-size: 12px; font-weight: 600; margin-bottom: 2px; }
+  .comp-desc { font-size: 10px; color: var(--text2); line-height: 1.4; }
+  .comp-file { font-size: 9px; color: var(--text3); margin-top: 4px; font-family: monospace; }
+
+  /* ── Flow Diagram ── */
+  .flow-container { padding: 20px 0; }
+  .flow-row { display: flex; align-items: center; justify-content: center; gap: 0; margin-bottom: 16px; flex-wrap: wrap; }
+  .flow-node { min-width: 140px; padding: 16px; border-radius: 10px; text-align: center; border: 1px solid var(--border); background: var(--surface); position: relative; transition: all 0.25s; cursor: default; }
+  .flow-node:hover { transform: scale(1.05); z-index: 2; }
+  .flow-node .num { width: 22px; height: 22px; border-radius: 50%; font-size: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center; margin: 0 auto 8px; }
+  .flow-node .icon { font-size: 24px; margin-bottom: 6px; }
+  .flow-node .title { font-size: 11px; font-weight: 600; }
+  .flow-node .sub { font-size: 9px; color: var(--text2); margin-top: 2px; }
+  .flow-connector { width: 40px; display: flex; align-items: center; justify-content: center; color: var(--text3); flex-shrink: 0; }
+  .flow-connector svg { width: 32px; height: 12px; }
+  .flow-down { display: flex; justify-content: center; margin: -4px 0; }
+  .flow-down svg { width: 12px; height: 24px; }
+
+  /* ── Color themes for nodes ── */
+  .node-blue { border-color: var(--blue); background: linear-gradient(135deg, var(--surface), rgba(59,130,246,0.08)); }
+  .node-blue:hover { box-shadow: 0 0 20px var(--blue-glow); }
+  .node-blue .num { background: var(--blue); color: white; }
+  .node-green { border-color: var(--green); background: linear-gradient(135deg, var(--surface), rgba(16,185,129,0.08)); }
+  .node-green:hover { box-shadow: 0 0 20px var(--green-glow); }
+  .node-green .num { background: var(--green); color: white; }
+  .node-amber { border-color: var(--amber); background: linear-gradient(135deg, var(--surface), rgba(245,158,11,0.08)); }
+  .node-amber:hover { box-shadow: 0 0 20px var(--amber-glow); }
+  .node-amber .num { background: var(--amber); color: white; }
+  .node-red { border-color: var(--red); background: linear-gradient(135deg, var(--surface), rgba(239,68,68,0.08)); }
+  .node-red:hover { box-shadow: 0 0 20px var(--red-glow); }
+  .node-red .num { background: var(--red); color: white; }
+  .node-purple { border-color: var(--purple); background: linear-gradient(135deg, var(--surface), rgba(139,92,246,0.08)); }
+  .node-purple:hover { box-shadow: 0 0 20px var(--purple-glow); }
+  .node-purple .num { background: var(--purple); color: white; }
+  .node-cyan { border-color: var(--cyan); background: linear-gradient(135deg, var(--surface), rgba(6,182,212,0.08)); }
+  .node-cyan:hover { box-shadow: 0 0 20px var(--cyan-glow); }
+  .node-cyan .num { background: var(--cyan); color: white; }
+
+  /* ── Detail Panel ── */
+  .detail-panel { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 20px; margin-top: 16px; }
+  .detail-panel h3 { font-size: 14px; font-weight: 600; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+  .detail-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px; }
+  .detail-card { padding: 14px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); }
+  .detail-card h4 { font-size: 11px; font-weight: 600; margin-bottom: 4px; display: flex; align-items: center; gap: 6px; }
+  .detail-card p { font-size: 10px; color: var(--text2); line-height: 1.5; }
+  .detail-card ul { padding-left: 14px; margin-top: 4px; }
+  .detail-card ul li { font-size: 10px; color: var(--text2); line-height: 1.5; margin-bottom: 1px; }
+
+  /* ── Rules Table ── */
+  .rules-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media (max-width: 700px) { .rules-grid { grid-template-columns: 1fr; } }
+  .rule-category { padding: 16px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); }
+  .rule-category h4 { font-size: 12px; font-weight: 600; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+  .rule-item { font-size: 10px; color: var(--text2); padding: 3px 0; display: flex; gap: 6px; }
+  .rule-id { font-family: monospace; color: var(--blue); font-weight: 600; min-width: 60px; }
+
+  /* ── Tech Stack ── */
+  .stack-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 8px; }
+  .stack-item { flex: 1; min-width: 120px; padding: 12px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); text-align: center; transition: all 0.2s; }
+  .stack-item:hover { border-color: var(--blue); transform: translateY(-2px); }
+  .stack-item .s-icon { font-size: 22px; margin-bottom: 4px; }
+  .stack-item .s-name { font-size: 11px; font-weight: 600; }
+  .stack-item .s-detail { font-size: 9px; color: var(--text2); margin-top: 2px; }
+
+  /* ── Zoom Modal ── */
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 1000; backdrop-filter: blur(4px); animation: fadeIn 0.2s; }
+  .modal-overlay.active { display: flex; align-items: center; justify-content: center; }
+  .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 28px; max-width: 700px; width: 90%; max-height: 80vh; overflow-y: auto; position: relative; animation: zoomIn 0.25s ease; }
+  @keyframes zoomIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+  .modal-close { position: absolute; top: 12px; right: 16px; background: none; border: none; color: var(--text2); font-size: 18px; cursor: pointer; }
+  .modal h3 { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+  .modal .modal-sub { font-size: 12px; color: var(--text2); margin-bottom: 16px; }
+  .modal-section { margin-bottom: 14px; }
+  .modal-section h4 { font-size: 12px; font-weight: 600; margin-bottom: 6px; color: var(--blue); }
+  .modal-section p, .modal-section li { font-size: 11px; color: var(--text2); line-height: 1.6; }
+  .modal-section ul { padding-left: 16px; }
+</style>
+</head>
+<body>
+
+<!-- ── Header ── -->
+<div class="header">
+  <div class="header-left">
+    <h1>⚔ Knight <span>Insurance</span> — System Architecture</h1>
+    <p>AI-Powered Commercial Trucking Underwriting Platform</p>
+  </div>
+  <div class="header-right">
+    <span class="chip">v3.0</span>
+    <span class="chip">AWS us-east-1</span>
+    <span class="chip">t3.medium</span>
+  </div>
+</div>
+
+<!-- ── View Tabs ── -->
+<div class="view-tabs">
+  <button class="view-tab active" data-view="overview">System Overview</button>
+  <button class="view-tab" data-view="pipeline">AI Pipeline</button>
+  <button class="view-tab" data-view="infra">Infrastructure</button>
+  <button class="view-tab" data-view="services">Services</button>
+  <button class="view-tab" data-view="rules">Rules Engine</button>
+  <button class="view-tab" data-view="stack">Tech Stack</button>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- VIEW: System Overview                           -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="canvas">
+<div class="view active" id="view-overview">
+  <div class="flow-container">
+    <!-- Row 1: Input sources -->
+    <div class="flow-row">
+      <div class="flow-node node-cyan" onclick="openModal('email-detail')">
+        <div class="icon">📧</div>
+        <div class="title">Email Intake</div>
+        <div class="sub">IMAP IDLE push</div>
+      </div>
+      <div class="flow-connector"><svg viewBox="0 0 32 12"><path d="M0 6 L28 6 M24 2 L28 6 L24 10" stroke="#64748B" fill="none" stroke-width="1.5"/></svg></div>
+      <div class="flow-node node-blue" onclick="openModal('upload-detail')" style="min-width: 200px;">
+        <div class="icon">📁</div>
+        <div class="title">Document Upload</div>
+        <div class="sub">PDF, Excel, Word, Images</div>
+      </div>
+      <div class="flow-connector"><svg viewBox="0 0 32 12"><path d="M0 6 L28 6 M24 2 L28 6 L24 10" stroke="#64748B" fill="none" stroke-width="1.5"/></svg></div>
+      <div class="flow-node node-purple" onclick="openModal('ai-detail')" style="min-width: 200px;">
+        <div class="icon">🤖</div>
+        <div class="title">AI Processing</div>
+        <div class="sub">Gemini 2.5 Flash — Classify, Extract, Analyze</div>
+      </div>
+      <div class="flow-connector"><svg viewBox="0 0 32 12"><path d="M0 6 L28 6 M24 2 L28 6 L24 10" stroke="#64748B" fill="none" stroke-width="1.5"/></svg></div>
+      <div class="flow-node node-amber" onclick="openModal('rules-detail')">
+        <div class="icon">⚖️</div>
+        <div class="title">Rules Engine</div>
+        <div class="sub">30+ underwriting rules</div>
+      </div>
+      <div class="flow-connector"><svg viewBox="0 0 32 12"><path d="M0 6 L28 6 M24 2 L28 6 L24 10" stroke="#64748B" fill="none" stroke-width="1.5"/></svg></div>
+      <div class="flow-node node-green" onclick="openModal('decision-detail')">
+        <div class="icon">✅</div>
+        <div class="title">Decision</div>
+        <div class="sub">Accept / Refer / Decline</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Expandable layers below -->
+  <div class="layer open" data-layer="frontend">
+    <div class="layer-header" onclick="toggleLayer(this)">
+      <h3><span style="color:var(--cyan)">⬤</span> Frontend — Next.js Dashboard <span class="layer-tag" style="background:var(--cyan-glow);color:var(--cyan)">:3000</span></h3>
+      <span class="layer-arrow">▶</span>
+    </div>
+    <div class="layer-body">
+      <div class="components">
+        <div class="comp" onclick="openModal('dash-detail')"><div class="comp-icon">📊</div><div class="comp-name">Dashboard</div><div class="comp-desc">Stats overview, recent submissions, quick upload zone</div></div>
+        <div class="comp" onclick="openModal('upload-ui-detail')"><div class="comp-icon">📤</div><div class="comp-name">New Submission</div><div class="comp-desc">Drag-and-drop multi-file upload with validation</div></div>
+        <div class="comp" onclick="openModal('uw-detail')"><div class="comp-icon">👤</div><div class="comp-name">Underwriter View</div><div class="comp-desc">All submissions list with pipeline status tracking</div></div>
+        <div class="comp" onclick="openModal('workbench-detail')"><div class="comp-icon">🔍</div><div class="comp-name">Submission Workbench</div><div class="comp-desc">8-tab deep-dive: Email, Summary, Docs, Data, Conflicts, Rules, Recs, Audit</div></div>
+        <div class="comp"><div class="comp-icon">⚙️</div><div class="comp-name">Settings</div><div class="comp-desc">Rules configuration: enable/disable rules, adjust severity</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="layer" data-layer="backend">
+    <div class="layer-header" onclick="toggleLayer(this)">
+      <h3><span style="color:var(--blue)">⬤</span> Backend — FastAPI Services <span class="layer-tag" style="background:var(--blue-glow);color:var(--blue)">:8000</span></h3>
+      <span class="layer-arrow">▶</span>
+    </div>
+    <div class="layer-body">
+      <div class="components">
+        <div class="comp"><div class="comp-icon">🔌</div><div class="comp-name">REST API</div><div class="comp-desc">Upload, list, detail, stats, rules config endpoints</div><div class="comp-file">routers/submissions.py</div></div>
+        <div class="comp"><div class="comp-icon">📧</div><div class="comp-name">Email Watcher</div><div class="comp-desc">IMAP IDLE listener with auto-reconnect</div><div class="comp-file">services/email_watcher.py</div></div>
+        <div class="comp"><div class="comp-icon">⚙️</div><div class="comp-name">Pipeline</div><div class="comp-desc">7-stage orchestrator: extract → classify → extract data → analyze → rules → decide</div><div class="comp-file">services/pipeline.py</div></div>
+        <div class="comp"><div class="comp-icon">🤖</div><div class="comp-name">AI Services</div><div class="comp-desc">Classifier, Data Extractor, Analyzer — all via Gemini API</div><div class="comp-file">services/ai_*.py</div></div>
+        <div class="comp"><div class="comp-icon">⚖️</div><div class="comp-name">Rules Engine</div><div class="comp-desc">30+ rules across 6 categories with configurable severity</div><div class="comp-file">rules/engine.py</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="layer" data-layer="data">
+    <div class="layer-header" onclick="toggleLayer(this)">
+      <h3><span style="color:var(--green)">⬤</span> Data Layer — Storage & Persistence</h3>
+      <span class="layer-arrow">▶</span>
+    </div>
+    <div class="layer-body">
+      <div class="components">
+        <div class="comp"><div class="comp-icon">🗄️</div><div class="comp-name">SQLite + SQLAlchemy</div><div class="comp-desc">Submissions, documents, analysis results, rule results, audit logs</div></div>
+        <div class="comp"><div class="comp-icon">🪣</div><div class="comp-name">AWS S3</div><div class="comp-desc">Durable document storage with server-side encryption</div></div>
+        <div class="comp"><div class="comp-icon">📊</div><div class="comp-name">CloudWatch</div><div class="comp-desc">Centralized application logs with 10s buffer flush</div></div>
+        <div class="comp"><div class="comp-icon">🔐</div><div class="comp-name">IAM Role</div><div class="comp-desc">KnightEC2Role — S3, CloudWatch, Bedrock access via instance profile</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- VIEW: AI Pipeline                               -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="view" id="view-pipeline">
+  <div class="flow-container">
+    <!-- Step 1 -->
+    <div class="flow-row">
+      <div class="flow-node node-cyan" style="min-width: 160px;" onclick="openModal('step1-detail')">
+        <div class="num" style="background:var(--cyan)">1</div>
+        <div class="icon">📧</div>
+        <div class="title">Receive</div>
+        <div class="sub">Email with attachments or<br>UI drag-and-drop upload</div>
+      </div>
+      <div class="flow-connector"><svg viewBox="0 0 32 12"><path d="M0 6 L28 6 M24 2 L28 6 L24 10" stroke="#64748B" fill="none" stroke-width="1.5"/></svg></div>
+      <div class="flow-node node-blue" style="min-width: 160px;" onclick="openModal('step2-detail')">
+        <div class="num" style="background:var(--blue)">2</div>
+        <div class="icon">📄</div>
+        <div class="title">Extract Text</div>
+        <div class="sub">PyMuPDF for PDFs<br>openpyxl for Excel</div>
+      </div>
+      <div class="flow-connector"><svg viewBox="0 0 32 12"><path d="M0 6 L28 6 M24 2 L28 6 L24 10" stroke="#64748B" fill="none" stroke-width="1.5"/></svg></div>
+      <div class="flow-node node-purple" style="min-width: 160px;" onclick="openModal('step3-detail')">
+        <div class="num" style="background:var(--purple)">3</div>
+        <div class="icon">🏷️</div>
+        <div class="title">Classify</div>
+        <div class="sub">AI identifies document type<br>with confidence %</div>
+      </div>
+      <div class="flow-connector"><svg viewBox="0 0 32 12"><path d="M0 6 L28 6 M24 2 L28 6 L24 10" stroke="#64748B" fill="none" stroke-width="1.5"/></svg></div>
+      <div class="flow-node node-purple" style="min-width: 160px;" onclick="openModal('step4-detail')">
+        <div class="num" style="background:var(--purple)">4</div>
+        <div class="icon">📊</div>
+        <div class="title">Extract Data</div>
+        <div class="sub">Structured JSON output<br>per document type</div>
+      </div>
+    </div>
+
+    <!-- Step 5-7 -->
+    <div class="flow-row" style="margin-top: 12px;">
+      <div class="flow-node node-purple" style="min-width: 160px;" onclick="openModal('step5-detail')">
+        <div class="num" style="background:var(--purple)">5</div>
+        <div class="icon">🔬</div>
+        <div class="title">AI Analysis</div>
+        <div class="sub">Risk scoring, conflicts,<br>cross-document analysis</div>
+      </div>
+      <div class="flow-connector"><svg viewBox="0 0 32 12"><path d="M0 6 L28 6 M24 2 L28 6 L24 10" stroke="#64748B" fill="none" stroke-width="1.5"/></svg></div>
+      <div class="flow-node node-amber" style="min-width: 160px;" onclick="openModal('step6-detail')">
+        <div class="num" style="background:var(--amber)">6</div>
+        <div class="icon">⚖️</div>
+        <div class="title">Rules Engine</div>
+        <div class="sub">30+ rules across<br>6 categories</div>
+      </div>
+      <div class="flow-connector"><svg viewBox="0 0 32 12"><path d="M0 6 L28 6 M24 2 L28 6 L24 10" stroke="#64748B" fill="none" stroke-width="1.5"/></svg></div>
+      <div class="flow-node node-green" style="min-width: 160px;" onclick="openModal('step7-detail')">
+        <div class="num" style="background:var(--green)">7</div>
+        <div class="icon">✅</div>
+        <div class="title">Decision</div>
+        <div class="sub">Auto-decision based on<br>rule results + risk score</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pipeline details -->
+  <div class="detail-panel">
+    <h3>📋 Document Types Processed</h3>
+    <div class="detail-grid">
+      <div class="detail-card"><h4>📝 Insurance Application</h4><p>Company info, FEIN, DOT#, MC#, operations, commodities, coverage requested, prior insurance, loss history</p></div>
+      <div class="detail-card"><h4>🚛 Driver Roster</h4><p>Driver names, DOB, age, CDL number, state, years experience, hire date, violations, accidents</p></div>
+      <div class="detail-card"><h4>🚚 Vehicle/Equipment Schedule</h4><p>Unit numbers, year, make/model, VIN, vehicle type, GVW, stated value</p></div>
+      <div class="detail-card"><h4>⛽ IFTA Reports (4 quarters)</h4><p>Jurisdictional miles, fuel purchases, states traveled, tax paid per state</p></div>
+      <div class="detail-card"><h4>📉 Loss Runs (3 years)</h4><p>Claims history, incurred amounts, loss ratios, claim details, carrier info</p></div>
+      <div class="detail-card"><h4>📋 Motor Vehicle Records</h4><p>Individual driver MVRs with violations, points, accident history</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- VIEW: Infrastructure                            -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="view" id="view-infra">
+  <div class="flow-container">
+    <div class="flow-row">
+      <div class="flow-node node-cyan" style="min-width: 160px;">
+        <div class="icon">🌐</div>
+        <div class="title">Users</div>
+        <div class="sub">Brokers, Underwriters</div>
+      </div>
+      <div class="flow-connector"><svg viewBox="0 0 32 12"><path d="M0 6 L28 6 M24 2 L28 6 L24 10" stroke="#64748B" fill="none" stroke-width="1.5"/></svg></div>
+      <div class="flow-node node-blue" style="min-width: 280px;">
+        <div class="icon">🖥️</div>
+        <div class="title">EC2 — t3.medium</div>
+        <div class="sub">2 vCPU, 4GB RAM, 30GB EBS gp3<br>54.221.226.243 (Elastic IP)</div>
+      </div>
+      <div class="flow-connector"><svg viewBox="0 0 32 12"><path d="M0 6 L28 6 M24 2 L28 6 L24 10" stroke="#64748B" fill="none" stroke-width="1.5"/></svg></div>
+      <div class="flow-node node-purple" style="min-width: 160px;">
+        <div class="icon">🤖</div>
+        <div class="title">Gemini API</div>
+        <div class="sub">Google AI Studio</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="layer open">
+    <div class="layer-header" onclick="toggleLayer(this)">
+      <h3><span style="color:var(--blue)">⬤</span> EC2 Instance — Docker Containers</h3>
+      <span class="layer-arrow">▶</span>
+    </div>
+    <div class="layer-body">
+      <div class="components">
+        <div class="comp"><div class="comp-icon">⚛️</div><div class="comp-name">Frontend Container</div><div class="comp-desc">Next.js 14, React, TypeScript — Port 3000</div></div>
+        <div class="comp"><div class="comp-icon">🐍</div><div class="comp-name">Backend Container</div><div class="comp-desc">Python 3.12, FastAPI, Uvicorn — Port 8000</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="layer open">
+    <div class="layer-header" onclick="toggleLayer(this)">
+      <h3><span style="color:var(--green)">⬤</span> AWS Managed Services</h3>
+      <span class="layer-arrow">▶</span>
+    </div>
+    <div class="layer-body">
+      <div class="components">
+        <div class="comp"><div class="comp-icon">🪣</div><div class="comp-name">S3 Bucket</div><div class="comp-desc">Document storage with server-side encryption. Dual-write: local + S3.</div></div>
+        <div class="comp"><div class="comp-icon">📊</div><div class="comp-name">CloudWatch Logs</div><div class="comp-desc">Centralized app logs at /knight-insurance/backend. 10s buffer.</div></div>
+        <div class="comp"><div class="comp-icon">🔐</div><div class="comp-name">IAM Instance Profile</div><div class="comp-desc">KnightEC2Role with S3Full, CloudWatch, Bedrock policies.</div></div>
+        <div class="comp"><div class="comp-icon">🛡️</div><div class="comp-name">Security Group</div><div class="comp-desc">Inbound: 22 (SSH), 3000 (Frontend), 8000 (API). Outbound: All.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="layer">
+    <div class="layer-header" onclick="toggleLayer(this)">
+      <h3><span style="color:var(--amber)">⬤</span> External Services</h3>
+      <span class="layer-arrow">▶</span>
+    </div>
+    <div class="layer-body">
+      <div class="components">
+        <div class="comp"><div class="comp-icon">📬</div><div class="comp-name">IMAP Mail Server</div><div class="comp-desc">mail.privateemail.com:993 (SSL). IDLE push for instant email intake.</div></div>
+        <div class="comp"><div class="comp-icon">🤖</div><div class="comp-name">Google Gemini API</div><div class="comp-desc">Gemini 2.5 Flash for classification, extraction, risk analysis.</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- VIEW: Services                                  -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="view" id="view-services">
+  <div class="detail-panel" style="margin-top:0;">
+    <h3>🔌 API Layer</h3>
+    <div class="detail-grid">
+      <div class="detail-card"><h4>POST /api/submissions/upload</h4><p>Multi-file upload with validation (type, size, duplicates)</p></div>
+      <div class="detail-card"><h4>POST /api/submissions/{id}/process</h4><p>Trigger 7-stage AI pipeline in background thread</p></div>
+      <div class="detail-card"><h4>GET /api/submissions</h4><p>List all submissions with status and document counts</p></div>
+      <div class="detail-card"><h4>GET /api/submissions/{id}</h4><p>Full detail: docs, analysis, rules, audit log</p></div>
+      <div class="detail-card"><h4>GET /api/submissions/stats</h4><p>Dashboard statistics: counts by status and decision</p></div>
+      <div class="detail-card"><h4>GET/PUT /meta/rules-config</h4><p>Rules configuration: enable/disable, severity overrides</p></div>
+    </div>
+  </div>
+
+  <div class="detail-panel">
+    <h3>⚙️ Processing Services</h3>
+    <div class="detail-grid">
+      <div class="detail-card">
+        <h4>📧 Email Watcher</h4>
+        <ul><li>IMAP IDLE push (1-2s latency)</li><li>Auto-reconnect on failure</li><li>Marks emails as read</li><li>Creates submission + starts pipeline</li></ul>
+        <p style="margin-top:4px;font-family:monospace;font-size:9px;color:var(--text3)">services/email_watcher.py</p>
+      </div>
+      <div class="detail-card">
+        <h4>📄 Document Processor</h4>
+        <ul><li>PyMuPDF for PDF text extraction</li><li>openpyxl for Excel parsing</li><li>python-docx for Word files</li><li>Fallback: filename-based classification</li></ul>
+        <p style="margin-top:4px;font-family:monospace;font-size:9px;color:var(--text3)">services/document_processor.py</p>
+      </div>
+      <div class="detail-card">
+        <h4>🏷️ AI Classifier</h4>
+        <ul><li>First 2000 chars → Gemini API</li><li>Returns type + confidence %</li><li>Types: application, driver_roster, vehicle_schedule, ifta_report, loss_run</li></ul>
+        <p style="margin-top:4px;font-family:monospace;font-size:9px;color:var(--text3)">services/document_classifier.py</p>
+      </div>
+      <div class="detail-card">
+        <h4>📊 Data Extractor</h4>
+        <ul><li>Type-specific extraction prompts</li><li>Returns structured JSON per doc type</li><li>JSON schema validation on AI output</li></ul>
+        <p style="margin-top:4px;font-family:monospace;font-size:9px;color:var(--text3)">services/data_extractor.py</p>
+      </div>
+      <div class="detail-card">
+        <h4>🔬 AI Analyzer</h4>
+        <ul><li>Full submission context analysis</li><li>Risk scoring (1-10 scale)</li><li>Cross-document conflict detection</li><li>Recommendations generation</li></ul>
+        <p style="margin-top:4px;font-family:monospace;font-size:9px;color:var(--text3)">services/ai_analyzer.py</p>
+      </div>
+      <div class="detail-card">
+        <h4>🤖 Gemini Client</h4>
+        <ul><li>Structured JSON prompting</li><li>Token tracking & cost calculation</li><li>Automatic retry with backoff</li><li>Rate limiting protection</li></ul>
+        <p style="margin-top:4px;font-family:monospace;font-size:9px;color:var(--text3)">utils/gemini.py</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- VIEW: Rules Engine                              -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="view" id="view-rules">
+  <div class="flow-container">
+    <div class="flow-row">
+      <div class="flow-node node-blue"><div class="icon">📄</div><div class="title">Extracted Data</div><div class="sub">Application, Drivers,<br>Vehicles, IFTA, Losses</div></div>
+      <div class="flow-connector"><svg viewBox="0 0 32 12"><path d="M0 6 L28 6 M24 2 L28 6 L24 10" stroke="#64748B" fill="none" stroke-width="1.5"/></svg></div>
+      <div class="flow-node node-amber" style="min-width: 200px;"><div class="icon">⚖️</div><div class="title">Rules Engine</div><div class="sub">30+ rules evaluated<br>6 categories</div></div>
+      <div class="flow-connector"><svg viewBox="0 0 32 12"><path d="M0 6 L28 6 M24 2 L28 6 L24 10" stroke="#64748B" fill="none" stroke-width="1.5"/></svg></div>
+      <div class="flow-node node-red" style="min-width: 100px;"><div class="title">Any Critical FAIL?</div></div>
+      <div class="flow-connector"><svg viewBox="0 0 32 12"><path d="M0 6 L28 6 M24 2 L28 6 L24 10" stroke="#64748B" fill="none" stroke-width="1.5"/></svg></div>
+      <div style="display:flex;flex-direction:column;gap:6px;">
+        <div class="flow-node node-red" style="padding:8px 16px;min-width:100px;"><div class="title">🔴 Decline</div></div>
+        <div class="flow-node node-amber" style="padding:8px 16px;min-width:100px;"><div class="title">🟡 Refer</div></div>
+        <div class="flow-node node-green" style="padding:8px 16px;min-width:100px;"><div class="title">🟢 Accept</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="rules-grid">
+    <div class="rule-category">
+      <h4>🎯 Eligibility (7 rules)</h4>
+      <div class="rule-item"><span class="rule-id">ELIG-001</span> Semi-trucks only (target risk)</div>
+      <div class="rule-item"><span class="rule-id">ELIG-002</span> Prohibited vehicle types</div>
+      <div class="rule-item"><span class="rule-id">ELIG-003</span> Available states check</div>
+      <div class="rule-item"><span class="rule-id">ELIG-004</span> Texas: North of I-10</div>
+      <div class="rule-item"><span class="rule-id">ELIG-005</span> Illinois: Selective basis</div>
+      <div class="rule-item"><span class="rule-id">ELIG-006</span> No auto liability deductibles</div>
+      <div class="rule-item"><span class="rule-id">ELIG-007</span> Physical damage N/A</div>
+    </div>
+    <div class="rule-category">
+      <h4>🚛 Driver (7 rules)</h4>
+      <div class="rule-item"><span class="rule-id">DRV-001</span> Valid CDL required</div>
+      <div class="rule-item"><span class="rule-id">DRV-002</span> Min 2 years CDL experience</div>
+      <div class="rule-item"><span class="rule-id">DRV-003</span> Minimum age 23</div>
+      <div class="rule-item"><span class="rule-id">DRV-004</span> Age 65+ DOT medical</div>
+      <div class="rule-item"><span class="rule-id">DRV-005</span> Max 6 points / 3 years</div>
+      <div class="rule-item"><span class="rule-id">DRV-006</span> Max 4 points / 12 months</div>
+      <div class="rule-item"><span class="rule-id">DRV-100</span> Unacceptable history (auto-decline)</div>
+    </div>
+    <div class="rule-category">
+      <h4>⚠️ Exposure (7 rules)</h4>
+      <div class="rule-item"><span class="rule-id">EXP-001</span> Hazmat prohibited</div>
+      <div class="rule-item"><span class="rule-id">EXP-002</span> Lithium batteries prohibited</div>
+      <div class="rule-item"><span class="rule-id">EXP-003</span> Mexico border 50-mile rule</div>
+      <div class="rule-item"><span class="rule-id">EXP-004</span> SAFER violations</div>
+      <div class="rule-item"><span class="rule-id">EXP-005</span> Towing/recovery prohibited</div>
+      <div class="rule-item"><span class="rule-id">EXP-006</span> Intermodal prohibited</div>
+      <div class="rule-item"><span class="rule-id">EXP-007</span> Waste disposal prohibited</div>
+    </div>
+    <div class="rule-category">
+      <h4>📋 Submission + IFTA + Selective</h4>
+      <div class="rule-item"><span class="rule-id">SUB-001</span> FEIN/SSN present</div>
+      <div class="rule-item"><span class="rule-id">SUB-002</span> MC/DOT number present</div>
+      <div class="rule-item"><span class="rule-id">SUB-003</span> Loss runs within 60 days</div>
+      <div class="rule-item"><span class="rule-id">SUB-005</span> 4 IFTA quarters provided</div>
+      <div class="rule-item"><span class="rule-id">IFTA-001</span> Fleet MPG validation</div>
+      <div class="rule-item"><span class="rule-id">SEL-001</span> Box truck min premium</div>
+      <div class="rule-item"><span class="rule-id">VENT-001</span> New venture CDL experience</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- VIEW: Tech Stack                                -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="view" id="view-stack">
+  <div style="margin-bottom: 16px; font-size: 12px; color: var(--text2);">Complete technology inventory powering the platform.</div>
+
+  <div class="stack-row">
+    <div class="stack-item"><div class="s-icon">⚛️</div><div class="s-name">Next.js 14</div><div class="s-detail">React + TypeScript</div></div>
+    <div class="stack-item"><div class="s-icon">🐍</div><div class="s-name">FastAPI</div><div class="s-detail">Python 3.12 + Uvicorn</div></div>
+    <div class="stack-item"><div class="s-icon">🤖</div><div class="s-name">Gemini 2.5 Flash</div><div class="s-detail">Google AI</div></div>
+    <div class="stack-item"><div class="s-icon">🗄️</div><div class="s-name">SQLite</div><div class="s-detail">SQLAlchemy ORM</div></div>
+  </div>
+  <div class="stack-row">
+    <div class="stack-item"><div class="s-icon">📄</div><div class="s-name">PyMuPDF</div><div class="s-detail">PDF text extraction</div></div>
+    <div class="stack-item"><div class="s-icon">📊</div><div class="s-name">openpyxl</div><div class="s-detail">Excel parsing</div></div>
+    <div class="stack-item"><div class="s-icon">📧</div><div class="s-name">imapclient</div><div class="s-detail">IMAP IDLE email</div></div>
+    <div class="stack-item"><div class="s-icon">🐳</div><div class="s-name">Docker</div><div class="s-detail">Container orchestration</div></div>
+  </div>
+  <div class="stack-row">
+    <div class="stack-item"><div class="s-icon">☁️</div><div class="s-name">AWS EC2</div><div class="s-detail">t3.medium compute</div></div>
+    <div class="stack-item"><div class="s-icon">🪣</div><div class="s-name">AWS S3</div><div class="s-detail">Document storage</div></div>
+    <div class="stack-item"><div class="s-icon">📊</div><div class="s-name">CloudWatch</div><div class="s-detail">Centralized logging</div></div>
+    <div class="stack-item"><div class="s-icon">🔐</div><div class="s-name">IAM</div><div class="s-detail">Role-based access</div></div>
+  </div>
+</div>
+</div><!-- end canvas -->
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- Zoom Modals                                     -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
+  <div class="modal" id="modal-content" onclick="event.stopPropagation()">
+    <button class="modal-close" onclick="closeModalForce()">&times;</button>
+    <div id="modal-body"></div>
+  </div>
+</div>
+
+<script>
+// ── Tab switching ──
+document.querySelectorAll('.view-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.view-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('view-' + tab.dataset.view).classList.add('active');
+  });
+});
+
+// ── Layer toggle ──
+function toggleLayer(header) {
+  header.closest('.layer').classList.toggle('open');
+}
+
+// ── Modal system ──
+const MODALS = {
+  'email-detail': { title: '📧 Email Intake System', sub: 'Real-time email monitoring with IMAP IDLE', sections: [
+    { h: 'How It Works', content: '<ul><li><b>IMAP IDLE</b> — server pushes notification instantly when new mail arrives (1-2s latency)</li><li>Not polling — zero wasted requests, instant response</li><li>Auto-reconnects on any connection drop with 10s retry</li><li>Runs as a daemon thread — doesn\'t block the API server</li></ul>' },
+    { h: 'Processing Flow', content: '<ul><li>New email → parse MIME structure → extract attachments</li><li>Validate file types (PDF, Excel, Word, images only)</li><li>25MB max per attachment, sanitized filenames</li><li>Auto-create submission → start AI pipeline</li><li>Mark email as read to prevent re-processing</li></ul>' },
+    { h: 'Security', content: '<ul><li>IMAP over SSL (port 993)</li><li>Credentials via environment variables</li><li>File type whitelist — rejects everything else</li></ul>' },
+  ]},
+  'ai-detail': { title: '🤖 AI Processing Engine', sub: 'Google Gemini 2.5 Flash — 3 AI stages', sections: [
+    { h: 'Stage 1: Classification', content: '<p>Sends first 2000 characters to Gemini with a classification prompt. Returns document type (application, driver_roster, vehicle_schedule, ifta_report, loss_run) with confidence percentage.</p>' },
+    { h: 'Stage 2: Structured Extraction', content: '<p>Type-specific prompts extract data into structured JSON schemas. For example, an insurance application extracts: business name, FEIN, DOT#, MC#, operations, commodities, coverage, prior insurance.</p>' },
+    { h: 'Stage 3: Risk Analysis', content: '<p>Full submission context sent to Gemini for holistic analysis. Returns: risk score (1-10), cross-document conflicts, completeness assessment, and actionable recommendations.</p>' },
+    { h: 'Cost Tracking', content: '<p>Every API call tracks input/output tokens and calculates cost. Displayed per-submission in the dashboard. Typical submission: ~$0.01-0.05.</p>' },
+  ]},
+  'rules-detail': { title: '⚖️ Rules Engine', sub: '30+ automated underwriting rules', sections: [
+    { h: 'How It Works', content: '<p>After AI extraction, all structured data is passed through 30+ configurable rules across 6 categories. Each rule returns: PASS, FAIL, WARNING, INFO, or SKIP.</p>' },
+    { h: 'Decision Logic', content: '<ul><li><b>Any critical FAIL</b> → Auto-decline</li><li><b>Any high FAIL</b> → Refer to senior underwriter</li><li><b>All PASS</b> → Accept for binding</li></ul>' },
+    { h: 'Configurable', content: '<p>Rules can be enabled/disabled and severity can be adjusted via the Settings page. Changes apply to new submissions only.</p>' },
+  ]},
+  'workbench-detail': { title: '🔍 Submission Workbench', sub: '8-tab deep-dive into each submission', sections: [
+    { h: '8 Tabs', content: '<ul><li><b>📧 Email</b> — Compose response to submitting broker</li><li><b>📋 Summary</b> — AI analysis, risk score, overall decision</li><li><b>📄 Documents</b> — Uploaded files with classification & confidence</li><li><b>📊 Extracted Data</b> — Structured JSON from each document</li><li><b>⚠️ Conflicts</b> — Cross-document inconsistencies detected by AI</li><li><b>⚖️ Rules</b> — 30+ rule evaluations with pass/fail/warning</li><li><b>💡 Recommendations</b> — AI-generated next steps and actions</li><li><b>📝 Audit Log</b> — Complete processing timeline</li></ul>' },
+  ]},
+};
+
+function openModal(id) {
+  const data = MODALS[id];
+  if (!data) return;
+  let html = `<h3>${data.title}</h3><p class="modal-sub">${data.sub}</p>`;
+  data.sections.forEach(s => {
+    html += `<div class="modal-section"><h4>${s.h}</h4>${s.content}</div>`;
+  });
+  document.getElementById('modal-body').innerHTML = html;
+  document.getElementById('modal-overlay').classList.add('active');
+}
+
+function closeModal(e) {
+  if (e.target === document.getElementById('modal-overlay')) {
+    document.getElementById('modal-overlay').classList.remove('active');
+  }
+}
+function closeModalForce() {
+  document.getElementById('modal-overlay').classList.remove('active');
+}
+
+// Close on Escape
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModalForce(); });
+</script>
+</body>
+</html>
