@@ -36,7 +36,7 @@ export default function EmailTab({ submission }: Props) {
           (rule.details || "").toLowerCase().includes(i.label.toLowerCase().split("(")[0].trim())
         );
         if (!alreadyListed) {
-          items.push({ label: rule.rule_name, reason: rule.details, priority: "required" });
+          items.push({ label: rule.rule_name, reason: rule.details || "", priority: "required" });
         }
       }
     }
@@ -44,7 +44,7 @@ export default function EmailTab({ submission }: Props) {
     // From warning rules
     for (const rule of rules) {
       if (rule.result === "WARNING") {
-        items.push({ label: rule.rule_name, reason: rule.details, priority: "recommended" });
+        items.push({ label: rule.rule_name, reason: rule.details || "", priority: "recommended" });
       }
     }
 
