@@ -225,12 +225,12 @@
         <div class="layer-title">Presentation Layer <span class="layer-subtitle">— Next.js 14 • Port 3000</span></div>
       </div>
       <div class="nodes">
-        <div class="node node-wide"><span class="node-icon">📊</span><div class="node-label">Dashboard</div><div class="node-desc">KPIs, decision distribution, recent activity</div></div>
-        <div class="node node-wide"><span class="node-icon">📤</span><div class="node-label">Submission Form</div><div class="node-desc">Multi-file upload, email metadata</div></div>
-        <div class="node node-wide"><span class="node-icon">📋</span><div class="node-label">Underwriter View</div><div class="node-desc">Real-time pipeline progress</div></div>
-        <div class="node node-wide"><span class="node-icon">📈</span><div class="node-label">Analytics</div><div class="node-desc">Cost, performance, rule stats</div></div>
-        <div class="node node-wide"><span class="node-icon">🔀</span><div class="node-label">Compare</div><div class="node-desc">Side-by-side submission diff</div></div>
-        <div class="node node-wide"><span class="node-icon">🏥</span><div class="node-label">Health Monitor</div><div class="node-desc">DB, AI, storage status</div></div>
+        <div class="node node-wide"><span class="node-icon">📊</span><div class="node-label">Dashboard</div><div class="node-desc">KPIs, decision distribution chart, AI cost tracking, recent submissions feed</div></div>
+        <div class="node node-wide"><span class="node-icon">📤</span><div class="node-label">Submission Form</div><div class="node-desc">Multi-file drag & drop upload, supports PDF, Excel, CSV, images</div></div>
+        <div class="node node-wide"><span class="node-icon">📋</span><div class="node-label">Underwriter View</div><div class="node-desc">6-step pipeline progress, documents tab, rules tab with pass/fail</div></div>
+        <div class="node node-wide"><span class="node-icon">📈</span><div class="node-label">Analytics</div><div class="node-desc">Gemini token usage, processing time trends, rule pass rates</div></div>
+        <div class="node node-wide"><span class="node-icon">🔀</span><div class="node-label">Compare</div><div class="node-desc">Side-by-side submission diff with rules & metrics comparison</div></div>
+        <div class="node node-wide"><span class="node-icon">🏥</span><div class="node-label">Health Monitor</div><div class="node-desc">DB latency, AI status, disk usage, cumulative API costs</div></div>
       </div>
     </div>
 
@@ -250,9 +250,9 @@
         <div class="layer-title">API & Orchestration Layer <span class="layer-subtitle">— FastAPI • Port 8000</span></div>
       </div>
       <div class="flex gap-10">
-        <div class="node flex-1"><span class="node-icon">🌐</span><div class="node-label">REST API Router</div><div class="node-desc">Submissions, analytics, health, rules config</div></div>
-        <div class="node flex-1"><span class="node-icon">🎯</span><div class="node-label">Pipeline Orchestrator</div><div class="node-desc">6-step workflow, threaded execution</div></div>
-        <div class="node flex-1"><span class="node-icon">📧</span><div class="node-label">Email Watcher</div><div class="node-desc">IMAP polling every 30s, auto-ingest</div></div>
+        <div class="node flex-1"><span class="node-icon">🌐</span><div class="node-label">REST API Router</div><div class="node-desc">CRUD submissions, file downloads, analytics aggregation, health checks, Swagger docs at /docs</div></div>
+        <div class="node flex-1"><span class="node-icon">🎯</span><div class="node-label">Pipeline Orchestrator</div><div class="node-desc">6-step sequential workflow with ThreadPoolExecutor for parallel image & AI calls. Tracks cost per run</div></div>
+        <div class="node flex-1"><span class="node-icon">📧</span><div class="node-label">Email Watcher</div><div class="node-desc">IMAP polling every 30s, auto-extracts attachments (PDF, Excel, images), creates submissions</div></div>
       </div>
     </div>
 
@@ -272,11 +272,11 @@
         <div class="layer-title">Processing Layer <span class="layer-subtitle">— Core business logic</span></div>
       </div>
       <div class="nodes">
-        <div class="node flex-1"><span class="node-icon">📄</span><div class="node-label">Document Processor</div><div class="node-desc">PDF, Excel, CSV, Image text extraction</div></div>
-        <div class="node flex-1"><span class="node-icon">🏷️</span><div class="node-label">Document Classifier</div><div class="node-desc">Content-based AI classification</div></div>
-        <div class="node flex-1"><span class="node-icon">🔍</span><div class="node-label">Data Extractor</div><div class="node-desc">Regex + Python + Gemini Vision</div></div>
-        <div class="node flex-1"><span class="node-icon">🧠</span><div class="node-label">AI Analyzer</div><div class="node-desc">4 parallel risk assessments</div></div>
-        <div class="node flex-1"><span class="node-icon">⚖️</span><div class="node-label">Rules Engine</div><div class="node-desc">21 configurable business rules</div></div>
+        <div class="node flex-1"><span class="node-icon">📄</span><div class="node-label">Document Processor</div><div class="node-desc">PyMuPDF for PDF, openpyxl for Excel, pandas for CSV, Gemini OCR for images (parallelized)</div></div>
+        <div class="node flex-1"><span class="node-icon">🏷️</span><div class="node-label">Document Classifier</div><div class="node-desc">Single batched Gemini call, content-based only (never uses filenames per guidelines)</div></div>
+        <div class="node flex-1"><span class="node-icon">🔍</span><div class="node-label">Data Extractor</div><div class="node-desc">Python regex for structured docs (zero AI cost), Gemini Vision only for CDL images</div></div>
+        <div class="node flex-1"><span class="node-icon">🧠</span><div class="node-label">AI Analyzer</div><div class="node-desc">4 parallel Gemini calls: company risk, driver risk, fleet, financial/loss analysis</div></div>
+        <div class="node flex-1"><span class="node-icon">⚖️</span><div class="node-label">Rules Engine</div><div class="node-desc">21 configurable rules across 5 categories, severity levels, produces ACCEPT/REFER/DECLINE</div></div>
       </div>
     </div>
 
@@ -293,8 +293,8 @@
           <div class="layer-title">External Services</div>
         </div>
         <div class="flex-col gap-8">
-          <div class="node w-full"><span class="node-icon">🧠</span><div class="node-label">Google Gemini 2.5 Flash</div><div class="node-desc">Vision + Text generation • Classification, OCR, risk analysis</div></div>
-          <div class="node w-full"><span class="node-icon">📬</span><div class="node-label">IMAP Server</div><div class="node-desc">Email inbox polling • IMAPS encrypted</div></div>
+          <div class="node w-full"><span class="node-icon">🧠</span><div class="node-label">Google Gemini 2.5 Flash</div><div class="node-desc">Vision + text generation via REST API • Used for classification, CDL OCR, and 4 parallel risk analyses • ~$0.005/submission avg</div></div>
+          <div class="node w-full"><span class="node-icon">📬</span><div class="node-label">IMAP Server</div><div class="node-desc">IMAPS port 993 encrypted • Polls inbox every 30s • Extracts all attachments from new emails automatically</div></div>
         </div>
       </div>
       <div class="layer layer-slate flex-1">
@@ -303,8 +303,8 @@
           <div class="layer-title">Data Layer</div>
         </div>
         <div class="flex-col gap-8">
-          <div class="node w-full"><span class="node-icon">🗃️</span><div class="node-label">SQLite Database</div><div class="node-desc">Submissions, documents, rules, analysis, audit logs</div></div>
-          <div class="node w-full"><span class="node-icon">📁</span><div class="node-label">File Storage</div><div class="node-desc">uploads/ • Original documents preserved</div></div>
+          <div class="node w-full"><span class="node-icon">🗃️</span><div class="node-label">SQLite Database</div><div class="node-desc">SQLAlchemy ORM • 6 tables: submissions, documents, analysis_results, rule_results, audit_logs, rule_configs</div></div>
+          <div class="node w-full"><span class="node-icon">📁</span><div class="node-label">File Storage</div><div class="node-desc">uploads/{submission_id}/ • Original documents preserved with metadata • Mounted Docker volume</div></div>
         </div>
       </div>
     </div>
@@ -590,59 +590,83 @@
 <div class="view" id="view-deploy">
   <div class="diagram">
 
+    <!-- Client tier -->
     <div class="layer layer-slate" style="text-align:center;">
-      <div class="node node-filled-dark" style="display:inline-flex; min-width:240px;"><span class="node-icon">🌐</span><div class="node-label">User Browser</div><div class="node-desc">HTTPS • Any modern browser</div></div>
+      <div class="layer-header">
+        <div class="layer-icon">🌐</div>
+        <div class="layer-title">Client Tier</div>
+      </div>
+      <div class="flex gap-10 justify-center">
+        <div class="node" style="min-width:200px;"><span class="node-icon">💻</span><div class="node-label">User Browser</div><div class="node-desc">Any modern browser (Chrome, Firefox, Safari)<br/>Connects via HTTP to public IP on port 3000</div></div>
+        <div class="node" style="min-width:200px;"><span class="node-icon">📧</span><div class="node-label">Email Client</div><div class="node-desc">Underwriters send submissions as email<br/>with document attachments to monitored inbox</div></div>
+      </div>
     </div>
 
     <div class="connector"><svg width="2" height="12"><line x1="1" y1="0" x2="1" y2="12" stroke="var(--slate-400)" stroke-width="2"/></svg></div>
-    <div class="connector-label">Port 3000</div>
+    <div class="connector-label">HTTP :3000 / IMAPS :993</div>
     <div class="connector"><svg width="2" height="8"><line x1="1" y1="0" x2="1" y2="8" stroke="var(--slate-400)" stroke-width="2"/></svg></div>
 
-    <!-- AWS -->
+    <!-- AWS Compute -->
     <div class="layer layer-amber">
       <div class="layer-header">
         <div class="layer-icon">☁️</div>
-        <div class="layer-title">AWS EC2 <span class="layer-subtitle">— t2.micro • Ubuntu 22.04 • Docker Compose</span></div>
+        <div class="layer-title">AWS EC2 <span class="layer-subtitle">— Compute instance</span></div>
+      </div>
+
+      <!-- Instance details row -->
+      <div class="flex gap-10" style="margin-bottom:14px;">
+        <div class="node flex-1 node-sm"><div class="node-label">Instance Type</div><div class="node-desc">t2.micro (1 vCPU, 1GB RAM)<br/>Free tier eligible</div></div>
+        <div class="node flex-1 node-sm"><div class="node-label">Operating System</div><div class="node-desc">Ubuntu 22.04 LTS<br/>Docker Engine + Compose</div></div>
+        <div class="node flex-1 node-sm"><div class="node-label">Security Group</div><div class="node-desc">Inbound: 22 (SSH), 3000 (HTTP), 8000 (API)<br/>Outbound: All traffic</div></div>
+        <div class="node flex-1 node-sm"><div class="node-label">Key Pair</div><div class="node-desc">SSH key-based auth<br/>knight-key.pem</div></div>
       </div>
 
       <div class="flex gap-14">
         <!-- Docker containers -->
         <div class="layer layer-blue flex-1" style="margin-bottom:0;">
-          <div class="layer-header"><div class="layer-icon">🐳</div><div class="layer-title" style="font-size:10px;">Docker Containers</div></div>
+          <div class="layer-header"><div class="layer-icon">🐳</div><div class="layer-title" style="font-size:10px;">Docker Containers <span class="layer-subtitle">— docker-compose.yml</span></div></div>
           <div class="flex-col gap-8">
-            <div class="node w-full" style="border-left:3px solid var(--green-500);"><span class="node-icon">🖥️</span><div class="node-label">Next.js Frontend</div><div class="node-desc">Port 3000 • SSR + static</div></div>
-            <div class="node w-full" style="border-left:3px solid var(--blue-500);"><span class="node-icon">⚙️</span><div class="node-label">FastAPI Backend</div><div class="node-desc">Port 8000 • REST API + Swagger</div></div>
-            <div class="node w-full" style="border-left:3px solid var(--purple-500);"><span class="node-icon">📧</span><div class="node-label">Email Watcher</div><div class="node-desc">Background thread • IMAP polling</div></div>
+            <div class="node w-full" style="border-left:3px solid var(--green-500);"><span class="node-icon">🖥️</span><div class="node-label">Next.js Frontend</div><div class="node-desc">Port 3000 • Server-side rendered React<br/>Proxies /api/* requests to backend container<br/>Built with multi-stage Dockerfile (node:18-alpine)</div></div>
+            <div class="node w-full" style="border-left:3px solid var(--blue-500);"><span class="node-icon">⚙️</span><div class="node-label">FastAPI Backend</div><div class="node-desc">Port 8000 • Uvicorn ASGI server<br/>Swagger UI at /docs, ReDoc at /redoc<br/>Background thread pool for pipeline processing</div></div>
+            <div class="node w-full" style="border-left:3px solid var(--purple-500);"><span class="node-icon">📧</span><div class="node-label">Email Watcher</div><div class="node-desc">Runs inside backend container as daemon thread<br/>IMAP polling every 30s, auto-creates submissions<br/>Extracts PDF, Excel, image attachments</div></div>
           </div>
         </div>
 
         <!-- Volumes -->
         <div class="layer layer-slate flex-1" style="margin-bottom:0;">
-          <div class="layer-header"><div class="layer-icon">📦</div><div class="layer-title" style="font-size:10px;">Persistent Volumes</div></div>
+          <div class="layer-header"><div class="layer-icon">📦</div><div class="layer-title" style="font-size:10px;">Persistent Storage <span class="layer-subtitle">— Docker volumes, survives restarts</span></div></div>
           <div class="flex-col gap-8">
-            <div class="node w-full"><span class="node-icon">🗃️</span><div class="node-label">SQLite Database</div><div class="node-desc">submissions.db • Mounted volume</div></div>
-            <div class="node w-full"><span class="node-icon">📁</span><div class="node-label">uploads/</div><div class="node-desc">Original documents • Mounted volume</div></div>
-            <div class="node w-full"><span class="node-icon">🔧</span><div class="node-label">.env Configuration</div><div class="node-desc">GEMINI_API_KEY, IMAP credentials</div></div>
+            <div class="node w-full"><span class="node-icon">🗃️</span><div class="node-label">SQLite Database</div><div class="node-desc">./data/submissions.db → /app/data/<br/>SQLAlchemy ORM • 6 tables<br/>Mounted as Docker bind mount</div></div>
+            <div class="node w-full"><span class="node-icon">📁</span><div class="node-label">Document Storage</div><div class="node-desc">./uploads/ → /app/uploads/<br/>Original files organized by submission ID<br/>8GB EBS gp2 volume (expandable)</div></div>
+            <div class="node w-full"><span class="node-icon">🔧</span><div class="node-label">Configuration</div><div class="node-desc">.env file with GEMINI_API_KEY,<br/>IMAP_HOST, IMAP_USER, IMAP_PASS<br/>Not committed to git (in .gitignore)</div></div>
           </div>
         </div>
       </div>
     </div>
 
     <div class="connector"><svg width="2" height="12"><line x1="1" y1="0" x2="1" y2="12" stroke="var(--slate-400)" stroke-width="2" stroke-dasharray="4,3"/></svg></div>
-    <div class="connector-label">HTTPS / IMAPS</div>
+    <div class="connector-label">Outbound HTTPS / IMAPS connections</div>
     <div class="connector"><svg width="2" height="8"><line x1="1" y1="0" x2="1" y2="8" stroke="var(--slate-400)" stroke-width="2" stroke-dasharray="4,3"/></svg></div>
 
-    <!-- External -->
+    <!-- External Services -->
     <div class="layer layer-purple">
       <div class="layer-header">
         <div class="layer-icon">☁️</div>
-        <div class="layer-title">External Services</div>
+        <div class="layer-title">External Services <span class="layer-subtitle">— Third-party APIs & infrastructure</span></div>
       </div>
       <div class="flex gap-10">
-        <div class="node flex-1"><span class="node-icon">🧠</span><div class="node-label">Google Gemini API</div><div class="node-desc">generativelanguage.googleapis.com<br/>Model: gemini-2.5-flash</div></div>
-        <div class="node flex-1"><span class="node-icon">📬</span><div class="node-label">IMAP Server</div><div class="node-desc">Email inbox • IMAPS port 993<br/>Auto-ingestion of submissions</div></div>
-        <div class="node flex-1"><span class="node-icon">🐙</span><div class="node-label">GitHub</div><div class="node-desc">Source code repository<br/>CI/CD deployment</div></div>
+        <div class="node flex-1"><span class="node-icon">🧠</span><div class="node-label">Google Gemini API</div><div class="node-desc">generativelanguage.googleapis.com<br/>Model: gemini-2.5-flash<br/>REST API with API key auth<br/>~$0.005 per submission avg cost</div></div>
+        <div class="node flex-1"><span class="node-icon">📬</span><div class="node-label">IMAP Email Server</div><div class="node-desc">Outreach Benefits mail server<br/>IMAPS port 993 (TLS encrypted)<br/>Polls INBOX for new submissions<br/>Marks processed emails as read</div></div>
+        <div class="node flex-1"><span class="node-icon">🐙</span><div class="node-label">GitHub Repository</div><div class="node-desc">challayashwanth1998-png/knight-case-study<br/>Main branch • SSH deploy key<br/>Source code, Dockerfile, docker-compose.yml</div></div>
       </div>
+    </div>
+
+    <!-- Legend -->
+    <div class="legend">
+      <span class="legend-title">Key:</span>
+      <div class="legend-item"><svg width="20" height="2"><line x1="0" y1="1" x2="20" y2="1" stroke="var(--slate-400)" stroke-width="2"/></svg> Direct connection</div>
+      <div class="legend-item"><svg width="20" height="2"><line x1="0" y1="1" x2="20" y2="1" stroke="var(--slate-400)" stroke-width="1.5" stroke-dasharray="4,3"/></svg> External API call</div>
+      <div class="legend-item" style="margin-left:auto;">Est. cost: ~$5/month (t2.micro) + ~$0.005/submission (Gemini)</div>
     </div>
 
   </div>
