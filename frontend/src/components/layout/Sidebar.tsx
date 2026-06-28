@@ -17,6 +17,7 @@ const NAV_ITEMS = [
   { section: "Reference" },
   { href: "/rules", icon: "⚖️", label: "Rules Engine" },
   { href: "/guidelines", icon: "📖", label: "Guidelines" },
+  { href: "/api-docs", icon: "📡", label: "API Reference" },
   { section: "Settings" },
   { href: "/settings/rules", icon: "⚙️", label: "Rules Config" },
 ];
