@@ -86,7 +86,7 @@ def gen_application(out_dir, company, state="TN", fein="62-7834521",
     paras = [
         f"<b>Commercial Auto Insurance Application</b>",
         f"<b>Business Name:</b> {company}",
-        f"<b>Business Type:</b> Corporation",
+        f"<b>Business Type:</b> LLC",
         f"<b>FEIN:</b> {fein}",
         f"<b>MC Number:</b> {mc}",
         f"<b>DOT Number:</b> {dot}",
