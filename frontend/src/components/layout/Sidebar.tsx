@@ -13,11 +13,10 @@ const NAV_ITEMS = [
   { href: "/compare", icon: "🔀", label: "Compare" },
   { href: "/logs", icon: "📋", label: "System Logs" },
   { href: "/health", icon: "🏥", label: "System Health" },
-  { href: "/architecture", icon: "🏗️", label: "Architecture" },
   { section: "Reference" },
   { href: "/rules", icon: "⚖️", label: "Rules Engine" },
   { href: "/guidelines", icon: "📖", label: "Guidelines" },
-  { href: "/api-docs", icon: "📡", label: "API Reference" },
+  { href: "/swagger", icon: "📡", label: "API Docs" },
   { section: "Settings" },
   { href: "/settings/rules", icon: "⚙️", label: "Rules Config" },
 ];

@@ -5,94 +5,148 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Knight Insurance — System Architecture</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"></script>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { font-family: 'Inter', -apple-system, sans-serif; background: #FAFBFC; color: #1E293B; }
+  body { font-family: 'Inter', -apple-system, sans-serif; background: #F8FAFC; color: #1E293B; }
 
-  /* Header */
+  /* ── Header ── */
   .header {
-    padding: 16px 32px;
+    height: 52px; padding: 0 28px;
     display: flex; justify-content: space-between; align-items: center;
-    border-bottom: 1px solid #E2E8F0; background: white;
-    position: sticky; top: 0; z-index: 100;
+    border-bottom: 1px solid #E2E8F0; background: white; z-index: 100; position: relative;
   }
-  .header h1 { font-size: 16px; font-weight: 700; letter-spacing: -0.3px; }
+  .header h1 { font-size: 15px; font-weight: 700; }
   .header h1 span { color: #2563EB; }
-  .header-sub { font-size: 11px; color: #94A3B8; margin-top: 2px; }
-  .header-controls { display: flex; gap: 8px; align-items: center; }
+  .header-sub { font-size: 10px; color: #94A3B8; }
+  .header-right { display: flex; gap: 6px; align-items: center; }
 
-  /* View Tabs */
+  /* ── Tabs ── */
   .tabs {
-    display: flex; gap: 4px; padding: 12px 32px;
-    background: #F8FAFC; border-bottom: 1px solid #E2E8F0;
+    display: flex; gap: 2px; padding: 8px 28px;
+    background: #F1F5F9; border-bottom: 1px solid #E2E8F0;
+    position: relative; z-index: 99;
   }
   .tab {
-    padding: 6px 16px; font-size: 12px; font-weight: 500;
-    border-radius: 6px; border: 1px solid transparent;
-    background: transparent; color: #64748B; cursor: pointer;
-    transition: all 0.15s;
+    padding: 6px 14px; font-size: 11px; font-weight: 500;
+    border-radius: 5px; border: 1px solid transparent;
+    background: transparent; color: #64748B; cursor: pointer; transition: all 0.15s;
   }
   .tab:hover { background: white; color: #1E293B; }
-  .tab.active { background: #1E3A8A; color: white; border-color: #1E3A8A; }
+  .tab.active { background: #1E3A8A; color: white; }
 
-  /* Canvas */
-  .canvas {
-    padding: 24px 32px;
-    min-height: calc(100vh - 100px);
-  }
-  .diagram-container {
-    display: none;
+  /* ── Content ── */
+  .content { padding: 32px 40px; max-width: 1200px; margin: 0 auto; }
+  .diagram { display: none; }
+  .diagram.active { display: block; }
+
+  /* ══════════════════════════════════════
+     COMPONENT STYLES (Microsoft-like)
+  ══════════════════════════════════════ */
+
+  /* Section Groups */
+  .group {
+    border: 2px solid; border-radius: 6px;
+    padding: 12px 14px 14px; position: relative;
     background: white;
-    border: 1px solid #E2E8F0;
-    border-radius: 10px;
-    overflow: hidden;
-    position: relative;
   }
-  .diagram-container.active { display: block; }
-
-  .diagram-wrapper {
-    width: 100%;
-    min-height: 500px;
-    cursor: grab;
+  .group-label {
+    position: absolute; top: -10px; left: 14px;
+    font-size: 11px; font-weight: 700; padding: 0 8px;
+    background: white; letter-spacing: 0.3px;
   }
-  .diagram-wrapper:active { cursor: grabbing; }
-  .diagram-wrapper svg { width: 100% !important; max-width: 100%; }
-
-  /* Pan/Zoom hint */
-  .zoom-hint {
-    position: absolute; bottom: 12px; right: 12px;
-    font-size: 10px; color: #94A3B8; background: white;
-    padding: 4px 10px; border-radius: 4px;
-    border: 1px solid #E2E8F0;
+  .group-sublabel {
+    font-size: 9px; font-weight: 400; color: #94A3B8;
+    display: block; margin-top: 1px;
   }
 
-  /* Zoom controls */
-  .zoom-controls {
-    position: absolute; top: 12px; right: 12px;
-    display: flex; gap: 4px; z-index: 10;
+  /* Color variants for groups */
+  .group-blue { border-color: #93C5FD; background: #F0F7FF; }
+  .group-blue .group-label { color: #1E40AF; }
+  .group-green { border-color: #86EFAC; background: #F0FDF4; }
+  .group-green .group-label { color: #166534; }
+  .group-amber { border-color: #FCD34D; background: #FFFBEB; }
+  .group-amber .group-label { color: #92400E; }
+  .group-red { border-color: #FCA5A5; background: #FEF2F2; }
+  .group-red .group-label { color: #991B1B; }
+  .group-purple { border-color: #C4B5FD; background: #F5F3FF; }
+  .group-purple .group-label { color: #5B21B6; }
+  .group-teal { border-color: #5EEAD4; background: #F0FDFA; }
+  .group-teal .group-label { color: #134E4A; }
+  .group-gray { border-color: #D1D5DB; background: #F9FAFB; }
+  .group-gray .group-label { color: #374151; }
+
+  /* Component Boxes */
+  .box {
+    display: inline-flex; flex-direction: column; align-items: center;
+    padding: 10px 16px; border-radius: 5px;
+    border: 1px solid #D1D5DB; background: white;
+    font-size: 11px; font-weight: 500; text-align: center;
+    min-width: 90px; transition: box-shadow 0.15s;
+    line-height: 1.3;
   }
-  .zoom-btn {
-    width: 28px; height: 28px; border-radius: 6px;
-    border: 1px solid #E2E8F0; background: white;
-    color: #475569; cursor: pointer;
+  .box:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+  .box-icon { font-size: 22px; margin-bottom: 4px; }
+  .box-sub { font-size: 9px; color: #94A3B8; font-weight: 400; margin-top: 2px; }
+
+  /* Colored boxes */
+  .box-blue { border-color: #93C5FD; background: #EFF6FF; }
+  .box-green { border-color: #86EFAC; background: #ECFDF5; }
+  .box-amber { border-color: #FCD34D; background: #FFFBEB; }
+  .box-red { border-color: #FCA5A5; background: #FEF2F2; }
+  .box-purple { border-color: #C4B5FD; background: #F5F3FF; }
+  .box-teal { border-color: #5EEAD4; background: #F0FDFA; }
+  .box-dark { border-color: #475569; background: #1E293B; color: white; }
+  .box-dark .box-sub { color: #94A3B8; }
+
+  /* Flex layouts */
+  .row { display: flex; gap: 10px; align-items: flex-start; }
+  .col { display: flex; flex-direction: column; gap: 10px; }
+  .center { align-items: center; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+  .grid-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 10px; }
+  .wrap { flex-wrap: wrap; }
+
+  /* ── SVG Arrow lines ── */
+  .arrows-layer {
+    position: absolute; top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none; z-index: 1;
+  }
+  .arrow-line { stroke: #94A3B8; stroke-width: 1.5; fill: none; }
+  .arrow-line-blue { stroke: #3B82F6; }
+  .arrow-line-green { stroke: #10B981; }
+  .arrow-line-amber { stroke: #F59E0B; }
+  .arrow-line-red { stroke: #EF4444; }
+  .arrow-dash { stroke-dasharray: 6 4; }
+  .arrow-label {
+    font-size: 9px; font-family: 'Inter', sans-serif;
+    fill: #64748B; font-weight: 500;
+  }
+
+  /* Arrow (CSS-based for simple flows) */
+  .arrow-down, .arrow-right, .arrow-left {
     display: flex; align-items: center; justify-content: center;
-    font-size: 14px; transition: all 0.15s;
+    color: #94A3B8; font-size: 18px; flex-shrink: 0;
   }
-  .zoom-btn:hover { border-color: #2563EB; color: #2563EB; background: #EFF6FF; }
-
-  /* Title strip above each diagram */
-  .diagram-title {
-    padding: 12px 20px;
-    border-bottom: 1px solid #E2E8F0;
-    font-size: 13px; font-weight: 600; color: #334155;
-    background: #F8FAFC;
+  .arrow-down { padding: 4px 0; }
+  .arrow-right { padding: 0 4px; }
+  .arrow-label-inline {
+    font-size: 9px; color: #94A3B8; font-weight: 500;
+    text-align: center; margin-top: -2px;
   }
-  .diagram-title span { font-weight: 400; color: #94A3B8; margin-left: 8px; }
 
-  /* Mermaid theme overrides */
-  .mermaid { padding: 24px; }
+  /* Key / Legend */
+  .legend {
+    display: flex; gap: 16px; padding: 10px 16px;
+    background: white; border: 1px solid #E2E8F0;
+    border-radius: 6px; font-size: 10px; color: #64748B;
+    position: absolute; bottom: 20px; left: 20px;
+  }
+  .legend-item { display: flex; align-items: center; gap: 4px; }
+  .legend-line { width: 20px; height: 2px; border-radius: 1px; }
+  .legend-line-solid { background: #94A3B8; }
+  .legend-line-dash { background: repeating-linear-gradient(90deg, #94A3B8 0px, #94A3B8 5px, transparent 5px, transparent 9px); }
 </style>
 </head>
 <body>
@@ -100,494 +154,493 @@
 <div class="header">
   <div>
     <h1><span>Knight Insurance</span> — System Architecture</h1>
-    <div class="header-sub">Interactive flow diagrams • Scroll to zoom • Drag to pan</div>
+    <div class="header-sub">Interactive architecture diagrams • Click tabs to switch views</div>
   </div>
 </div>
 
-<div class="tabs">
-  <button class="tab active" onclick="switchView('overview')">System Overview</button>
-  <button class="tab" onclick="switchView('pipeline')">Processing Pipeline</button>
-  <button class="tab" onclick="switchView('data')">Data Flow</button>
-  <button class="tab" onclick="switchView('rules')">Rules Engine</button>
-  <button class="tab" onclick="switchView('deployment')">Deployment</button>
+<div class="tabs" id="tabsBar">
+  <button class="tab active" data-view="overview">System Overview</button>
+  <button class="tab" data-view="pipeline">Processing Pipeline</button>
+  <button class="tab" data-view="data">Data Flow</button>
+  <button class="tab" data-view="rules">Rules Engine</button>
+  <button class="tab" data-view="deploy">Deployment</button>
 </div>
 
-<div class="canvas">
+<div class="content">
 
-  <!-- ═══════════════════ VIEW 1: SYSTEM OVERVIEW ═══════════════════ -->
-  <div id="view-overview" class="diagram-container active">
-    <div class="diagram-title">System Overview <span>High-level component architecture</span></div>
-    <div class="zoom-controls">
-      <button class="zoom-btn" onclick="zoomIn('overview')">+</button>
-      <button class="zoom-btn" onclick="zoomOut('overview')">−</button>
-      <button class="zoom-btn" onclick="resetZoom('overview')">⟲</button>
-    </div>
-    <div id="pan-overview" class="diagram-wrapper">
-      <div class="mermaid">
-graph TB
-    subgraph Ingestion["📥 Ingestion Layer"]
-        EMAIL["📧 Email Watcher<br/><i>IMAP polling every 30s</i>"]
-        UPLOAD["📤 Manual Upload<br/><i>REST API endpoint</i>"]
-    end
+<!-- ═════════════ VIEW 1: SYSTEM OVERVIEW ═════════════ -->
+<div class="diagram active" id="view-overview">
+  <div class="col" style="gap:28px;">
 
-    subgraph Frontend["🖥️ Frontend — Next.js"]
-        DASH["Dashboard"]
-        SUBMIT["Submission Form"]
-        DETAIL["Submission Detail"]
-        UW["Underwriter View"]
-        ANALYTICS["Analytics"]
-        COMPARE["Compare"]
-        LOGS["System Logs"]
-        HEALTH["Health Monitor"]
-    end
+    <!-- Row 1: Ingestion -->
+    <div class="row" style="gap:24px; justify-content:center;">
+      <div class="group group-blue" style="width:240px;">
+        <div class="group-label">📥 Ingestion</div>
+        <div class="row" style="gap:8px; margin-top:6px;">
+          <div class="box box-blue">
+            <div class="box-icon">📧</div>
+            Email Watcher
+            <div class="box-sub">IMAP poll 30s</div>
+          </div>
+          <div class="box box-blue">
+            <div class="box-icon">📤</div>
+            Manual Upload
+            <div class="box-sub">REST endpoint</div>
+          </div>
+        </div>
+      </div>
 
-    subgraph Backend["⚙️ Backend — FastAPI"]
-        API["REST API Router"]
-        PIPE["Pipeline Orchestrator"]
-        PROC["Document Processor"]
-        CLASS["Document Classifier"]
-        EXTRACT["Data Extractor"]
-        AI["AI Analyzer"]
-        RULES["Rules Engine"]
-    end
+      <div class="arrow-right">→</div>
 
-    subgraph External["☁️ External Services"]
-        GEMINI["🧠 Google Gemini 2.5 Flash<br/><i>Vision + Text AI</i>"]
-        IMAP["📬 IMAP Server<br/><i>Email inbox</i>"]
-    end
+      <div class="group group-purple" style="width:180px;">
+        <div class="group-label">⚙️ API Layer</div>
+        <div class="box box-purple" style="width:100%; margin-top:6px;">
+          <div class="box-icon">🌐</div>
+          FastAPI Router
+          <div class="box-sub">REST endpoints</div>
+        </div>
+      </div>
 
-    subgraph Storage["💾 Storage Layer"]
-        DB[("🗃️ SQLite Database<br/><i>Submissions, Documents,<br/>Rules, Audit Logs</i>")]
-        FILES["📁 File System<br/><i>Uploaded documents</i>"]
-    end
+      <div class="arrow-right">→</div>
 
-    EMAIL -->|new email| API
-    UPLOAD -->|files| API
-    IMAP -.->|poll| EMAIL
-
-    Frontend -->|HTTP| API
-    API --> PIPE
-    PIPE --> PROC
-    PIPE --> CLASS
-    PIPE --> EXTRACT
-    PIPE --> AI
-    PIPE --> RULES
-
-    PROC --> FILES
-    CLASS -->|content-based| GEMINI
-    AI -->|4 parallel calls| GEMINI
-    EXTRACT -->|images only| GEMINI
-
-    API --> DB
-    PIPE --> DB
-
-    style Ingestion fill:#EFF6FF,stroke:#BFDBFE,color:#1E3A8A
-    style Frontend fill:#F0FDF4,stroke:#BBF7D0,color:#166534
-    style Backend fill:#FFF7ED,stroke:#FED7AA,color:#9A3412
-    style External fill:#EEF2FF,stroke:#C7D2FE,color:#3730A3
-    style Storage fill:#F8FAFC,stroke:#E2E8F0,color:#334155
+      <div class="group group-amber" style="width:180px;">
+        <div class="group-label">🔄 Orchestrator</div>
+        <div class="box box-amber" style="width:100%; margin-top:6px;">
+          <div class="box-icon">🎯</div>
+          Pipeline Service
+          <div class="box-sub">6 steps, threaded</div>
+        </div>
       </div>
     </div>
-    <div class="zoom-hint">🖱️ Scroll to zoom • Drag to pan</div>
-  </div>
 
-  <!-- ═══════════════════ VIEW 2: PROCESSING PIPELINE ═══════════════════ -->
-  <div id="view-pipeline" class="diagram-container">
-    <div class="diagram-title">Processing Pipeline <span>6-step document analysis workflow</span></div>
-    <div class="zoom-controls">
-      <button class="zoom-btn" onclick="zoomIn('pipeline')">+</button>
-      <button class="zoom-btn" onclick="zoomOut('pipeline')">−</button>
-      <button class="zoom-btn" onclick="resetZoom('pipeline')">⟲</button>
-    </div>
-    <div id="pan-pipeline" class="diagram-wrapper">
-      <div class="mermaid">
-graph TD
-    START(["🚀 Submission Created"]) --> S1
+    <!-- Arrow down -->
+    <div class="arrow-down" style="text-align:center;">↓</div>
 
-    subgraph S1["Step 1 — Text Extraction"]
-        S1A["PDF → PyMuPDF text"]
-        S1B["Excel → openpyxl rows"]
-        S1C["Images → Parallel Gemini OCR"]
-        S1D["CSV → pandas reader"]
-    end
-
-    S1 --> S2
-
-    subgraph S2["Step 2 — Classification"]
-        S2A["Batch all docs in single<br/>Gemini API call"]
-        S2B["Content-based only<br/><i>Never uses filename</i>"]
-        S2C["Types: application, driver_list,<br/>equipment_list, loss_run,<br/>ifta_report, drivers_license"]
-    end
-
-    S2 --> S3
-
-    subgraph S3["Step 3 — Data Extraction"]
-        S3A["Excel/CSV → Regex + Python<br/><i>Zero AI cost</i>"]
-        S3B["PDF text → Regex patterns"]
-        S3C["Images → Gemini Vision<br/><i>CDL photos only</i>"]
-    end
-
-    S3 --> DEDUP["🔄 Driver Deduplication<br/><i>Name matching across sources</i>"]
-
-    DEDUP --> S4
-
-    subgraph S4["Step 4 — AI Analysis"]
-        direction LR
-        S4A["🏢 Company<br/>Risk Profile"]
-        S4B["👤 Driver<br/>Risk Assessment"]
-        S4C["🚛 Fleet<br/>Analysis"]
-        S4D["📊 Financial<br/>& Loss Analysis"]
-    end
-
-    S4 --> S5
-
-    subgraph S5["Step 5 — Rules Engine"]
-        S5A["21 business rules"]
-        S5B["Categories: eligibility,<br/>driver, vehicle, safety, financial"]
-        S5C["Results: PASS / FAIL / WARNING / INFO"]
-    end
-
-    S5 --> S6
-
-    subgraph S6["Step 6 — Decision"]
-        S6A{"Any FAIL rules?"}
-        S6B["❌ DECLINE"]
-        S6C{"Any WARNING rules?"}
-        S6D["⚠️ REFER"]
-        S6E["✅ ACCEPT"]
-    end
-
-    S6A -->|Yes| S6B
-    S6A -->|No| S6C
-    S6C -->|Yes| S6D
-    S6C -->|No| S6E
-
-    style START fill:#2563EB,stroke:#1D4ED8,color:white
-    style S1 fill:#EFF6FF,stroke:#BFDBFE,color:#1E3A8A
-    style S2 fill:#F5F3FF,stroke:#DDD6FE,color:#5B21B6
-    style S3 fill:#ECFDF5,stroke:#A7F3D0,color:#065F46
-    style S4 fill:#FFF7ED,stroke:#FED7AA,color:#9A3412
-    style S5 fill:#FFFBEB,stroke:#FDE68A,color:#92400E
-    style S6 fill:#FEF2F2,stroke:#FECACA,color:#991B1B
-    style DEDUP fill:#F0FDFA,stroke:#99F6E4,color:#134E4A
-    style S6B fill:#DC2626,stroke:#B91C1C,color:white
-    style S6D fill:#D97706,stroke:#B45309,color:white
-    style S6E fill:#059669,stroke:#047857,color:white
+    <!-- Row 2: Pipeline Services -->
+    <div class="row" style="gap:24px; justify-content:center;">
+      <div class="group group-teal" style="min-width:720px;">
+        <div class="group-label">🧠 Processing Services</div>
+        <div class="row" style="gap:10px; margin-top:8px;">
+          <div class="box box-teal">
+            <div class="box-icon">📄</div>
+            Document<br/>Processor
+            <div class="box-sub">Text extraction</div>
+          </div>
+          <div class="box box-teal">
+            <div class="box-icon">🏷️</div>
+            Document<br/>Classifier
+            <div class="box-sub">Content-based</div>
+          </div>
+          <div class="box box-teal">
+            <div class="box-icon">🔍</div>
+            Data<br/>Extractor
+            <div class="box-sub">Regex + AI</div>
+          </div>
+          <div class="box box-teal">
+            <div class="box-icon">🧠</div>
+            AI<br/>Analyzer
+            <div class="box-sub">4 parallel calls</div>
+          </div>
+          <div class="box box-teal">
+            <div class="box-icon">⚖️</div>
+            Rules<br/>Engine
+            <div class="box-sub">21 rules</div>
+          </div>
+        </div>
       </div>
     </div>
-    <div class="zoom-hint">🖱️ Scroll to zoom • Drag to pan</div>
-  </div>
 
-  <!-- ═══════════════════ VIEW 3: DATA FLOW ═══════════════════ -->
-  <div id="view-data" class="diagram-container">
-    <div class="diagram-title">Data Flow <span>How data moves through the system</span></div>
-    <div class="zoom-controls">
-      <button class="zoom-btn" onclick="zoomIn('data')">+</button>
-      <button class="zoom-btn" onclick="zoomOut('data')">−</button>
-      <button class="zoom-btn" onclick="resetZoom('data')">⟲</button>
-    </div>
-    <div id="pan-data" class="diagram-wrapper">
-      <div class="mermaid">
-graph LR
-    subgraph Input["📥 Input Documents"]
-        DOC1["📄 Insurance Application<br/><i>PDF — company info, coverage</i>"]
-        DOC2["👤 Driver List / Roster<br/><i>Excel/PDF — names, DOB, license#</i>"]
-        DOC3["🚛 Equipment Schedule<br/><i>Excel — VINs, year, value</i>"]
-        DOC4["📊 Loss Run Reports<br/><i>PDF — claims history</i>"]
-        DOC5["⛽ IFTA Reports<br/><i>PDF/Excel — mileage by state</i>"]
-        DOC6["🪪 Driver Licenses<br/><i>Images — CDL photos</i>"]
-    end
+    <!-- Arrow down -->
+    <div class="arrow-down" style="text-align:center;">↓</div>
 
-    subgraph Extract["🔍 Extracted Data"]
-        COMPANY["Company Profile<br/><i>name, DOT#, MC#, years,<br/>operation type, radius</i>"]
-        DRIVERS["Driver Records<br/><i>10 drivers with CDL info,<br/>experience, violations</i>"]
-        VEHICLES["Vehicle Fleet<br/><i>9 vehicles with VIN,<br/>year, type, value</i>"]
-        CLAIMS["Claims History<br/><i>open/closed claims,<br/>total incurred</i>"]
-        MILEAGE["Mileage Data<br/><i>states of operation,<br/>total annual miles</i>"]
-    end
+    <!-- Row 3: External + Storage -->
+    <div class="row" style="gap:24px; justify-content:center;">
+      <div class="group group-purple" style="width:260px;">
+        <div class="group-label">☁️ External Services</div>
+        <div class="col" style="gap:8px; margin-top:8px;">
+          <div class="box box-purple">
+            <div class="box-icon">🧠</div>
+            Google Gemini 2.5 Flash
+            <div class="box-sub">Vision + Text AI</div>
+          </div>
+          <div class="box box-purple">
+            <div class="box-icon">📬</div>
+            IMAP Server
+            <div class="box-sub">Email polling</div>
+          </div>
+        </div>
+      </div>
 
-    subgraph Analysis["🧠 AI Analysis Output"]
-        RISK["Risk Assessment<br/><i>overall risk score,<br/>confidence level</i>"]
-        CONFLICTS["⚠️ Data Conflicts<br/><i>11 conflicts detected<br/>across documents</i>"]
-        RECOMMEND["Recommendations<br/><i>premium suggestions,<br/>coverage conditions</i>"]
-    end
+      <div class="group group-gray" style="width:260px;">
+        <div class="group-label">💾 Storage</div>
+        <div class="col" style="gap:8px; margin-top:8px;">
+          <div class="box">
+            <div class="box-icon">🗃️</div>
+            SQLite Database
+            <div class="box-sub">Submissions, Docs, Rules, Logs</div>
+          </div>
+          <div class="box">
+            <div class="box-icon">📁</div>
+            File System
+            <div class="box-sub">uploads/ directory</div>
+          </div>
+        </div>
+      </div>
 
-    subgraph Decision["✅ Final Output"]
-        RESULT["Underwriting Decision<br/><i>ACCEPT / DECLINE / REFER</i>"]
-        REPORT["Detailed Report<br/><i>rules results, AI reasoning,<br/>confidence scores</i>"]
-        AUDIT["Audit Trail<br/><i>timestamped pipeline logs</i>"]
-    end
-
-    DOC1 --> COMPANY
-    DOC2 --> DRIVERS
-    DOC3 --> VEHICLES
-    DOC4 --> CLAIMS
-    DOC5 --> MILEAGE
-    DOC6 --> DRIVERS
-
-    COMPANY --> RISK
-    DRIVERS --> RISK
-    VEHICLES --> RISK
-    CLAIMS --> RISK
-    MILEAGE --> RISK
-    RISK --> CONFLICTS
-    RISK --> RECOMMEND
-
-    RISK --> RESULT
-    CONFLICTS --> RESULT
-    RECOMMEND --> REPORT
-    RESULT --> AUDIT
-
-    style Input fill:#EFF6FF,stroke:#BFDBFE,color:#1E3A8A
-    style Extract fill:#ECFDF5,stroke:#A7F3D0,color:#065F46
-    style Analysis fill:#FFF7ED,stroke:#FED7AA,color:#9A3412
-    style Decision fill:#F5F3FF,stroke:#DDD6FE,color:#5B21B6
+      <div class="group group-green" style="width:260px;">
+        <div class="group-label">🖥️ Frontend</div>
+        <div class="grid-2" style="margin-top:8px;">
+          <div class="box box-green">Dashboard</div>
+          <div class="box box-green">Submit</div>
+          <div class="box box-green">Underwriter</div>
+          <div class="box box-green">Analytics</div>
+          <div class="box box-green">Logs</div>
+          <div class="box box-green">Health</div>
+        </div>
+        <div class="box-sub" style="text-align:center; margin-top:6px;">Next.js • Port 3000</div>
       </div>
     </div>
-    <div class="zoom-hint">🖱️ Scroll to zoom • Drag to pan</div>
+
   </div>
-
-  <!-- ═══════════════════ VIEW 4: RULES ENGINE ═══════════════════ -->
-  <div id="view-rules" class="diagram-container">
-    <div class="diagram-title">Rules Engine <span>21 underwriting business rules</span></div>
-    <div class="zoom-controls">
-      <button class="zoom-btn" onclick="zoomIn('rules')">+</button>
-      <button class="zoom-btn" onclick="zoomOut('rules')">−</button>
-      <button class="zoom-btn" onclick="resetZoom('rules')">⟲</button>
-    </div>
-    <div id="pan-rules" class="diagram-wrapper">
-      <div class="mermaid">
-graph TD
-    INPUT["📦 Extracted Data + AI Analysis"] --> ENGINE["⚖️ Rules Engine"]
-
-    ENGINE --> CAT1
-    ENGINE --> CAT2
-    ENGINE --> CAT3
-    ENGINE --> CAT4
-    ENGINE --> CAT5
-
-    subgraph CAT1["🏢 Eligibility Rules"]
-        R1["R-ELIG-001<br/>Years in business ≥ 2"]
-        R2["R-ELIG-002<br/>DOT number required"]
-        R3["R-ELIG-003<br/>Valid operation type"]
-        R4["R-ELIG-004<br/>Operating radius check"]
-    end
-
-    subgraph CAT2["👤 Driver Rules"]
-        R5["R-DRV-001<br/>All drivers have valid CDL"]
-        R6["R-DRV-002<br/>Driver age 23-70"]
-        R7["R-DRV-003<br/>Min 2 years experience"]
-        R8["R-DRV-004<br/>Max violations threshold"]
-        R9["R-DRV-005<br/>No major violations"]
-    end
-
-    subgraph CAT3["🚛 Vehicle Rules"]
-        R10["R-VEH-001<br/>Vehicle age ≤ 15 years"]
-        R11["R-VEH-002<br/>Valid VIN numbers"]
-        R12["R-VEH-003<br/>Proper vehicle types"]
-        R13["R-VEH-004<br/>Fleet size limits"]
-    end
-
-    subgraph CAT4["🛡️ Safety Rules"]
-        R14["R-SAFE-001<br/>Loss ratio &lt; 60%"]
-        R15["R-SAFE-002<br/>No serious accidents"]
-        R16["R-SAFE-003<br/>Safety program in place"]
-        R17["R-SAFE-004<br/>Cargo type allowed"]
-    end
-
-    subgraph CAT5["💰 Financial Rules"]
-        R18["R-FIN-001<br/>Revenue minimums met"]
-        R19["R-FIN-002<br/>Coverage limits adequate"]
-        R20["R-FIN-003<br/>Premium calculation"]
-        R21["R-FIN-004<br/>Claims frequency check"]
-    end
-
-    CAT1 --> EVAL["📋 Evaluation"]
-    CAT2 --> EVAL
-    CAT3 --> EVAL
-    CAT4 --> EVAL
-    CAT5 --> EVAL
-
-    EVAL --> PASS["✅ PASS"]
-    EVAL --> WARN["⚠️ WARNING"]
-    EVAL --> FAIL["❌ FAIL"]
-
-    PASS --> DEC{"Decision Logic"}
-    WARN --> DEC
-    FAIL --> DEC
-
-    DEC -->|"all pass"| ACCEPT["✅ ACCEPT"]
-    DEC -->|"has warnings"| REFER["⚠️ REFER"]
-    DEC -->|"has failures"| DECLINE["❌ DECLINE"]
-
-    style INPUT fill:#F8FAFC,stroke:#E2E8F0,color:#334155
-    style ENGINE fill:#1E3A8A,stroke:#1E3A8A,color:white
-    style CAT1 fill:#EFF6FF,stroke:#BFDBFE,color:#1E3A8A
-    style CAT2 fill:#F5F3FF,stroke:#DDD6FE,color:#5B21B6
-    style CAT3 fill:#F0FDFA,stroke:#99F6E4,color:#134E4A
-    style CAT4 fill:#FFFBEB,stroke:#FDE68A,color:#92400E
-    style CAT5 fill:#FEF2F2,stroke:#FECACA,color:#991B1B
-    style EVAL fill:#F8FAFC,stroke:#E2E8F0,color:#334155
-    style ACCEPT fill:#059669,stroke:#047857,color:white
-    style REFER fill:#D97706,stroke:#B45309,color:white
-    style DECLINE fill:#DC2626,stroke:#B91C1C,color:white
-      </div>
-    </div>
-    <div class="zoom-hint">🖱️ Scroll to zoom • Drag to pan</div>
-  </div>
-
-  <!-- ═══════════════════ VIEW 5: DEPLOYMENT ═══════════════════ -->
-  <div id="view-deployment" class="diagram-container">
-    <div class="diagram-title">Deployment Architecture <span>AWS infrastructure</span></div>
-    <div class="zoom-controls">
-      <button class="zoom-btn" onclick="zoomIn('deployment')">+</button>
-      <button class="zoom-btn" onclick="zoomOut('deployment')">−</button>
-      <button class="zoom-btn" onclick="resetZoom('deployment')">⟲</button>
-    </div>
-    <div id="pan-deployment" class="diagram-wrapper">
-      <div class="mermaid">
-graph TB
-    USER["🌐 User Browser"] -->|":3000"| NGINX
-
-    subgraph AWS["☁️ AWS EC2 — t2.micro"]
-        subgraph Docker["🐳 Docker Compose"]
-            NGINX["Next.js Frontend<br/><i>Port 3000</i>"]
-            FASTAPI["FastAPI Backend<br/><i>Port 8000</i>"]
-        end
-
-        subgraph Volumes["📦 Persistent Storage"]
-            SQLITE[("SQLite DB<br/><i>submissions.db</i>")]
-            UPLOADS["📁 uploads/<br/><i>Document files</i>"]
-        end
-
-        EMAILW["📧 Email Watcher<br/><i>Background thread</i>"]
-    end
-
-    NGINX -->|"/api/*"| FASTAPI
-    FASTAPI --> SQLITE
-    FASTAPI --> UPLOADS
-    EMAILW --> FASTAPI
-
-    subgraph External["External Services"]
-        GEMINI_API["🧠 Gemini API<br/><i>generativelanguage.googleapis.com</i>"]
-        IMAP_SRV["📬 IMAP Server<br/><i>Email inbox polling</i>"]
-    end
-
-    FASTAPI -->|"HTTPS"| GEMINI_API
-    EMAILW -->|"IMAPS"| IMAP_SRV
-
-    subgraph Config["🔧 Configuration"]
-        ENV[".env file<br/><i>GEMINI_API_KEY<br/>IMAP credentials<br/>Database path</i>"]
-    end
-
-    ENV -.-> FASTAPI
-    ENV -.-> EMAILW
-
-    style AWS fill:#FFF7ED,stroke:#FED7AA,color:#9A3412
-    style Docker fill:#EFF6FF,stroke:#BFDBFE,color:#1E3A8A
-    style Volumes fill:#F8FAFC,stroke:#E2E8F0,color:#334155
-    style External fill:#F5F3FF,stroke:#DDD6FE,color:#5B21B6
-    style Config fill:#ECFDF5,stroke:#A7F3D0,color:#065F46
-    style USER fill:#1E3A8A,stroke:#1E3A8A,color:white
-      </div>
-    </div>
-    <div class="zoom-hint">🖱️ Scroll to zoom • Drag to pan</div>
-  </div>
-
 </div>
+
+<!-- ═════════════ VIEW 2: PROCESSING PIPELINE ═════════════ -->
+<div class="diagram" id="view-pipeline">
+  <div class="col center" style="gap:6px;">
+
+    <!-- Start -->
+    <div class="box box-dark" style="padding:12px 32px; font-size:13px; font-weight:600;">
+      🚀 Submission Created
+    </div>
+    <div class="arrow-down">↓</div>
+
+    <!-- Step 1 -->
+    <div class="group group-blue" style="width:660px;">
+      <div class="group-label">Step 1 — Text Extraction</div>
+      <div class="row" style="gap:8px; margin-top:8px;">
+        <div class="box box-blue"><div class="box-icon">📕</div>PDF<div class="box-sub">PyMuPDF text</div></div>
+        <div class="box box-blue"><div class="box-icon">📗</div>Excel<div class="box-sub">openpyxl rows</div></div>
+        <div class="box box-blue"><div class="box-icon">🖼️</div>Images<div class="box-sub">Gemini OCR<br/>(parallel)</div></div>
+        <div class="box box-blue"><div class="box-icon">📊</div>CSV<div class="box-sub">pandas reader</div></div>
+      </div>
+    </div>
+    <div class="arrow-down">↓</div>
+
+    <!-- Step 2 -->
+    <div class="group group-purple" style="width:660px;">
+      <div class="group-label">Step 2 — Classification</div>
+      <div class="row" style="gap:8px; margin-top:8px;">
+        <div class="box box-purple" style="flex:1;">
+          <div class="box-icon">🏷️</div>
+          Batch All Docs → Single Gemini Call
+          <div class="box-sub">Content-based only (never uses filename)</div>
+        </div>
+        <div class="col" style="gap:4px;">
+          <div class="box" style="font-size:9px; padding:4px 8px;">application</div>
+          <div class="box" style="font-size:9px; padding:4px 8px;">driver_list</div>
+          <div class="box" style="font-size:9px; padding:4px 8px;">equipment_list</div>
+        </div>
+        <div class="col" style="gap:4px;">
+          <div class="box" style="font-size:9px; padding:4px 8px;">loss_run</div>
+          <div class="box" style="font-size:9px; padding:4px 8px;">ifta_report</div>
+          <div class="box" style="font-size:9px; padding:4px 8px;">drivers_license</div>
+        </div>
+      </div>
+    </div>
+    <div class="arrow-down">↓</div>
+
+    <!-- Step 3 -->
+    <div class="group group-green" style="width:660px;">
+      <div class="group-label">Step 3 — Data Extraction</div>
+      <div class="row" style="gap:8px; margin-top:8px;">
+        <div class="box box-green"><div class="box-icon">📗</div>Excel / CSV<div class="box-sub">Regex + Python<br/>Zero AI cost</div></div>
+        <div class="box box-green"><div class="box-icon">📕</div>PDF Text<div class="box-sub">Regex patterns</div></div>
+        <div class="box box-green"><div class="box-icon">🖼️</div>CDL Images<div class="box-sub">Gemini Vision<br/>Only for photos</div></div>
+        <div class="arrow-right">→</div>
+        <div class="box box-teal"><div class="box-icon">🔄</div>Deduplication<div class="box-sub">Name matching<br/>across sources</div></div>
+      </div>
+    </div>
+    <div class="arrow-down">↓</div>
+
+    <!-- Step 4 -->
+    <div class="group group-amber" style="width:660px;">
+      <div class="group-label">Step 4 — AI Analysis (4 parallel Gemini calls)</div>
+      <div class="row" style="gap:8px; margin-top:8px;">
+        <div class="box box-amber" style="flex:1;"><div class="box-icon">🏢</div>Company<br/>Risk Profile</div>
+        <div class="box box-amber" style="flex:1;"><div class="box-icon">👤</div>Driver<br/>Risk Assessment</div>
+        <div class="box box-amber" style="flex:1;"><div class="box-icon">🚛</div>Fleet<br/>Analysis</div>
+        <div class="box box-amber" style="flex:1;"><div class="box-icon">📊</div>Financial &<br/>Loss Analysis</div>
+      </div>
+    </div>
+    <div class="arrow-down">↓</div>
+
+    <!-- Step 5 -->
+    <div class="group group-red" style="width:660px;">
+      <div class="group-label">Step 5 — Rules Engine (21 rules)</div>
+      <div class="row" style="gap:6px; margin-top:8px;">
+        <div class="box" style="flex:1; font-size:10px;">🏢 Eligibility<div class="box-sub">4 rules</div></div>
+        <div class="box" style="flex:1; font-size:10px;">👤 Driver<div class="box-sub">5 rules</div></div>
+        <div class="box" style="flex:1; font-size:10px;">🚛 Vehicle<div class="box-sub">4 rules</div></div>
+        <div class="box" style="flex:1; font-size:10px;">🛡️ Safety<div class="box-sub">4 rules</div></div>
+        <div class="box" style="flex:1; font-size:10px;">💰 Financial<div class="box-sub">4 rules</div></div>
+      </div>
+    </div>
+    <div class="arrow-down">↓</div>
+
+    <!-- Step 6: Decision -->
+    <div class="row" style="gap:16px; justify-content:center;">
+      <div class="box" style="background:#059669; color:white; border-color:#047857; padding:12px 24px; font-weight:600;">✅ ACCEPT<div class="box-sub" style="color:#A7F3D0;">All rules pass</div></div>
+      <div class="box" style="background:#D97706; color:white; border-color:#B45309; padding:12px 24px; font-weight:600;">⚠️ REFER<div class="box-sub" style="color:#FDE68A;">Has warnings</div></div>
+      <div class="box" style="background:#DC2626; color:white; border-color:#B91C1C; padding:12px 24px; font-weight:600;">❌ DECLINE<div class="box-sub" style="color:#FECACA;">Has failures</div></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═════════════ VIEW 3: DATA FLOW ═════════════ -->
+<div class="diagram" id="view-data">
+  <div class="row" style="gap:28px; align-items:flex-start;">
+
+    <!-- Column 1: Input Documents -->
+    <div class="group group-blue" style="width:220px;">
+      <div class="group-label">📥 Input Documents</div>
+      <div class="col" style="gap:6px; margin-top:8px;">
+        <div class="box box-blue" style="width:100%;"><div class="box-icon">📄</div>Insurance<br/>Application<div class="box-sub">PDF</div></div>
+        <div class="box box-blue" style="width:100%;"><div class="box-icon">👤</div>Driver List<br/>/ Roster<div class="box-sub">Excel / PDF</div></div>
+        <div class="box box-blue" style="width:100%;"><div class="box-icon">🚛</div>Equipment<br/>Schedule<div class="box-sub">Excel</div></div>
+        <div class="box box-blue" style="width:100%;"><div class="box-icon">📊</div>Loss Run<br/>Reports<div class="box-sub">PDF</div></div>
+        <div class="box box-blue" style="width:100%;"><div class="box-icon">⛽</div>IFTA<br/>Reports<div class="box-sub">PDF / Excel</div></div>
+        <div class="box box-blue" style="width:100%;"><div class="box-icon">🪪</div>Driver<br/>Licenses<div class="box-sub">Images (CDL)</div></div>
+      </div>
+    </div>
+
+    <div class="col center" style="padding-top:100px;">
+      <div class="arrow-right" style="font-size:24px;">→</div>
+      <div class="arrow-label-inline">extract &<br/>classify</div>
+    </div>
+
+    <!-- Column 2: Extracted Data -->
+    <div class="group group-green" style="width:220px;">
+      <div class="group-label">🔍 Extracted Data</div>
+      <div class="col" style="gap:6px; margin-top:8px;">
+        <div class="box box-green" style="width:100%;">Company Profile<div class="box-sub">name, DOT#, MC#,<br/>years, operation type</div></div>
+        <div class="box box-green" style="width:100%;">Driver Records<div class="box-sub">10 drivers, CDL info,<br/>experience, violations</div></div>
+        <div class="box box-green" style="width:100%;">Vehicle Fleet<div class="box-sub">9 vehicles, VIN,<br/>year, type, value</div></div>
+        <div class="box box-green" style="width:100%;">Claims History<div class="box-sub">open/closed claims,<br/>total incurred</div></div>
+        <div class="box box-green" style="width:100%;">Mileage Data<div class="box-sub">states of operation,<br/>annual miles</div></div>
+      </div>
+    </div>
+
+    <div class="col center" style="padding-top:100px;">
+      <div class="arrow-right" style="font-size:24px;">→</div>
+      <div class="arrow-label-inline">AI analysis<br/>+ rules</div>
+    </div>
+
+    <!-- Column 3: AI Analysis -->
+    <div class="group group-amber" style="width:220px;">
+      <div class="group-label">🧠 AI Analysis</div>
+      <div class="col" style="gap:6px; margin-top:8px;">
+        <div class="box box-amber" style="width:100%;">Risk Assessment<div class="box-sub">overall score,<br/>confidence level</div></div>
+        <div class="box box-amber" style="width:100%;">⚠️ Data Conflicts<div class="box-sub">11 conflicts detected<br/>across documents</div></div>
+        <div class="box box-amber" style="width:100%;">Recommendations<div class="box-sub">premium suggestions,<br/>coverage conditions</div></div>
+        <div class="box box-amber" style="width:100%;">Rules Evaluation<div class="box-sub">21 rules checked<br/>PASS / FAIL / WARN</div></div>
+      </div>
+    </div>
+
+    <div class="col center" style="padding-top:100px;">
+      <div class="arrow-right" style="font-size:24px;">→</div>
+      <div class="arrow-label-inline">decision</div>
+    </div>
+
+    <!-- Column 4: Output -->
+    <div class="group group-purple" style="width:220px;">
+      <div class="group-label">✅ Final Output</div>
+      <div class="col" style="gap:6px; margin-top:8px;">
+        <div class="box" style="width:100%; background:#059669; color:white; border-color:#047857; font-weight:600;">
+          Decision
+          <div class="box-sub" style="color:#A7F3D0;">ACCEPT / DECLINE / REFER</div>
+        </div>
+        <div class="box box-purple" style="width:100%;">Detailed Report<div class="box-sub">rules results,<br/>AI reasoning</div></div>
+        <div class="box box-purple" style="width:100%;">Confidence Score<div class="box-sub">0.0 – 1.0<br/>per analysis</div></div>
+        <div class="box box-purple" style="width:100%;">Audit Trail<div class="box-sub">timestamped logs<br/>per pipeline step</div></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═════════════ VIEW 4: RULES ENGINE ═════════════ -->
+<div class="diagram" id="view-rules">
+  <div class="col center" style="gap:16px;">
+
+    <div class="box box-dark" style="padding:12px 32px; font-size:12px; font-weight:600;">
+      📦 Extracted Data + AI Analysis
+    </div>
+    <div class="arrow-down">↓</div>
+
+    <div class="box box-purple" style="padding:12px 40px; font-size:13px; font-weight:700;">
+      ⚖️ Rules Engine — 21 Business Rules
+    </div>
+    <div class="arrow-down">↓</div>
+
+    <!-- 5 Rule Categories -->
+    <div class="row" style="gap:14px;">
+      <div class="group group-blue" style="width:175px;">
+        <div class="group-label">🏢 Eligibility</div>
+        <div class="col" style="gap:4px; margin-top:6px; font-size:10px;">
+          <div class="box" style="width:100%; font-size:9px; padding:6px;">R-ELIG-001<div class="box-sub">Years in business ≥ 2</div></div>
+          <div class="box" style="width:100%; font-size:9px; padding:6px;">R-ELIG-002<div class="box-sub">DOT number required</div></div>
+          <div class="box" style="width:100%; font-size:9px; padding:6px;">R-ELIG-003<div class="box-sub">Valid operation type</div></div>
+          <div class="box" style="width:100%; font-size:9px; padding:6px;">R-ELIG-004<div class="box-sub">Operating radius</div></div>
+        </div>
+      </div>
+      <div class="group group-purple" style="width:175px;">
+        <div class="group-label">👤 Driver</div>
+        <div class="col" style="gap:4px; margin-top:6px;">
+          <div class="box" style="width:100%; font-size:9px; padding:6px;">R-DRV-001<div class="box-sub">Valid CDL required</div></div>
+          <div class="box" style="width:100%; font-size:9px; padding:6px;">R-DRV-002<div class="box-sub">Age 23–70</div></div>
+          <div class="box" style="width:100%; font-size:9px; padding:6px;">R-DRV-003<div class="box-sub">Min 2yr experience</div></div>
+          <div class="box" style="width:100%; font-size:9px; padding:6px;">R-DRV-004<div class="box-sub">Violations threshold</div></div>
+          <div class="box" style="width:100%; font-size:9px; padding:6px;">R-DRV-005<div class="box-sub">No major violations</div></div>
+        </div>
+      </div>
+      <div class="group group-teal" style="width:175px;">
+        <div class="group-label">🚛 Vehicle</div>
+        <div class="col" style="gap:4px; margin-top:6px;">
+          <div class="box" style="width:100%; font-size:9px; padding:6px;">R-VEH-001<div class="box-sub">Age ≤ 15 years</div></div>
+          <div class="box" style="width:100%; font-size:9px; padding:6px;">R-VEH-002<div class="box-sub">Valid VIN numbers</div></div>
+          <div class="box" style="width:100%; font-size:9px; padding:6px;">R-VEH-003<div class="box-sub">Proper vehicle types</div></div>
+          <div class="box" style="width:100%; font-size:9px; padding:6px;">R-VEH-004<div class="box-sub">Fleet size limits</div></div>
+        </div>
+      </div>
+      <div class="group group-amber" style="width:175px;">
+        <div class="group-label">🛡️ Safety</div>
+        <div class="col" style="gap:4px; margin-top:6px;">
+          <div class="box" style="width:100%; font-size:9px; padding:6px;">R-SAFE-001<div class="box-sub">Loss ratio < 60%</div></div>
+          <div class="box" style="width:100%; font-size:9px; padding:6px;">R-SAFE-002<div class="box-sub">No serious accidents</div></div>
+          <div class="box" style="width:100%; font-size:9px; padding:6px;">R-SAFE-003<div class="box-sub">Safety program</div></div>
+          <div class="box" style="width:100%; font-size:9px; padding:6px;">R-SAFE-004<div class="box-sub">Cargo type allowed</div></div>
+        </div>
+      </div>
+      <div class="group group-red" style="width:175px;">
+        <div class="group-label">💰 Financial</div>
+        <div class="col" style="gap:4px; margin-top:6px;">
+          <div class="box" style="width:100%; font-size:9px; padding:6px;">R-FIN-001<div class="box-sub">Revenue minimums</div></div>
+          <div class="box" style="width:100%; font-size:9px; padding:6px;">R-FIN-002<div class="box-sub">Coverage limits</div></div>
+          <div class="box" style="width:100%; font-size:9px; padding:6px;">R-FIN-003<div class="box-sub">Premium calc</div></div>
+          <div class="box" style="width:100%; font-size:9px; padding:6px;">R-FIN-004<div class="box-sub">Claims frequency</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="arrow-down">↓</div>
+
+    <!-- Decision -->
+    <div class="row" style="gap:16px; justify-content:center;">
+      <div class="box" style="background:#059669; color:white; border-color:#047857; padding:14px 28px; font-weight:600; font-size:13px;">✅ ACCEPT<div class="box-sub" style="color:#A7F3D0;">All rules pass</div></div>
+      <div class="box" style="background:#D97706; color:white; border-color:#B45309; padding:14px 28px; font-weight:600; font-size:13px;">⚠️ REFER<div class="box-sub" style="color:#FDE68A;">Has warnings</div></div>
+      <div class="box" style="background:#DC2626; color:white; border-color:#B91C1C; padding:14px 28px; font-weight:600; font-size:13px;">❌ DECLINE<div class="box-sub" style="color:#FECACA;">Has failures</div></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═════════════ VIEW 5: DEPLOYMENT ═════════════ -->
+<div class="diagram" id="view-deploy">
+  <div class="col" style="gap:28px;">
+
+    <!-- User -->
+    <div style="text-align:center;">
+      <div class="box box-dark" style="display:inline-flex; padding:12px 32px; font-size:13px;">
+        <div class="box-icon">🌐</div> User Browser
+      </div>
+    </div>
+    <div class="arrow-down">↓ :3000</div>
+
+    <!-- AWS Group -->
+    <div class="group group-amber" style="max-width:800px; margin:0 auto;">
+      <div class="group-label">☁️ AWS EC2 — t2.micro<span class="group-sublabel">Ubuntu • Docker Compose</span></div>
+
+      <div class="row" style="gap:16px; margin-top:12px;">
+        <!-- Docker containers -->
+        <div class="group group-blue" style="flex:1;">
+          <div class="group-label">🐳 Docker</div>
+          <div class="col" style="gap:8px; margin-top:6px;">
+            <div class="box box-green" style="width:100%;">
+              <div class="box-icon">🖥️</div>
+              Next.js Frontend
+              <div class="box-sub">Port 3000</div>
+            </div>
+            <div class="box box-blue" style="width:100%;">
+              <div class="box-icon">⚙️</div>
+              FastAPI Backend
+              <div class="box-sub">Port 8000</div>
+            </div>
+            <div class="box" style="width:100%;">
+              <div class="box-icon">📧</div>
+              Email Watcher
+              <div class="box-sub">Background thread</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Storage volumes -->
+        <div class="group group-gray" style="flex:1;">
+          <div class="group-label">📦 Volumes</div>
+          <div class="col" style="gap:8px; margin-top:6px;">
+            <div class="box" style="width:100%;">
+              <div class="box-icon">🗃️</div>
+              SQLite DB
+              <div class="box-sub">submissions.db</div>
+            </div>
+            <div class="box" style="width:100%;">
+              <div class="box-icon">📁</div>
+              uploads/
+              <div class="box-sub">Document files</div>
+            </div>
+            <div class="box" style="width:100%;">
+              <div class="box-icon">🔧</div>
+              .env
+              <div class="box-sub">API keys, IMAP creds</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- External Services -->
+    <div class="row" style="gap:24px; justify-content:center;">
+      <div class="col center" style="gap:4px;">
+        <div class="arrow-down">↓ HTTPS</div>
+      </div>
+    </div>
+
+    <div class="row" style="gap:20px; justify-content:center;">
+      <div class="box box-purple" style="padding:14px 24px;">
+        <div class="box-icon">🧠</div>
+        Gemini API
+        <div class="box-sub">generativelanguage.googleapis.com</div>
+      </div>
+      <div class="box box-purple" style="padding:14px 24px;">
+        <div class="box-icon">📬</div>
+        IMAP Server
+        <div class="box-sub">Email inbox (IMAPS)</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+  </div><!-- /content -->
 
 <script>
-  // ── Mermaid Init ──
-  mermaid.initialize({
-    startOnLoad: true,
-    theme: 'base',
-    themeVariables: {
-      primaryColor: '#EFF6FF',
-      primaryTextColor: '#1E293B',
-      primaryBorderColor: '#BFDBFE',
-      lineColor: '#94A3B8',
-      secondaryColor: '#F8FAFC',
-      tertiaryColor: '#F1F5F9',
-      fontFamily: 'Inter, sans-serif',
-      fontSize: '13px',
-    },
-    flowchart: {
-      htmlLabels: true,
-      curve: 'basis',
-      padding: 16,
-      nodeSpacing: 30,
-      rankSpacing: 40,
-    },
-    securityLevel: 'loose',
-  });
-
-  // ── Pan/Zoom (lazy-initialized per tab) ──
-  const panZoomInstances = {};
-
-  function initPanZoomFor(id) {
-    // Skip if already initialized
-    if (panZoomInstances[id]) return;
-
-    const container = document.getElementById(`pan-${id}`);
-    if (!container) return;
-    const svg = container.querySelector('svg');
-    if (!svg) return;
-
-    // Make SVG fill container
-    svg.setAttribute('width', '100%');
-    svg.setAttribute('height', '100%');
-    svg.style.minHeight = '500px';
-
-    try {
-      panZoomInstances[id] = svgPanZoom(svg, {
-        zoomEnabled: true,
-        controlIconsEnabled: false,
-        fit: true,
-        center: true,
-        minZoom: 0.3,
-        maxZoom: 5,
-        zoomScaleSensitivity: 0.3,
-        panEnabled: true,
-      });
-    } catch(e) {
-      console.warn(`Pan-zoom init failed for ${id}:`, e);
-    }
-  }
-
-  function zoomIn(id) { if (panZoomInstances[id]) panZoomInstances[id].zoomIn(); }
-  function zoomOut(id) { if (panZoomInstances[id]) panZoomInstances[id].zoomOut(); }
-  function resetZoom(id) {
-    if (panZoomInstances[id]) {
-      panZoomInstances[id].resetZoom();
-      panZoomInstances[id].center();
-      panZoomInstances[id].fit();
-    }
-  }
-
-  // ── View Switching ──
-  function switchView(viewId) {
-    // Update tabs
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-    event.target.classList.add('active');
-
-    // Show/hide diagrams
-    document.querySelectorAll('.diagram-container').forEach(d => d.classList.remove('active'));
-    document.getElementById(`view-${viewId}`).classList.add('active');
-
-    // Lazy-init pan-zoom after the container is visible
-    setTimeout(() => {
-      initPanZoomFor(viewId);
-      if (panZoomInstances[viewId]) {
-        panZoomInstances[viewId].resize();
-        panZoomInstances[viewId].fit();
-        panZoomInstances[viewId].center();
-      }
-    }, 200);
-  }
-
-  // Init only the visible (overview) tab after mermaid renders
-  window.addEventListener('load', () => {
-    setTimeout(() => initPanZoomFor('overview'), 1500);
+  document.querySelectorAll('.tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      document.querySelectorAll('.diagram').forEach(d => d.classList.remove('active'));
+      document.getElementById('view-' + tab.dataset.view).classList.add('active');
+    });
   });
 </script>
 </body>
