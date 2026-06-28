@@ -203,6 +203,165 @@ async def get_stats(db: Session = Depends(get_db)):
     )
 
 
+@router.get("/analytics")
+async def get_analytics(db: Session = Depends(get_db)):
+    """Rich analytics data for the analytics dashboard."""
+    submissions = db.query(Submission).filter(Submission.status == "complete").all()
+
+    # Processing time stats
+    times = [s.processing_duration_ms / 1000 for s in submissions if s.processing_duration_ms]
+    avg_time = sum(times) / len(times) if times else 0
+    min_time = min(times) if times else 0
+    max_time = max(times) if times else 0
+
+    # AI cost stats
+    costs = [s.ai_cost_usd or 0 for s in submissions]
+    total_cost = sum(costs)
+    avg_cost = total_cost / len(costs) if costs else 0
+
+    # Token stats
+    total_input = sum(s.ai_input_tokens or 0 for s in submissions)
+    total_output = sum(s.ai_output_tokens or 0 for s in submissions)
+    total_calls = sum(s.ai_calls_count or 0 for s in submissions)
+
+    # Rule pass/fail breakdown
+    rules = db.query(RuleResult).all()
+    rule_stats = {}
+    for r in rules:
+        if r.rule_id not in rule_stats:
+            rule_stats[r.rule_id] = {"pass": 0, "fail": 0, "warning": 0, "info": 0}
+        result_key = r.result.lower() if r.result else "info"
+        if result_key in rule_stats[r.rule_id]:
+            rule_stats[r.rule_id][result_key] += 1
+
+    # Decision breakdown
+    decisions = {"accept": 0, "decline": 0, "refer": 0}
+    for s in submissions:
+        if s.overall_decision in decisions:
+            decisions[s.overall_decision] += 1
+
+    # Submission timeline (last 30 submissions)
+    timeline = []
+    for s in sorted(submissions, key=lambda x: x.created_at or datetime.min)[-30:]:
+        timeline.append({
+            "id": s.id[:8],
+            "company": s.email_subject or "Unknown",
+            "decision": s.overall_decision,
+            "time_seconds": round((s.processing_duration_ms or 0) / 1000, 1),
+            "cost_usd": round(s.ai_cost_usd or 0, 4),
+            "ai_calls": s.ai_calls_count or 0,
+            "date": s.created_at.isoformat() if s.created_at else None,
+        })
+
+    # Document type breakdown
+    doc_types = {}
+    docs = db.query(Document).filter(Document.classified_type.isnot(None)).all()
+    for d in docs:
+        t = d.classified_type or "unknown"
+        doc_types[t] = doc_types.get(t, 0) + 1
+
+    return {
+        "summary": {
+            "total_submissions": len(submissions),
+            "avg_processing_time": round(avg_time, 1),
+            "min_processing_time": round(min_time, 1),
+            "max_processing_time": round(max_time, 1),
+            "total_ai_cost": round(total_cost, 4),
+            "avg_ai_cost": round(avg_cost, 4),
+            "total_input_tokens": total_input,
+            "total_output_tokens": total_output,
+            "total_ai_calls": total_calls,
+        },
+        "decisions": decisions,
+        "rule_stats": rule_stats,
+        "timeline": timeline,
+        "document_types": doc_types,
+    }
+
+
+@router.get("/logs")
+async def get_logs(limit: int = 200, db: Session = Depends(get_db)):
+    """Return audit logs across all submissions for the logs viewer."""
+    logs = (
+        db.query(AuditLog, Submission.email_subject)
+        .join(Submission, AuditLog.submission_id == Submission.id, isouter=True)
+        .order_by(AuditLog.timestamp.desc())
+        .limit(limit)
+        .all()
+    )
+    return [
+        {
+            "id": log.AuditLog.id,
+            "submission_id": log.AuditLog.submission_id,
+            "submission_name": log.email_subject or "Unknown",
+            "action": log.AuditLog.action,
+            "details": log.AuditLog.details,
+            "step_number": log.AuditLog.step_number,
+            "timestamp": log.AuditLog.timestamp.isoformat() if log.AuditLog.timestamp else None,
+            "duration_ms": log.AuditLog.duration_ms,
+        }
+        for log in logs
+    ]
+
+
+@router.get("/health")
+async def health_check(db: Session = Depends(get_db)):
+    """System health check for the health dashboard."""
+    import time
+
+    # Database check
+    try:
+        db_start = time.time()
+        db.query(Submission).first()
+        db_ms = round((time.time() - db_start) * 1000, 1)
+        db_status = "healthy"
+    except Exception as e:
+        db_ms = 0
+        db_status = f"error: {e}"
+
+    # Check Gemini connectivity
+    gemini_status = "unknown"
+    try:
+        api_key = os.environ.get("GEMINI_API_KEY") or settings.GEMINI_API_KEY
+        gemini_status = "configured" if api_key and len(api_key) > 10 else "not configured"
+    except Exception:
+        gemini_status = "not configured"
+
+    # Disk space for storage
+    storage_path = settings.LOCAL_STORAGE_PATH
+    import shutil
+    try:
+        usage = shutil.disk_usage(storage_path)
+        disk_free_gb = round(usage.free / (1024**3), 1)
+        disk_total_gb = round(usage.total / (1024**3), 1)
+    except Exception:
+        disk_free_gb = 0
+        disk_total_gb = 0
+
+    # Count items
+    total_subs = db.query(Submission).count()
+    total_docs = db.query(Document).count()
+    processing = db.query(Submission).filter(Submission.status == "processing").count()
+
+    return {
+        "status": "healthy" if db_status == "healthy" else "degraded",
+        "database": {"status": db_status, "latency_ms": db_ms},
+        "ai_service": {"status": gemini_status, "model": "gemini-2.0-flash"},
+        "storage": {
+            "path": storage_path,
+            "disk_free_gb": disk_free_gb,
+            "disk_total_gb": disk_total_gb,
+        },
+        "counts": {
+            "submissions": total_subs,
+            "documents": total_docs,
+            "currently_processing": processing,
+        },
+        "version": "1.0.0",
+        "uptime": "active",
+    }
+
+
 @router.get("/{submission_id}", response_model=SubmissionDetailResponse)
 async def get_submission(submission_id: str, db: Session = Depends(get_db)):
     submission = db.query(Submission).filter(Submission.id == submission_id).first()

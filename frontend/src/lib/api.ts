@@ -63,3 +63,12 @@ export const updateRuleConfig = (ruleId: string, body: { enabled?: boolean; seve
 
 export const resetRulesConfig = () =>
   api<{ status: string }>("/api/submissions/meta/rules-config/reset", { method: "POST" });
+
+export const getAnalytics = () =>
+  api<any>("/api/submissions/analytics");
+
+export const getLogs = (limit = 200) =>
+  api<any[]>(`/api/submissions/logs?limit=${limit}`);
+
+export const getHealth = () =>
+  api<any>("/api/submissions/health");
