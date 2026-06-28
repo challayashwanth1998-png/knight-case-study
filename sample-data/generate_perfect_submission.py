@@ -131,7 +131,7 @@ def create_application_pdf():
     e.append(Paragraph("COVERAGE REQUESTED", s["heading"]))
     e.append(_info_table([
         ["Auto Liability:", "$1,000,000 CSL"],
-        ["Physical Damage:", "Not Requested - Not Applicable"],
+        ["Physical Damage:", "Yes — Comprehensive & Collision, ACV basis"],
         ["Cargo Coverage:", "Yes - $100,000"],
         ["General Liability:", "No"],
         ["Medical Payments:", "Yes - $5,000"],
@@ -158,16 +158,25 @@ def create_application_pdf():
         ["Effective Date:", "September 1, 2024"],
         ["Expiration Date:", "September 1, 2026"],
         ["Current Premium:", "$185,000"],
-        ["Cancellations:", "None"],
-        ["Non-Renewals:", "None"],
+        ["Cancelled or Non-Renewed:", "No — continuous coverage since 2018"],
+        ["Cancellation Reason:", "N/A"],
     ]))
 
     # ── Safety ──
     e.append(Paragraph("SAFETY & COMPLIANCE", s["heading"]))
     e.append(_info_table([
-        ["Drug Testing:", "Yes — random quarterly testing"],
-        ["Safety Program:", "Monthly safety meetings, dash cameras, ELD compliant"],
-        ["Hiring Standards:", "2+ years CDL experience, clean MVR, current DOT physical"],
+        ["Employment Background Check:", "Yes"],
+        ["Pre-Employment Drug Test:", "Yes — DOT 5-panel"],
+        ["Criminal Background Check:", "Yes"],
+        ["MVR Review (Pre-Employment):", "Yes"],
+        ["Annual MVR Review:", "Yes"],
+        ["Road Test:", "Yes — all new hires"],
+        ["Telematics / GPS:", "Yes — Samsara fleet tracking on all units"],
+        ["Safety Director:", "Yes — James Mitchell (Owner/Safety Director)"],
+        ["Drug Testing Program:", "Yes — random quarterly DOT testing"],
+        ["Safety Meetings:", "Yes — monthly, documented"],
+        ["Dash Cameras:", "Yes — forward and driver-facing on all trucks"],
+        ["ELD Compliance:", "Yes — fully compliant"],
     ]))
 
     doc.build(e)
@@ -201,11 +210,11 @@ def create_driver_roster_xlsx():
         cell.font = hf; cell.fill = hfill; cell.alignment = cen; cell.border = bd
 
     drivers = [
-        [1, "James Mitchell",    "1978-04-12", 48, "TN-88234591", "TN", "A", 18, "2015-06-01", "None", "None", "Active"],
-        [2, "Robert Williams",   "1985-09-22", 40, "TN-77123488", "TN", "A", 12, "2018-03-15", "None", "None", "Active"],
-        [3, "David Thompson",    "1990-01-30", 36, "AL-55987234", "AL", "A",  8, "2020-01-10", "None", "None", "Active"],
-        [4, "Michael Garcia",    "1982-07-15", 43, "AR-44321876", "AR", "A", 15, "2016-09-01", "None", "None", "Active"],
-        [5, "Kevin Brown",       "1988-11-05", 37, "TN-99876543", "TN", "A", 10, "2019-07-20", "None", "None", "Active"],
+        [1, "James Mitchell",    "1978-04-12", 48, "TN-88234591", "TN", "A", 18, "2015-06-01", 0, 0, "Active"],
+        [2, "Robert Williams",   "1985-09-22", 40, "TN-77123488", "TN", "A", 12, "2018-03-15", 0, 0, "Active"],
+        [3, "David Thompson",    "1990-01-30", 36, "AL-55987234", "AL", "A",  8, "2020-01-10", 0, 0, "Active"],
+        [4, "Michael Garcia",    "1982-07-15", 43, "AR-44321876", "AR", "A", 15, "2016-09-01", 0, 0, "Active"],
+        [5, "Kevin Brown",       "1988-11-05", 37, "TN-99876543", "TN", "A", 10, "2019-07-20", 0, 0, "Active"],
     ]
 
     gf = PatternFill(start_color="DCFCE7", end_color="DCFCE7", fill_type="solid")
@@ -257,11 +266,11 @@ def create_vehicle_schedule_xlsx():
         cell.font = hf; cell.fill = hfill; cell.alignment = cen; cell.border = bd
 
     vehicles = [
-        [1, 2022, "Freightliner Cascadia", "3AKJHHDR5NSLA1234", "Semi-Truck (Sleeper)", "80,000 lbs", "$125,000"],
-        [2, 2021, "Kenworth T680",         "1XKYD49X1MJ456789", "Semi-Truck (Sleeper)", "80,000 lbs", "$115,000"],
-        [3, 2023, "Peterbilt 579",         "2NP2HN0X8PT234567", "Semi-Truck (Day Cab)", "80,000 lbs", "$140,000"],
-        [4, 2022, "Volvo VNL 860",         "4V4NC9EH3NN345678", "Semi-Truck (Sleeper)", "80,000 lbs", "$130,000"],
-        [5, 2020, "International LT",      "3HSDJAPR5LN567890", "Semi-Truck (Day Cab)", "80,000 lbs", "$95,000"],
+        ["T-101", 2022, "Freightliner Cascadia", "3AKJHHDR5NSLA1234", "Semi-Truck (Sleeper)", "80,000 lbs", "$125,000"],
+        ["T-102", 2021, "Kenworth T680",         "1XKYD49X1MJ456789", "Semi-Truck (Sleeper)", "80,000 lbs", "$115,000"],
+        ["T-103", 2023, "Peterbilt 579",         "2NP2HN0X8PT234567", "Semi-Truck (Day Cab)", "80,000 lbs", "$140,000"],
+        ["T-104", 2022, "Volvo VNL 860",         "4V4NC9EH3NN345678", "Semi-Truck (Sleeper)", "80,000 lbs", "$130,000"],
+        ["T-105", 2020, "International LT",      "3HSDJAPR5LN567890", "Semi-Truck (Day Cab)", "80,000 lbs", "$95,000"],
     ]
     for ri, v in enumerate(vehicles, 5):
         for ci, val in enumerate(v, 1):
