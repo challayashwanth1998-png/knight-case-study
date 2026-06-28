@@ -266,12 +266,13 @@ def call_gemini_vision_batch(
             text = response.text
             text = _clean_json_fences(text)
 
-            input_tokens, output_tokens = _extract_token_counts(response)
-            cost = _calculate_cost(input_tokens, output_tokens)
+            input_tokens, output_tokens, thinking_tokens = _extract_token_counts(response)
+            cost = _calculate_cost(input_tokens, output_tokens, thinking_tokens)
 
             call_metrics = AICallMetrics(
                 input_tokens=input_tokens,
                 output_tokens=output_tokens,
+                thinking_tokens=thinking_tokens,
                 cost_usd=cost,
                 latency_ms=latency_ms,
                 step_name=step_name,
@@ -282,7 +283,7 @@ def call_gemini_vision_batch(
 
             logger.info(
                 f"Gemini vision BATCH ({step_name}, {len(images)} images): "
-                f"{input_tokens}in/{output_tokens}out tokens, "
+                f"{input_tokens}in/{output_tokens}out/{thinking_tokens}think tokens, "
                 f"${cost:.5f}, {latency_ms}ms"
             )
             return text
@@ -333,12 +334,13 @@ def call_gemini_vision(
             text = response.text
             text = _clean_json_fences(text)
 
-            input_tokens, output_tokens = _extract_token_counts(response)
-            cost = _calculate_cost(input_tokens, output_tokens)
+            input_tokens, output_tokens, thinking_tokens = _extract_token_counts(response)
+            cost = _calculate_cost(input_tokens, output_tokens, thinking_tokens)
 
             call_metrics = AICallMetrics(
                 input_tokens=input_tokens,
                 output_tokens=output_tokens,
+                thinking_tokens=thinking_tokens,
                 cost_usd=cost,
                 latency_ms=latency_ms,
                 step_name=step_name,
@@ -350,7 +352,7 @@ def call_gemini_vision(
 
             logger.info(
                 f"Gemini vision call ({step_name}): "
-                f"{input_tokens}in/{output_tokens}out tokens, "
+                f"{input_tokens}in/{output_tokens}out/{thinking_tokens}think tokens, "
                 f"${cost:.5f}, {latency_ms}ms"
             )
 
