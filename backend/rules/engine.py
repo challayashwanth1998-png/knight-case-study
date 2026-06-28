@@ -81,6 +81,7 @@ class RulesEngine:
             {"rule_id": "SUB-003", "rule_name": "Current Loss Runs Required", "category": "submission", "severity": "high", "description": "Current loss runs valued within 60 days must be provided."},
             {"rule_id": "SUB-004", "rule_name": "3 Prior Years Loss Runs", "category": "submission", "severity": "high", "description": "At least 3 prior years of loss history must be provided."},
             {"rule_id": "SUB-005", "rule_name": "4 IFTA Quarters Required", "category": "submission", "severity": "high", "description": "The most recent 4 quarters of IFTA reports must be submitted."},
+            {"rule_id": "SUB-008", "rule_name": "Driver License Documents Required", "category": "submission", "severity": "high", "description": "Driver license (CDL) images must be provided for driver eligibility verification."},
             # IFTA
             {"rule_id": "IFTA-001", "rule_name": "Fleet MPG Validation", "category": "ifta", "severity": "medium", "description": "Fleet MPG should be within a reasonable range (4.0-9.0 MPG for semi-trucks)."},
             {"rule_id": "IFTA-002", "rule_name": "Company Name Consistency", "category": "ifta", "severity": "medium", "description": "Company name on IFTA reports should be consistent across all quarters."},

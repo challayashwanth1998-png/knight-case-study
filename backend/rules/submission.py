@@ -70,4 +70,19 @@ def check_submission_completeness(
             "FAIL", "high", "No equipment schedule found.", {},
         ))
 
+    # SUB-008: Driver license documents for CDL verification
+    if "drivers_license" not in document_types:
+        results.append(RuleEvaluation(
+            "SUB-008", "Driver License Documents Provided", "submission",
+            "FAIL", "high",
+            "No driver license (CDL) documents found. Required for driver eligibility verification.",
+            {"cdl_docs_present": False},
+        ))
+    else:
+        results.append(RuleEvaluation(
+            "SUB-008", "Driver License Documents Provided", "submission",
+            "PASS", "low", "Driver license documents provided for CDL verification.",
+            {"cdl_docs_present": True},
+        ))
+
     return results

@@ -245,8 +245,8 @@ Return a JSON array starting with the overall decision recommendation:"""
             "driver_licenses": {
                 "present": "drivers_license" in doc_types,
                 "label": "Driver Licenses (CDL verification)",
-                "required": False,
-                "note": "CDL images verified via AI vision"
+                "required": True,
+                "note": "CDL images required for driver verification"
             },
         }
 
