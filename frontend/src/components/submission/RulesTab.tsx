@@ -17,9 +17,49 @@ const RESULT_COLOR: Record<string, string> = {
 
 export default function RulesTab({ rules }: Props) {
   const categories = [...new Set(rules.map((r) => r.category))];
+  const passCount = rules.filter(r => r.result === "PASS").length;
+  const failCount = rules.filter(r => r.result === "FAIL").length;
+  const warnCount = rules.filter(r => r.result === "WARNING").length;
+  const infoCount = rules.filter(r => r.result === "INFO").length;
+  const total = rules.length;
+  const passRate = total ? Math.round((passCount / total) * 100) : 0;
 
   return (
     <div style={{ display: "grid", gap: 20 }}>
+      {/* Summary Bar */}
+      <div style={{
+        display: "flex", gap: 12, padding: "14px 18px", background: "white",
+        border: "1px solid #E2E8F0", borderRadius: 10,
+      }}>
+        <div style={{ flex: 1, textAlign: "center" }}>
+          <div style={{ fontSize: 22, fontWeight: 800, color: "#059669" }}>{passCount}</div>
+          <div style={{ fontSize: 10, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.5px" }}>Pass</div>
+        </div>
+        <div style={{ width: 1, background: "#E2E8F0" }} />
+        <div style={{ flex: 1, textAlign: "center" }}>
+          <div style={{ fontSize: 22, fontWeight: 800, color: "#DC2626" }}>{failCount}</div>
+          <div style={{ fontSize: 10, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.5px" }}>Fail</div>
+        </div>
+        <div style={{ width: 1, background: "#E2E8F0" }} />
+        <div style={{ flex: 1, textAlign: "center" }}>
+          <div style={{ fontSize: 22, fontWeight: 800, color: "#D97706" }}>{warnCount}</div>
+          <div style={{ fontSize: 10, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.5px" }}>Warn</div>
+        </div>
+        <div style={{ width: 1, background: "#E2E8F0" }} />
+        <div style={{ flex: 1, textAlign: "center" }}>
+          <div style={{ fontSize: 22, fontWeight: 800, color: "#2563EB" }}>{infoCount}</div>
+          <div style={{ fontSize: 10, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.5px" }}>Info</div>
+        </div>
+        <div style={{ width: 1, background: "#E2E8F0" }} />
+        <div style={{ flex: 1, textAlign: "center" }}>
+          <div style={{
+            fontSize: 22, fontWeight: 800,
+            color: passRate >= 90 ? "#059669" : passRate >= 70 ? "#D97706" : "#DC2626",
+          }}>{passRate}%</div>
+          <div style={{ fontSize: 10, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.5px" }}>Pass Rate</div>
+        </div>
+      </div>
+
       {categories.map((cat) => (
         <div key={cat}>
           <h3
