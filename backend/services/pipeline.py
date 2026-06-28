@@ -744,6 +744,30 @@ def _step_rules(db, submission_id: str, unified: dict) -> None:
     engine = RulesEngine()
     evaluations = engine.evaluate_all(unified)
 
+    # ── Filename-vs-Classification discrepancy check ──
+    documents = db.query(Document).filter(Document.submission_id == submission_id).all()
+    mismatches = _check_filename_classification_mismatch(documents)
+    if mismatches:
+        mismatch_details = "; ".join(
+            f"'{m['filename']}' → classified as {m['classified_as']} (filename suggests {m['expected']})"
+            for m in mismatches
+        )
+        from rules.base import RuleEvaluation
+        evaluations.append(RuleEvaluation(
+            "SUB-009", "Filename-Content Consistency", "submission",
+            "WARNING", "medium",
+            f"{len(mismatches)} document(s) have filenames that don't match their content: {mismatch_details}",
+            {"mismatches": mismatches},
+        ))
+    else:
+        from rules.base import RuleEvaluation
+        evaluations.append(RuleEvaluation(
+            "SUB-009", "Filename-Content Consistency", "submission",
+            "PASS", "low",
+            "All document filenames are consistent with their classified content.",
+            {},
+        ))
+
     for ev in evaluations:
         db.add(RuleResult(
             submission_id=submission_id,
@@ -797,6 +821,67 @@ def _step_decision(db, submission_id: str, unified: dict) -> None:
     logger.info(f"[{submission_id}] Decision: {decision}")
     _audit(db, submission_id, "decision", f"{decision}: {reason}", step=step)
     db.commit()
+
+
+# ─── Filename-Classification Mismatch Detection ─────────────
+
+# Map filename keywords to expected document types
+_FILENAME_HINTS = {
+    "application": "insurance_application",
+    "app_form": "insurance_application",
+    "insurance_app": "insurance_application",
+    "driver_roster": "driver_list",
+    "driver_list": "driver_list",
+    "drivers_list": "driver_list",
+    "roster": "driver_list",
+    "equipment": "equipment_list",
+    "vehicle_schedule": "equipment_list",
+    "vehicle_list": "equipment_list",
+    "loss_run": "loss_run",
+    "lossrun": "loss_run",
+    "loss_runs": "loss_run",
+    "ifta": "ifta_report",
+    "cdl": "drivers_license",
+    "license": "drivers_license",
+    "dl_": "drivers_license",
+}
+
+
+def _check_filename_classification_mismatch(documents: list) -> list:
+    """Compare original filenames against AI classification to detect discrepancies."""
+    mismatches = []
+    for doc in documents:
+        if not doc.original_filename or not doc.classified_type:
+            continue
+        # Skip DL images — they are often generically named
+        if doc.classified_type == "drivers_license":
+            continue
+
+        fname_lower = doc.original_filename.lower().replace(" ", "_").replace("-", "_")
+
+        # Find what the filename suggests
+        suggested_type = None
+        for keyword, expected_type in _FILENAME_HINTS.items():
+            if keyword in fname_lower:
+                suggested_type = expected_type
+                break
+
+        if suggested_type and suggested_type != doc.classified_type:
+            # Filename suggests one type but content is classified as another
+            type_labels = {
+                "insurance_application": "Insurance Application",
+                "driver_list": "Driver List/Roster",
+                "equipment_list": "Equipment/Vehicle Schedule",
+                "loss_run": "Loss Runs",
+                "ifta_report": "IFTA Report",
+                "drivers_license": "Driver License",
+            }
+            mismatches.append({
+                "filename": doc.original_filename,
+                "classified_as": type_labels.get(doc.classified_type, doc.classified_type),
+                "expected": type_labels.get(suggested_type, suggested_type),
+            })
+    return mismatches
 
 
 # ─── Unified Data Builder ────────────────────────────────────
