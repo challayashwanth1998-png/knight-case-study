@@ -10,6 +10,7 @@ const NAV_ITEMS = [
   { href: "/underwriter", icon: "📋", label: "Underwriter View" },
   { section: "Intelligence" },
   { href: "/analytics", icon: "📈", label: "Analytics" },
+  { href: "/compare", icon: "🔀", label: "Compare" },
   { href: "/logs", icon: "📋", label: "System Logs" },
   { href: "/health", icon: "🏥", label: "System Health" },
   { href: "/architecture", icon: "🏗️", label: "Architecture" },
