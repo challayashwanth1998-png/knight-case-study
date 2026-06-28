@@ -294,6 +294,7 @@ def _step_extract_data(db, submission_id: str, documents: list) -> None:
     extracted = 0
     ai_count = 0
     python_count = 0
+    ai_pending = []  # docs that need AI extraction
 
     for doc in documents:
         if doc.processing_status == "error" or not doc.classified_type:
@@ -320,15 +321,6 @@ def _step_extract_data(db, submission_id: str, documents: list) -> None:
                 if result:
                     python_count += 1
 
-            # Fall back to AI only for insurance_application or if Python failed
-            if not result:
-                result = extractor.extract(
-                    doc_type, doc.extracted_text or "",
-                    structured_raw, doc.original_filename
-                )
-                if result:
-                    ai_count += 1
-
             if result:
                 updated = dict(doc.extracted_data) if doc.extracted_data else {}
                 updated["extracted"] = result
@@ -337,12 +329,45 @@ def _step_extract_data(db, submission_id: str, documents: list) -> None:
                 doc.processing_status = "complete"
                 extracted += 1
                 db.commit()
-                logger.info(f"  ✅ {doc.original_filename} extracted")
+                logger.info(f"  ✅ {doc.original_filename} extracted (Python)")
+            else:
+                # Queue for parallel AI extraction
+                ai_pending.append(doc)
         except Exception as e:
             logger.error(f"  Extract error: {doc.filename}: {e}")
 
+    # Run all AI extractions IN PARALLEL
+    if ai_pending:
+        logger.info(f"  Running {len(ai_pending)} AI extractions in parallel...")
+
+        def _ai_extract(doc):
+            structured_raw = doc.extracted_data.get("structured_raw") if doc.extracted_data else None
+            return extractor.extract(
+                doc.classified_type, doc.extracted_text or "",
+                structured_raw, doc.original_filename
+            )
+
+        with ThreadPoolExecutor(max_workers=4) as executor:
+            futures = {executor.submit(_ai_extract, doc): doc for doc in ai_pending}
+            for future in as_completed(futures):
+                doc = futures[future]
+                try:
+                    result = future.result()
+                    if result:
+                        updated = dict(doc.extracted_data) if doc.extracted_data else {}
+                        updated["extracted"] = result
+                        doc.extracted_data = updated
+                        flag_modified(doc, "extracted_data")
+                        doc.processing_status = "complete"
+                        extracted += 1
+                        ai_count += 1
+                        db.commit()
+                        logger.info(f"  ✅ {doc.original_filename} extracted (AI)")
+                except Exception as e:
+                    logger.error(f"  AI extract error: {doc.filename}: {e}")
+
     _audit(db, submission_id, "step_extract_data_complete",
-           f"Extracted {extracted} docs ({python_count} Python, {ai_count} AI)", step=step)
+           f"Extracted {extracted} docs ({python_count} Python, {ai_count} AI parallel)", step=step)
     db.commit()
 
 
