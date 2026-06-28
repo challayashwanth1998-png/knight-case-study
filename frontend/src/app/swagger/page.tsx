@@ -1,21 +1,34 @@
 "use client";
 
+import { useEffect, useState } from "react";
+
 export default function SwaggerPage() {
-  const backendUrl = typeof window !== "undefined"
-    ? `${window.location.protocol}//${window.location.hostname}:8000`
-    : "http://localhost:8000";
+  const [backendUrl, setBackendUrl] = useState("");
+
+  useEffect(() => {
+    const url = `${window.location.protocol}//${window.location.hostname}:8000`;
+    setBackendUrl(url);
+    // Auto-redirect to backend docs
+    window.location.href = `${url}/docs`;
+  }, []);
 
   return (
-    <div style={{ height: "calc(100vh - 60px)", padding: 0 }}>
-      <iframe
-        src={`${backendUrl}/docs`}
-        style={{
-          width: "100%",
-          height: "100%",
-          border: "none",
-        }}
-        title="API Documentation — Swagger UI"
-      />
+    <div style={{
+      display: "flex", flexDirection: "column", alignItems: "center",
+      justifyContent: "center", minHeight: "60vh", gap: 16,
+    }}>
+      <div className="spinner" style={{ width: 28, height: 28 }} />
+      <div style={{ fontSize: 14, color: "#64748B" }}>
+        Redirecting to API Documentation...
+      </div>
+      {backendUrl && (
+        <a
+          href={`${backendUrl}/docs`}
+          style={{ fontSize: 13, color: "#3B82F6" }}
+        >
+          Click here if not redirected →
+        </a>
+      )}
     </div>
   );
 }
