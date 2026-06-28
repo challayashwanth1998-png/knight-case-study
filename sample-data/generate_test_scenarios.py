@@ -101,16 +101,41 @@ def gen_application(out_dir, company, state="TN", fein="62-7834521",
         f"<b>Mexico Border (within 50mi):</b> {'Yes' if mexico else 'No'}",
         f"<b>Number of Power Units:</b> {units}",
         f"<b>Number of Drivers:</b> {units}",
+        f"<b>Regular Drivers:</b> {units}",
+        f"<b>Part-Time Drivers:</b> 0",
+        f"<b>Owner Operators:</b> 0",
         f"<b>Estimated Annual Premium:</b> {premium}",
         f"<b>Coverage Requested:</b>",
         f"  Auto Liability: $1,000,000 CSL",
-        f"  Physical Damage: Not Requested - Not Applicable",
+        f"  Physical Damage: Not Requested",
         f"  Cargo: $100,000",
         f"<b>Base State:</b> {state}",
         f"<b>States of Operation:</b> {state}, AL, AR, VA, SC",
         f"<b>Annual Revenue:</b> $2,400,000",
         f"<b>Annual Mileage:</b> 625,000",
         f"<b>Intermodal/Container:</b> No",
+        "",
+        f"<b>PRIOR INSURANCE</b>",
+        f"<b>Current Carrier:</b> National Indemnity Insurance",
+        f"<b>Policy Number:</b> NAT-2024-TRK-77234",
+        f"<b>Effective Date:</b> January 1, 2024",
+        f"<b>Expiration Date:</b> January 1, 2026",
+        f"<b>Current Premium:</b> $165,000",
+        f"<b>Cancelled or Non-Renewed:</b> No - continuous coverage since 2018",
+        "",
+        f"<b>SAFETY & COMPLIANCE</b>",
+        f"<b>Employment Background Check:</b> Yes",
+        f"<b>Pre-Employment Drug Test:</b> Yes - DOT 5-panel",
+        f"<b>Criminal Background Check:</b> Yes",
+        f"<b>MVR Review (Pre-Employment):</b> Yes",
+        f"<b>Annual MVR Review:</b> Yes",
+        f"<b>Road Test:</b> Yes - all new hires",
+        f"<b>Telematics / GPS:</b> Yes - Samsara fleet tracking on all units",
+        f"<b>Safety Director:</b> Yes - Thomas Anderson",
+        f"<b>Drug Testing Program:</b> Yes - random quarterly DOT testing",
+        f"<b>Safety Meetings:</b> Yes - monthly, documented",
+        f"<b>Dash Cameras:</b> Yes - forward and driver-facing",
+        f"<b>ELD Compliance:</b> Yes - fully compliant",
     ]
     make_pdf(filepath, "Commercial Auto Insurance Application", paras)
     return filepath
@@ -126,7 +151,7 @@ def gen_driver_roster(out_dir, company, drivers, filename=None):
         rows.append([i, d["name"], d["dob"], d.get("age", 35),
                      d["cdl"], d["state"], d.get("cls", "A"),
                      d.get("exp", 5), d.get("hire", "2020-01-15"),
-                     d.get("violations", "None"), d.get("accidents", "None"),
+                     d.get("violations", 0), d.get("accidents", 0),
                      d.get("status", "Active")])
     make_excel(filepath, "Driver Roster", headers, rows)
     return filepath
@@ -140,7 +165,7 @@ def gen_vehicle_schedule(out_dir, company, vehicles, filename=None):
     for v in vehicles:
         rows.append([v["unit"], v["year"], v["make"], v["model"],
                      v["vin"], v.get("type", "Semi-Truck"),
-                     v.get("gvw", "80,000"), v.get("value", "$85,000")])
+                     v.get("gvw", "80,000 lbs"), v.get("value", "$95,000")])
     make_excel(filepath, "Vehicle Schedule", headers, rows)
     return filepath
 
