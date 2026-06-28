@@ -521,38 +521,37 @@ graph TB
     securityLevel: 'loose',
   });
 
-  // ── Pan/Zoom instances ──
+  // ── Pan/Zoom (lazy-initialized per tab) ──
   const panZoomInstances = {};
 
-  function initPanZoom() {
-    setTimeout(() => {
-      ['overview', 'pipeline', 'data', 'rules', 'deployment'].forEach(id => {
-        const container = document.getElementById(`pan-${id}`);
-        if (!container) return;
-        const svg = container.querySelector('svg');
-        if (!svg) return;
+  function initPanZoomFor(id) {
+    // Skip if already initialized
+    if (panZoomInstances[id]) return;
 
-        // Make SVG fill container
-        svg.setAttribute('width', '100%');
-        svg.setAttribute('height', '100%');
-        svg.style.minHeight = '500px';
+    const container = document.getElementById(`pan-${id}`);
+    if (!container) return;
+    const svg = container.querySelector('svg');
+    if (!svg) return;
 
-        try {
-          panZoomInstances[id] = svgPanZoom(svg, {
-            zoomEnabled: true,
-            controlIconsEnabled: false,
-            fit: true,
-            center: true,
-            minZoom: 0.3,
-            maxZoom: 5,
-            zoomScaleSensitivity: 0.3,
-            panEnabled: true,
-          });
-        } catch(e) {
-          console.warn(`Pan-zoom init failed for ${id}:`, e);
-        }
+    // Make SVG fill container
+    svg.setAttribute('width', '100%');
+    svg.setAttribute('height', '100%');
+    svg.style.minHeight = '500px';
+
+    try {
+      panZoomInstances[id] = svgPanZoom(svg, {
+        zoomEnabled: true,
+        controlIconsEnabled: false,
+        fit: true,
+        center: true,
+        minZoom: 0.3,
+        maxZoom: 5,
+        zoomScaleSensitivity: 0.3,
+        panEnabled: true,
       });
-    }, 1500); // Wait for mermaid to render
+    } catch(e) {
+      console.warn(`Pan-zoom init failed for ${id}:`, e);
+    }
   }
 
   function zoomIn(id) { if (panZoomInstances[id]) panZoomInstances[id].zoomIn(); }
@@ -575,18 +574,21 @@ graph TB
     document.querySelectorAll('.diagram-container').forEach(d => d.classList.remove('active'));
     document.getElementById(`view-${viewId}`).classList.add('active');
 
-    // Re-fit pan-zoom for the new view
+    // Lazy-init pan-zoom after the container is visible
     setTimeout(() => {
+      initPanZoomFor(viewId);
       if (panZoomInstances[viewId]) {
         panZoomInstances[viewId].resize();
         panZoomInstances[viewId].fit();
         panZoomInstances[viewId].center();
       }
-    }, 100);
+    }, 200);
   }
 
-  // Init after page load
-  window.addEventListener('load', initPanZoom);
+  // Init only the visible (overview) tab after mermaid renders
+  window.addEventListener('load', () => {
+    setTimeout(() => initPanZoomFor('overview'), 1500);
+  });
 </script>
 </body>
 </html>
