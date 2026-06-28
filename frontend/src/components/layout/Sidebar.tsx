@@ -12,6 +12,7 @@ const NAV_ITEMS = [
   { href: "/analytics", icon: "📈", label: "Analytics" },
   { href: "/logs", icon: "📋", label: "System Logs" },
   { href: "/health", icon: "🏥", label: "System Health" },
+  { href: "/architecture", icon: "🏗️", label: "Architecture" },
   { section: "Reference" },
   { href: "/rules", icon: "⚖️", label: "Rules Engine" },
   { href: "/guidelines", icon: "📖", label: "Guidelines" },
