@@ -190,6 +190,39 @@
     background: var(--blue-50); border: 1px solid var(--blue-200);
     font-size: 10px; font-weight: 600; color: var(--blue-700);
   }
+
+  /* ─── Text Content Sections ─── */
+  .section-title {
+    font-size: 14px; font-weight: 700; color: var(--slate-900);
+    margin-bottom: 12px; display: flex; align-items: center; gap: 8px;
+    letter-spacing: -0.3px;
+  }
+  .section-title .num {
+    width: 24px; height: 24px; border-radius: 50%;
+    background: var(--blue-600); color: white;
+    font-size: 11px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .section-body {
+    font-size: 12px; color: var(--slate-600); line-height: 1.7;
+    padding-left: 32px;
+  }
+  .section-body strong { color: var(--slate-800); font-weight: 600; }
+  .section-body ul { margin: 6px 0; padding-left: 18px; }
+  .section-body li { margin-bottom: 4px; }
+  .section-body code {
+    background: var(--slate-100); padding: 1px 5px; border-radius: 3px;
+    font-size: 11px; font-family: 'SF Mono', 'Fira Code', monospace;
+    color: var(--blue-700); border: 1px solid var(--slate-200);
+  }
+  .assumption-box {
+    background: var(--amber-50); border: 1px solid var(--amber-200);
+    border-radius: 6px; padding: 10px 14px; margin-top: 8px;
+    font-size: 11px; color: var(--amber-600); line-height: 1.5;
+  }
+  .assumption-box strong { color: var(--amber-700); }
+  .divider { border: none; border-top: 1px solid var(--slate-200); margin: 20px 0; }
 </style>
 </head>
 <body>
@@ -207,6 +240,8 @@
   <button class="tab" data-view="pipeline">Processing Pipeline</button>
   <button class="tab" data-view="dataflow">Data Flow</button>
   <button class="tab" data-view="rules">Rules Engine</button>
+  <button class="tab" data-view="decisions">Design Decisions</button>
+  <button class="tab" data-view="security">Security & Governance</button>
   <button class="tab" data-view="deploy">Deployment</button>
 </div>
 
@@ -667,6 +702,279 @@
       <div class="legend-item"><svg width="20" height="2"><line x1="0" y1="1" x2="20" y2="1" stroke="var(--slate-400)" stroke-width="2"/></svg> Direct connection</div>
       <div class="legend-item"><svg width="20" height="2"><line x1="0" y1="1" x2="20" y2="1" stroke="var(--slate-400)" stroke-width="1.5" stroke-dasharray="4,3"/></svg> External API call</div>
       <div class="legend-item" style="margin-left:auto;">Est. cost: ~$5/month (t2.micro) + ~$0.005/submission (Gemini)</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════
+     VIEW 6: SECURITY & GOVERNANCE
+════════════════════════════════════════════════════════ -->
+<div class="view" id="view-security">
+  <div class="diagram">
+
+    <!-- Middleware Stack -->
+    <div class="layer layer-red">
+      <div class="layer-header">
+        <div class="layer-icon">🛡️</div>
+        <div class="layer-title">Security Middleware Stack <span class="layer-subtitle">— 7 layers, every request passes through</span></div>
+      </div>
+      <div class="flex gap-10">
+        <div class="node flex-1"><span class="node-icon">🔒</span><div class="node-label">Security Headers</div><div class="node-desc">X-Content-Type-Options, X-Frame-Options,<br/>CSP, X-XSS-Protection, Referrer-Policy,<br/>Permissions-Policy (OWASP compliant)</div></div>
+        <div class="node flex-1"><span class="node-icon">⏱️</span><div class="node-label">Rate Limiting</div><div class="node-desc">Sliding window per client IP<br/>120 req/min general, 10/min uploads<br/>429 Too Many Requests on breach</div></div>
+        <div class="node flex-1"><span class="node-icon">🔑</span><div class="node-label">API Key Auth</div><div class="node-desc">X-API-Key header validation<br/>Constant-time comparison (timing-safe)<br/>Public vs protected endpoint routing</div></div>
+        <div class="node flex-1"><span class="node-icon">🌐</span><div class="node-label">CORS Hardening</div><div class="node-desc">Whitelisted origins only<br/>No more allow_origins=["*"]<br/>Restricted HTTP methods</div></div>
+      </div>
+      <div class="flex gap-10" style="margin-top:10px;">
+        <div class="node flex-1"><span class="node-icon">🆔</span><div class="node-label">Request ID</div><div class="node-desc">Unique X-Request-ID on every response<br/>Correlates logs across services<br/>Enables distributed tracing</div></div>
+        <div class="node flex-1"><span class="node-icon">📝</span><div class="node-label">Request Logging</div><div class="node-desc">Method, path, status, duration, client IP<br/>X-Response-Time header on every response<br/>Structured format for log aggregation</div></div>
+        <div class="node flex-1"><span class="node-icon">📦</span><div class="node-label">GZip Compression</div><div class="node-desc">Compresses responses > 500 bytes<br/>~60% smaller payloads<br/>Faster page loads over network</div></div>
+        <div class="node flex-1"><span class="node-icon">✅</span><div class="node-label">Input Validation</div><div class="node-desc">File type allowlist (14 types)<br/>25MB size limit, 20 files max<br/>Path traversal & filename sanitization</div></div>
+      </div>
+    </div>
+
+    <div class="connector"><svg width="2" height="12"><line x1="1" y1="0" x2="1" y2="12" stroke="var(--red-500)" stroke-width="2"/></svg></div>
+
+    <!-- Data Protection -->
+    <div class="layer layer-purple">
+      <div class="layer-header">
+        <div class="layer-icon">🔐</div>
+        <div class="layer-title">Data Protection & Privacy <span class="layer-subtitle">— PII handling & data governance</span></div>
+      </div>
+      <div class="flex gap-10">
+        <div class="node flex-1"><span class="node-icon">😷</span><div class="node-label">PII Masking</div><div class="node-desc">Auto-masks SSN, DOB, license numbers,<br/>phone, email in all log output<br/>Regex-based pattern detection</div></div>
+        <div class="node flex-1"><span class="node-icon">📊</span><div class="node-label">Data Classification</div><div class="node-desc">X-Data-Classification: CONFIDENTIAL<br/>X-PII-Present: true<br/>X-Data-Retention: 7-years</div></div>
+        <div class="node flex-1"><span class="node-icon">🧹</span><div class="node-label">Log Sanitization</div><div class="node-desc">PIILoggingFilter on root logger<br/>Strips PII before CloudWatch<br/>Name masking (first initial only)</div></div>
+        <div class="node flex-1"><span class="node-icon">📁</span><div class="node-label">File Security</div><div class="node-desc">SHA-256 hash deduplication<br/>Safe filename sanitization<br/>Isolated storage per submission</div></div>
+      </div>
+    </div>
+
+    <div class="connector"><svg width="2" height="12"><line x1="1" y1="0" x2="1" y2="12" stroke="var(--purple-500)" stroke-width="2"/></svg></div>
+
+    <!-- Audit & Monitoring -->
+    <div class="layer layer-blue">
+      <div class="layer-header">
+        <div class="layer-icon">📝</div>
+        <div class="layer-title">Audit Trail & Monitoring <span class="layer-subtitle">— Complete traceability</span></div>
+      </div>
+      <div class="flex gap-10">
+        <div class="node flex-1"><span class="node-icon">🗃️</span><div class="node-label">Audit Log DB</div><div class="node-desc">Every action tracked in audit_logs table<br/>Timestamp, action, entity, details<br/>Immutable append-only records</div></div>
+        <div class="node flex-1"><span class="node-icon">☁️</span><div class="node-label">AWS CloudWatch</div><div class="node-desc">Centralized log aggregation<br/>Buffered batch upload (10s intervals)<br/>Log group: /knight-insurance/backend</div></div>
+        <div class="node flex-1"><span class="node-icon">📡</span><div class="node-label">Health Monitoring</div><div class="node-desc">/api/health endpoint<br/>DB latency, AI status, disk usage<br/>Container health checks</div></div>
+        <div class="node flex-1"><span class="node-icon">📈</span><div class="node-label">Analytics Dashboard</div><div class="node-desc">AI cost tracking per submission<br/>Token usage, processing times<br/>Rule pass/fail trend analysis</div></div>
+      </div>
+    </div>
+
+    <div class="connector"><svg width="2" height="12"><line x1="1" y1="0" x2="1" y2="12" stroke="var(--blue-500)" stroke-width="2"/></svg></div>
+
+    <!-- AWS Services -->
+    <div class="layer layer-amber">
+      <div class="layer-header">
+        <div class="layer-icon">☁️</div>
+        <div class="layer-title">AWS Security Services <span class="layer-subtitle">— Cloud infrastructure security</span></div>
+      </div>
+      <div class="flex gap-10">
+        <div class="node flex-1"><span class="node-icon">🛡️</span><div class="node-label">EC2 Security Group</div><div class="node-desc">Inbound: SSH (22), HTTP (3000), API (8000)<br/>Outbound: HTTPS + IMAPS only<br/>No public DB or storage access</div></div>
+        <div class="node flex-1"><span class="node-icon">🔑</span><div class="node-label">IAM Roles</div><div class="node-desc">Least-privilege access policies<br/>S3: PutObject/GetObject only<br/>CloudWatch: PutLogEvents only</div></div>
+        <div class="node flex-1"><span class="node-icon">📦</span><div class="node-label">S3 Encryption</div><div class="node-desc">Server-side encryption (SSE-S3)<br/>Versioning enabled for audit<br/>Lifecycle rules for retention</div></div>
+        <div class="node flex-1"><span class="node-icon">🔒</span><div class="node-label">Secrets Management</div><div class="node-desc">.env with GEMINI_API_KEY, IMAP creds<br/>Not committed to git (.gitignore)<br/>Docker env_file injection</div></div>
+      </div>
+    </div>
+
+    <div class="connector"><svg width="2" height="12"><line x1="1" y1="0" x2="1" y2="12" stroke="var(--amber-500)" stroke-width="2"/></svg></div>
+
+    <!-- Scalability -->
+    <div class="layer layer-green">
+      <div class="layer-header">
+        <div class="layer-icon">⚡</div>
+        <div class="layer-title">Scalability & Performance <span class="layer-subtitle">— Optimized for speed</span></div>
+      </div>
+      <div class="flex gap-10">
+        <div class="node flex-1"><span class="node-icon">💾</span><div class="node-label">Response Caching</div><div class="node-desc">In-memory TTL cache (30s) for stats<br/>Avoids DB hit on every dashboard load<br/>Cache invalidation on new submissions</div></div>
+        <div class="node flex-1"><span class="node-icon">🧵</span><div class="node-label">Thread Pooling</div><div class="node-desc">ThreadPoolExecutor for parallel AI calls<br/>4 simultaneous risk analyses<br/>Parallel image OCR processing</div></div>
+        <div class="node flex-1"><span class="node-icon">📦</span><div class="node-label">GZip Compression</div><div class="node-desc">All responses > 500B compressed<br/>~60% bandwidth reduction<br/>Transparent to clients</div></div>
+        <div class="node flex-1"><span class="node-icon">🚀</span><div class="node-label">Deferred Loading</div><div class="node-desc">Heavy imports deferred to first request<br/>Fast cold start under memory pressure<br/>Lazy model/pipeline initialization</div></div>
+      </div>
+    </div>
+
+    <!-- Legend -->
+    <div class="legend">
+      <span class="legend-title">Security Stack:</span>
+      <div class="legend-item"><div class="legend-swatch" style="background:var(--red-100);border-color:var(--red-300);"></div> Middleware</div>
+      <div class="legend-item"><div class="legend-swatch" style="background:var(--purple-100);border-color:var(--purple-300);"></div> Data Protection</div>
+      <div class="legend-item"><div class="legend-swatch" style="background:var(--blue-100);border-color:var(--blue-300);"></div> Audit</div>
+      <div class="legend-item"><div class="legend-swatch" style="background:var(--amber-100);border-color:var(--amber-300);"></div> AWS</div>
+      <div class="legend-item"><div class="legend-swatch" style="background:var(--green-100);border-color:var(--green-300);"></div> Performance</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════
+     VIEW 7: DESIGN DECISIONS & ASSUMPTIONS
+════════════════════════════════════════════════════════ -->
+<div class="view" id="view-decisions">
+  <div class="diagram">
+
+    <!-- 1. Document Classification -->
+    <div class="layer layer-purple">
+      <div class="section-title"><span class="num">1</span> Document Classification</div>
+      <div class="section-body">
+        <strong>Approach:</strong> Content-based classification using Google Gemini AI. All documents in a submission are batched into a single API call for efficiency.
+        <ul>
+          <li><strong>Never uses filenames</strong> — filenames are often misleading (e.g., "Drivers.xlsx" might contain vehicle data). The classifier analyzes actual document content only.</li>
+          <li>Supports <strong>11 document types</strong>: insurance application, driver list, equipment list, IFTA report, loss run, MVR, driver’s license, certificate of insurance, financial document, DOT safety record, and “other.”</li>
+          <li>Each classification includes a <strong>confidence score</strong> (0–100) and <strong>reasoning</strong> so underwriters can verify why a document was categorized.</li>
+          <li>Batching all documents in one call reduces API costs and latency vs. classifying each individually.</li>
+        </ul>
+        <div class="assumption-box">
+          <strong>⚠ Assumption:</strong> Filenames are intentionally unreliable (per guidelines). The system treats filenames as opaque identifiers and never uses them for classification or routing decisions.
+        </div>
+      </div>
+    </div>
+
+    <hr class="divider"/>
+
+    <!-- 2. Data Extraction -->
+    <div class="layer layer-green">
+      <div class="section-title"><span class="num" style="background:var(--green-600);">2</span> Data Extraction Strategy</div>
+      <div class="section-body">
+        <strong>Approach:</strong> Hybrid extraction — Python regex + structured parsing for machine-readable docs, Gemini AI only where needed.
+        <ul>
+          <li><strong>Excel/CSV files</strong> → Parsed with <code>openpyxl</code> / <code>pandas</code> + regex patterns. <strong>Zero AI cost.</strong></li>
+          <li><strong>PDF text</strong> → Extracted with <code>PyMuPDF</code> (fitz), then structured with regex. Zero AI cost for text-based PDFs.</li>
+          <li><strong>CDL images</strong> → Gemini Vision OCR. Only images require AI calls for extraction.</li>
+          <li>Each document type has a <strong>specific extraction schema</strong> (e.g., insurance applications extract 50+ fields including business info, coverage, safety features).</li>
+          <li><strong>Deduplication:</strong> Cross-source name matching merges driver records from multiple documents (driver list + CDL photos + MVRs) into unified records.</li>
+        </ul>
+        <div class="assumption-box">
+          <strong>⚠ Assumption:</strong> Cost efficiency matters. We minimize AI API calls by using free local extraction (regex, openpyxl) for structured formats and reserving AI for unstructured content (images, ambiguous text).
+        </div>
+      </div>
+    </div>
+
+    <hr class="divider"/>
+
+    <!-- 3. Poor Quality Documents -->
+    <div class="layer layer-amber">
+      <div class="section-title"><span class="num" style="background:var(--amber-600);">3</span> Handling Poor-Quality Documents</div>
+      <div class="section-body">
+        <strong>Approach:</strong> Graceful degradation with fallback chains and explicit null handling.
+        <ul>
+          <li><strong>Missing text:</strong> If PyMuPDF extracts empty text from a PDF (scanned document), the system falls back to Gemini Vision OCR using the raw file bytes.</li>
+          <li><strong>Partial data:</strong> Extraction schemas use <code>null</code> for any missing values. The pipeline continues even if key fields are missing — the rules engine flags gaps as warnings.</li>
+          <li><strong>Corrupted files:</strong> Each file type processor wraps extraction in try/catch. A corrupt Excel file won’t crash the pipeline; the document is logged as “extraction_failed” and processing continues.</li>
+          <li><strong>Low confidence:</strong> If classification confidence is below threshold, the document is still processed but flagged in the underwriter view for manual review.</li>
+          <li><strong>Image quality:</strong> CDL images processed through ThreadPoolExecutor in parallel. If Gemini Vision can’t read a license, default fields are set to null and rules flag missing CDL data.</li>
+        </ul>
+        <div class="assumption-box">
+          <strong>⚠ Assumption:</strong> Real-world submissions will have incomplete data. The system is designed to produce the best possible assessment with whatever data is available, rather than rejecting submissions outright for missing documents.
+        </div>
+      </div>
+    </div>
+
+    <hr class="divider"/>
+
+    <!-- 4. Conflicting Information -->
+    <div class="layer layer-red">
+      <div class="section-title"><span class="num" style="background:var(--red-600);">4</span> Identifying Conflicting Information</div>
+      <div class="section-body">
+        <strong>Approach:</strong> AI-powered cross-document conflict detection as a dedicated pipeline step.
+        <ul>
+          <li>After data extraction, all unified data from every document is passed to a <strong>dedicated Gemini conflict analysis</strong> call.</li>
+          <li>The AI compares values across documents: driver counts on the application vs. actual driver list, vehicle counts vs. equipment schedule, stated addresses, etc.</li>
+          <li>Each conflict includes: <strong>severity</strong> (critical/high/medium/low), <strong>type</strong>, <strong>description</strong>, <strong>source documents</strong>, and <strong>conflicting values found</strong>.</li>
+          <li>Critical conflicts (e.g., 10 drivers listed but only 6 CDLs provided) directly impact the risk score and can trigger a <strong>REFER</strong> decision.</li>
+          <li>Conflicts are displayed prominently in the underwriter view with color-coded severity indicators.</li>
+        </ul>
+        <div class="assumption-box">
+          <strong>⚠ Assumption:</strong> Inconsistencies between documents are common and expected in insurance submissions. Some are benign (minor name spelling differences), others are critical (missing CDLs). The system surfaces all of them and lets the rules engine decide severity.
+        </div>
+      </div>
+    </div>
+
+    <hr class="divider"/>
+
+    <!-- 5. AI Recommendations -->
+    <div class="layer layer-blue">
+      <div class="section-title"><span class="num">5</span> How AI Recommendations Are Generated</div>
+      <div class="section-body">
+        <strong>Approach:</strong> 4 parallel Gemini API calls for comprehensive risk assessment, followed by a recommendation synthesis step.
+        <ul>
+          <li><strong>Company Risk:</strong> Evaluates business profile, DOT/MC number validity, years in operation, operation type, radius of operation.</li>
+          <li><strong>Driver Risk:</strong> CDL status, violation history, age analysis, experience years, driver-to-vehicle ratio.</li>
+          <li><strong>Fleet Analysis:</strong> Vehicle age distribution, VIN validation, fleet composition, stated values, maintenance indicators.</li>
+          <li><strong>Financial & Loss:</strong> Claims history, loss ratios, open vs. closed claims, mileage patterns, premium adequacy.</li>
+          <li>All 4 analyses run <strong>in parallel</strong> using <code>ThreadPoolExecutor</code> to minimize latency (~15s instead of ~60s sequential).</li>
+          <li>Results include a <strong>composite risk score</strong>, <strong>narrative summary</strong>, and <strong>specific recommendations</strong> (premium adjustments, coverage conditions, exclusions).</li>
+        </ul>
+        <div class="assumption-box">
+          <strong>⚠ Assumption:</strong> AI analysis is advisory only. The system generates recommendations but final underwriting decisions should always involve human review. The REFER decision exists specifically for edge cases where AI confidence is insufficient.
+        </div>
+      </div>
+    </div>
+
+    <hr class="divider"/>
+
+    <!-- 6. Business Rules -->
+    <div class="layer layer-teal">
+      <div class="section-title"><span class="num" style="background:var(--teal-600);">6</span> How Business Rules Are Applied</div>
+      <div class="section-body">
+        <strong>Approach:</strong> 21 configurable rules organized in 5 categories, evaluated against extracted + AI-analyzed data.
+        <ul>
+          <li><strong>Rule categories:</strong> Eligibility (4), Driver (5), Vehicle (4), Safety (4), Financial (4).</li>
+          <li>Each rule produces a result: <strong>PASS</strong>, <strong>FAIL</strong>, <strong>WARNING</strong>, or <strong>INFO</strong> with configurable severity.</li>
+          <li>Rules are <strong>pure Python functions</strong> — no AI calls, instant evaluation. A deterministic layer on top of probabilistic AI analysis.</li>
+          <li>Rules are <strong>configurable at runtime</strong>: enable/disable individual rules, change severity levels, adjust thresholds via API or settings UI.</li>
+          <li><strong>Decision logic:</strong> Any FAIL → DECLINE. Any WARNING (no FAILs) → REFER. All PASS → ACCEPT.</li>
+          <li>Rules with missing data default to WARNING (not FAIL) because the case study notes some documents are intentionally omitted.</li>
+        </ul>
+        <div class="assumption-box">
+          <strong>⚠ Assumption:</strong> Some required documents may not be provided in every submission (as stated in the guidelines). Rules handle missing data gracefully — absent driver licenses trigger a WARNING, not an automatic DECLINE, allowing underwriter discretion.
+        </div>
+      </div>
+    </div>
+
+    <hr class="divider"/>
+
+    <!-- 7. Results Presentation -->
+    <div class="layer layer-slate">
+      <div class="section-title"><span class="num" style="background:var(--slate-700);">7</span> How Results Are Presented to Users</div>
+      <div class="section-body">
+        <strong>Approach:</strong> Multi-view underwriter interface with progressive disclosure of details.
+        <ul>
+          <li><strong>Dashboard:</strong> KPIs at a glance — total submissions, decision distribution (accept/refer/decline), AI cost tracking, recent submission feed.</li>
+          <li><strong>Submission Detail:</strong> Tabbed view with Summary (decision + risk), Documents (classified files), Rules (21 rule results with pass/fail), Raw Analysis (AI output).</li>
+          <li><strong>Real-time Pipeline:</strong> 6-step progress indicator shows extraction → classification → extraction → analysis → rules → decision in real time.</li>
+          <li><strong>Compare View:</strong> Side-by-side comparison of two submissions with metrics diff — useful for renewal assessments.</li>
+          <li><strong>Analytics:</strong> Token usage trends, processing time charts, rule pass rates, cost per submission over time.</li>
+          <li><strong>Health Monitor:</strong> DB latency, AI API status, disk usage, cumulative costs — operational visibility.</li>
+        </ul>
+      </div>
+    </div>
+
+    <hr class="divider"/>
+
+    <!-- Key Assumptions Summary -->
+    <div class="layer layer-amber">
+      <div class="layer-header">
+        <div class="layer-icon">📌</div>
+        <div class="layer-title">Key Assumptions Summary</div>
+      </div>
+      <div class="section-body" style="padding-left:0;">
+        <ul>
+          <li><strong>Filenames are unreliable</strong> — Classification is content-based only (per case study guidelines).</li>
+          <li><strong>Documents may be missing</strong> — The system processes whatever is provided and flags gaps as warnings, not failures.</li>
+          <li><strong>Data inconsistencies are expected</strong> — Cross-document conflicts are detected and surfaced, not silently ignored.</li>
+          <li><strong>Cost efficiency is important</strong> — Regex/Python extraction for structured docs (free), AI only where needed (~$0.005/submission).</li>
+          <li><strong>AI is advisory</strong> — Risk analysis generates recommendations; final decisions involve human review via REFER pathway.</li>
+          <li><strong>Processing speed matters</strong> — Parallel AI calls + thread pooling bring pipeline time from ~4 min to ~53 seconds.</li>
+          <li><strong>Rules should be configurable</strong> — Business rules can be enabled/disabled and severity adjusted without code changes.</li>
+          <li><strong>Document types may expand</strong> — The classifier supports an “other” category for unrecognized document types.</li>
+          <li><strong>Audit trail is mandatory</strong> — Every action (upload, process, view, delete) is logged with timestamp and metadata for compliance.</li>
+          <li><strong>Scalability from day one</strong> — Dockerized, AWS-ready, with S3/CloudWatch integration ready for production scale.</li>
+        </ul>
+      </div>
     </div>
 
   </div>

@@ -3,11 +3,12 @@ Submissions Router — API endpoints with input validation guardrails.
 """
 import os
 import uuid
+import time
 import logging
 from datetime import datetime, timezone
 from typing import List, Optional
 
-from fastapi import APIRouter, UploadFile, File, Form, Depends, HTTPException, BackgroundTasks
+from fastapi import APIRouter, UploadFile, File, Form, Depends, HTTPException, BackgroundTasks, Request
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 from sqlalchemy import func
@@ -28,6 +29,10 @@ from utils.s3_storage import upload_to_s3
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/submissions", tags=["submissions"])
+
+# ── In-memory TTL cache for dashboard stats ──────────────────
+_stats_cache: dict = {"data": None, "expires": 0}
+_STATS_TTL = 30  # seconds
 
 
 @router.post("/upload", response_model=SubmissionResponse)
@@ -191,8 +196,13 @@ async def list_submissions(db: Session = Depends(get_db)):
 
 @router.get("/stats", response_model=DashboardStats)
 async def get_stats(db: Session = Depends(get_db)):
+    """Dashboard stats with 30-second TTL cache."""
+    now = time.time()
+    if _stats_cache["data"] and now < _stats_cache["expires"]:
+        return _stats_cache["data"]
+
     q = db.query(Submission)
-    return DashboardStats(
+    result = DashboardStats(
         total_submissions=q.count(),
         pending=q.filter(Submission.status == "received").count(),
         processing=q.filter(Submission.status == "processing").count(),
@@ -201,6 +211,9 @@ async def get_stats(db: Session = Depends(get_db)):
         declined=q.filter(Submission.overall_decision == "decline").count(),
         referred=q.filter(Submission.overall_decision == "refer").count(),
     )
+    _stats_cache["data"] = result
+    _stats_cache["expires"] = now + _STATS_TTL
+    return result
 
 
 @router.get("/analytics")
