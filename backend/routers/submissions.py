@@ -298,7 +298,6 @@ async def get_logs(limit: int = 200, db: Session = Depends(get_db)):
             "details": log.AuditLog.details,
             "step_number": log.AuditLog.step_number,
             "timestamp": log.AuditLog.timestamp.isoformat() if log.AuditLog.timestamp else None,
-            "duration_ms": log.AuditLog.duration_ms,
         }
         for log in logs
     ]
