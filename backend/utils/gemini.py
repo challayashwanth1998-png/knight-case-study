@@ -31,10 +31,11 @@ DEFAULT_MODEL = "gemini-2.5-flash"
 MAX_RETRIES = 5
 BASE_WAIT = 15
 
-# Gemini 2.5 Flash pricing (per 1M tokens) — includes thinking
-PRICE_INPUT_PER_1M = 0.15      # $0.15 per 1M input tokens
-PRICE_OUTPUT_PER_1M = 0.60     # $0.60 per 1M non-thinking output tokens
-PRICE_THINKING_PER_1M = 3.50   # $3.50 per 1M thinking output tokens
+# Gemini 2.5 Flash pricing (per 1M tokens)
+# Source: https://ai.google.dev/pricing (June 2026)
+PRICE_INPUT_PER_1M = 0.30      # $0.30 per 1M input tokens
+PRICE_OUTPUT_PER_1M = 2.50     # $2.50 per 1M output tokens
+PRICE_THINKING_PER_1M = 2.50   # $2.50 per 1M thinking tokens (billed as output)
 
 
 # ── Cost Tracking ──────────────────────────────────────────

@@ -659,6 +659,8 @@ def _parse_ifta_text(text: str) -> dict | None:
                 continue
 
     result["jurisdictions"] = jurisdictions
+    # Build flat states_traveled list for rules engine (ELIG-003, EXP-003)
+    result["states_traveled"] = list({j["state"] for j in jurisdictions})
     total_miles = sum(j["miles"] for j in jurisdictions)
     total_gallons = sum(j["gallons"] for j in jurisdictions)
     result["total_miles"] = total_miles
@@ -913,6 +915,13 @@ def _build_unified_data(documents: list) -> Dict[str, Any]:
             if sub_key:
                 unified[key].extend(extracted.get(sub_key, []))
             elif isinstance(unified[key], list):
+                # For IFTA: ensure states_traveled exists from jurisdictions
+                if doc.classified_type == "ifta_report" and "states_traveled" not in extracted:
+                    jurs = extracted.get("jurisdictions", [])
+                    if jurs and isinstance(jurs, list):
+                        extracted["states_traveled"] = list({
+                            j.get("state", "") for j in jurs if isinstance(j, dict) and j.get("state")
+                        })
                 unified[key].append(extracted)
             else:
                 unified[key] = extracted
