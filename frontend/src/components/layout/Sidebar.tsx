@@ -7,7 +7,7 @@ const NAV_ITEMS = [
   { section: "Operations" },
   { href: "/", icon: "📊", label: "Dashboard" },
   { href: "/submit", icon: "📤", label: "New Submission" },
-  { href: "/underwriter", icon: "📋", label: "Underwriter View" },
+  { href: "/submissions", icon: "📋", label: "Underwriter View" },
   { section: "Intelligence" },
   { href: "/analytics", icon: "📈", label: "Analytics" },
   { href: "/compare", icon: "🔀", label: "Compare" },
