@@ -208,6 +208,76 @@ def call_gemini_json(
         raise
 
 
+def call_gemini_vision_batch(
+    prompt: str,
+    images: list[tuple[bytes, str, str]],  # [(image_data, mime_type, label), ...]
+    model_name: str = DEFAULT_MODEL,
+    max_retries: int = MAX_RETRIES,
+    temperature: float = 0.1,
+    step_name: str = "",
+) -> str:
+    """
+    Call Gemini with MULTIPLE images in a single API call.
+    Much faster than individual calls for CDL batches.
+    
+    Args:
+        images: list of (image_bytes, mime_type, label) tuples
+    Returns:
+        Combined text response for all images
+    """
+    _ensure_initialized()
+    gen_config = {"temperature": temperature}
+    model = _genai.GenerativeModel(model_name, generation_config=gen_config)
+
+    # Build multimodal content: prompt + all images
+    content_parts = [prompt]
+    for image_data, mime_type, label in images:
+        content_parts.append(f"\n--- Image: {label} ---")
+        content_parts.append({"mime_type": mime_type, "data": image_data})
+
+    for attempt in range(1, max_retries + 1):
+        try:
+            start_time = time.time()
+            response = model.generate_content(content_parts)
+            latency_ms = int((time.time() - start_time) * 1000)
+
+            text = response.text
+            text = _clean_json_fences(text)
+
+            input_tokens, output_tokens = _extract_token_counts(response)
+            cost = _calculate_cost(input_tokens, output_tokens)
+
+            call_metrics = AICallMetrics(
+                input_tokens=input_tokens,
+                output_tokens=output_tokens,
+                cost_usd=cost,
+                latency_ms=latency_ms,
+                step_name=step_name,
+            )
+            tracker = get_current_metrics()
+            if tracker:
+                tracker.add_call(call_metrics)
+
+            logger.info(
+                f"Gemini vision BATCH ({step_name}, {len(images)} images): "
+                f"{input_tokens}in/{output_tokens}out tokens, "
+                f"${cost:.5f}, {latency_ms}ms"
+            )
+            return text
+        except Exception as e:
+            err_str = str(e)
+            is_rate_limit = "429" in err_str or "quota" in err_str.lower() or "rate" in err_str.lower()
+            if is_rate_limit and attempt < max_retries:
+                wait_time = _parse_retry_delay(err_str, attempt)
+                logger.warning(f"Gemini vision batch rate limit (attempt {attempt}/{max_retries}). Waiting {wait_time}s...")
+                time.sleep(wait_time)
+            else:
+                logger.error(f"Gemini vision batch error (attempt {attempt}): {e}")
+                if attempt >= max_retries:
+                    raise
+                time.sleep(BASE_WAIT * attempt)
+    raise RuntimeError("Gemini vision batch call failed after all retries")
+
 def call_gemini_vision(
     prompt: str,
     image_data: bytes,

@@ -132,35 +132,106 @@ def _step_extract_text(db, submission_id: str, documents: list) -> None:
             db.commit()
             logger.error(f"  Extract error: {doc.filename}: {e}")
 
-    # Process image docs in parallel (Gemini Vision calls)
+    # Process image docs with BATCH Gemini Vision (1 API call for all images)
     if image_docs:
-        def _extract_image(doc_path):
-            return processor.process(doc_path)
+        for doc in image_docs:
+            doc.processing_status = "extracting"
+        db.commit()
 
-        with ThreadPoolExecutor(max_workers=3) as executor:
-            futures = {}
+        try:
+            from utils.gemini import call_gemini_vision_batch
+
+            # Collect all images for batch
+            images_batch = []
+            ext_map = {
+                ".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg",
+                ".gif": "image/gif", ".bmp": "image/bmp", ".tiff": "image/tiff",
+                ".webp": "image/webp",
+            }
             for doc in image_docs:
-                doc.processing_status = "extracting"
-                db.commit()
-                futures[executor.submit(_extract_image, doc.file_path)] = doc
+                with open(doc.file_path, "rb") as f:
+                    img_data = f.read()
+                ext = Path(doc.file_path).suffix.lower()
+                mime = ext_map.get(ext, "image/png")
+                images_batch.append((img_data, mime, doc.filename))
 
-            for future in as_completed(futures):
-                doc = futures[future]
-                try:
-                    text, structured, quality = future.result()
-                    doc.extracted_text = text
-                    if structured:
-                        doc.extracted_data = {"structured_raw": structured}
-                    doc.quality_score = quality
-                    doc.processing_status = "extracted"
-                except Exception as e:
-                    doc.processing_status = "error"
-                    doc.processing_error = str(e)
-                    logger.error(f"  Vision error: {doc.filename}: {e}")
-                db.commit()
+            batch_prompt = (
+                "Extract ALL text and data from EACH image below. "
+                "For each image, provide the extracted data under a clear header matching the image label. "
+                "If an image is a driver's license or CDL, extract: "
+                "full name, date of birth, license number, state, class, "
+                "endorsements, restrictions, expiration date, sex, height, weight, eye color. "
+                "Format each as structured text with clear labels."
+            )
+
+            batch_result = call_gemini_vision_batch(
+                batch_prompt, images_batch, step_name="batch_cdl_ocr"
+            )
+
+            # Split batch result by image labels and assign to each doc
+            for i, doc in enumerate(image_docs):
+                # Try to find section for this doc's filename
+                label = doc.filename
+                next_label = image_docs[i + 1].filename if i + 1 < len(image_docs) else None
+
+                start_marker = f"--- Image: {label} ---"
+                start_idx = batch_result.find(start_marker)
+                if start_idx < 0:
+                    # Try alternate markers
+                    start_idx = batch_result.lower().find(label.lower())
+                    if start_idx < 0:
+                        start_idx = 0
+
+                if next_label:
+                    next_marker = f"--- Image: {next_label} ---"
+                    end_idx = batch_result.find(next_marker, start_idx + 1)
+                    if end_idx < 0:
+                        end_idx = batch_result.lower().find(next_label.lower(), start_idx + len(label))
+                    if end_idx < 0:
+                        end_idx = len(batch_result)
+                else:
+                    end_idx = len(batch_result)
+
+                doc_text = batch_result[start_idx:end_idx].strip()
+                if not doc_text or len(doc_text) < 20:
+                    # Fallback: give each doc an equal portion
+                    chunk_size = len(batch_result) // len(image_docs)
+                    doc_text = batch_result[i * chunk_size:(i + 1) * chunk_size].strip()
+
+                doc.extracted_text = doc_text
+                doc.quality_score = 0.85 if len(doc_text) > 50 else 0.5
+                doc.processing_status = "extracted"
+                logger.info(f"  Batch OCR: {doc.filename} → {len(doc_text)} chars")
+            db.commit()
+
+        except Exception as batch_err:
+            logger.warning(f"Batch vision failed ({batch_err}), falling back to individual calls")
+            # Fallback: individual parallel calls (old approach)
+            def _extract_image(doc_path):
+                return processor.process(doc_path)
+
+            with ThreadPoolExecutor(max_workers=3) as executor:
+                futures = {}
+                for doc in image_docs:
+                    futures[executor.submit(_extract_image, doc.file_path)] = doc
+
+                for future in as_completed(futures):
+                    doc = futures[future]
+                    try:
+                        text, structured, quality = future.result()
+                        doc.extracted_text = text
+                        if structured:
+                            doc.extracted_data = {"structured_raw": structured}
+                        doc.quality_score = quality
+                        doc.processing_status = "extracted"
+                    except Exception as e:
+                        doc.processing_status = "error"
+                        doc.processing_error = str(e)
+                        logger.error(f"  Vision error: {doc.filename}: {e}")
+                    db.commit()
 
     _audit(db, submission_id, "step_extract_text_complete",
-           f"Extracted {len(other_docs)} docs + {len(image_docs)} images (parallel)", step=step)
+           f"Extracted {len(other_docs)} docs + {len(image_docs)} images (batch)", step=step)
     db.commit()
 
 
