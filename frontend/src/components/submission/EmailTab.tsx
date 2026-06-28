@@ -33,7 +33,7 @@ export default function EmailTab({ submission }: Props) {
       if (rule.result === "FAIL" && rule.category === "submission") {
         const alreadyListed = items.some(i =>
           i.label.toLowerCase().includes(rule.rule_name.toLowerCase().split(":")[0]) ||
-          rule.details.toLowerCase().includes(i.label.toLowerCase().split("(")[0].trim())
+          (rule.details || "").toLowerCase().includes(i.label.toLowerCase().split("(")[0].trim())
         );
         if (!alreadyListed) {
           items.push({ label: rule.rule_name, reason: rule.details, priority: "required" });
