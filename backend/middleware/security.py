@@ -46,9 +46,16 @@ SECURITY_HEADERS = {
 class SecurityHeadersMiddleware(BaseHTTPMiddleware):
     """Adds OWASP-recommended security headers to every response."""
 
+    # Paths that need to be embeddable in iframes (e.g., Swagger UI)
+    FRAMEABLE_PATHS = ("/docs", "/redoc", "/openapi.json")
+
     async def dispatch(self, request: Request, call_next):
         response = await call_next(request)
+        is_frameable = request.url.path in self.FRAMEABLE_PATHS
         for header, value in SECURITY_HEADERS.items():
+            # Skip X-Frame-Options for docs paths (CSP frame-ancestors handles security)
+            if is_frameable and header == "X-Frame-Options":
+                continue
             response.headers[header] = value
         return response
 
