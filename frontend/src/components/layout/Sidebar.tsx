@@ -66,11 +66,7 @@ export default function Sidebar() {
 
       {/* Footer */}
       <div className="sidebar-footer">
-        <div className="sidebar-status">
-          <span className="sidebar-status-dot" />
-          System Online
-        </div>
-        <div style={{ marginTop: 4, fontSize: 10 }}>
+        <div style={{ fontSize: 10 }}>
           Knight Specialty Insurance Co.
         </div>
       </div>

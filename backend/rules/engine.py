@@ -31,7 +31,7 @@ class RulesEngine:
 
         results.extend(check_eligibility(application, vehicles, ifta_reports))
         results.extend(check_new_venture(application))
-        results.extend(check_drivers(drivers))
+        results.extend(check_drivers(drivers, document_types))
         results.extend(check_prohibited_exposures(application, ifta_reports))
         results.extend(check_selective_exposures(application, vehicles))
         results.extend(check_submission_completeness(

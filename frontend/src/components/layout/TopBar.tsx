@@ -52,11 +52,6 @@ export default function TopBar() {
       </div>
 
       <div style={{ display: "flex", alignItems: "center", gap: 12, fontSize: 12, color: "var(--base)" }}>
-        <span>Gemini 2.5 Flash</span>
-        <span style={{
-          width: 6, height: 6, borderRadius: "50%",
-          background: "var(--success)", display: "inline-block"
-        }} />
       </div>
     </div>
   );

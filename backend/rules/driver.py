@@ -4,8 +4,10 @@ from typing import List
 from rules.base import RuleEvaluation, UNACCEPTABLE_VIOLATIONS
 
 
-def check_drivers(drivers: list) -> List[RuleEvaluation]:
+def check_drivers(drivers: list, document_types: list = None) -> List[RuleEvaluation]:
     results = []
+    if document_types is None:
+        document_types = []
 
     if not drivers:
         results.append(RuleEvaluation(
@@ -82,6 +84,7 @@ def check_drivers(drivers: list) -> List[RuleEvaluation]:
 
     # DRV-001: Valid CDL
     missing_cdl = [d for d in drivers if not d.get("license_number")]
+    has_dl_docs = "drivers_license" in document_types
     if missing_cdl:
         results.append(RuleEvaluation(
             "DRV-001", "Valid CDL Required", "driver",
@@ -89,10 +92,21 @@ def check_drivers(drivers: list) -> List[RuleEvaluation]:
             f"{len(missing_cdl)} driver(s) missing CDL number.",
             {"count": len(missing_cdl)},
         ))
+    elif not has_dl_docs:
+        # CDL numbers exist in roster but no DL documents uploaded to verify
+        results.append(RuleEvaluation(
+            "DRV-001", "Valid CDL Required", "driver",
+            "WARNING", "high",
+            f"CDL numbers found in roster for {len(drivers)} drivers, but no driver license "
+            f"documents were uploaded for verification. CDL validity is unverified.",
+            {"cdl_numbers_present": True, "dl_docs_uploaded": False, "count": len(drivers)},
+        ))
     else:
         results.append(RuleEvaluation(
             "DRV-001", "Valid CDL Required", "driver",
-            "PASS", "high", f"All {len(drivers)} drivers have CDL numbers.", {},
+            "PASS", "high",
+            f"All {len(drivers)} drivers have CDL numbers with license documents provided.",
+            {"cdl_numbers_present": True, "dl_docs_uploaded": True},
         ))
 
     # DRV-005/006: Points check from violations data
