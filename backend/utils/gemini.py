@@ -31,9 +31,10 @@ DEFAULT_MODEL = "gemini-2.5-flash"
 MAX_RETRIES = 5
 BASE_WAIT = 15
 
-# Gemini 2.5 Flash pricing (per 1M tokens)
-PRICE_INPUT_PER_1M = 0.15    # $0.15 per 1M input tokens
-PRICE_OUTPUT_PER_1M = 0.60   # $0.60 per 1M output tokens
+# Gemini 2.5 Flash pricing (per 1M tokens) — includes thinking
+PRICE_INPUT_PER_1M = 0.15      # $0.15 per 1M input tokens
+PRICE_OUTPUT_PER_1M = 0.60     # $0.60 per 1M non-thinking output tokens
+PRICE_THINKING_PER_1M = 3.50   # $3.50 per 1M thinking output tokens
 
 
 # ── Cost Tracking ──────────────────────────────────────────
@@ -50,27 +51,30 @@ class AICallMetrics:
 
 @dataclass
 class SubmissionAIMetrics:
-    """Accumulated AI metrics for an entire submission pipeline."""
+    """Accumulated AI metrics for an entire submission pipeline (thread-safe)."""
     total_input_tokens: int = 0
     total_output_tokens: int = 0
     total_cost_usd: float = 0.0
     total_calls: int = 0
     calls: list = field(default_factory=list)
+    _lock: threading.Lock = field(default_factory=threading.Lock)
 
     def add_call(self, metrics: AICallMetrics):
-        self.total_input_tokens += metrics.input_tokens
-        self.total_output_tokens += metrics.output_tokens
-        self.total_cost_usd += metrics.cost_usd
-        self.total_calls += 1
-        self.calls.append(metrics)
+        with self._lock:
+            self.total_input_tokens += metrics.input_tokens
+            self.total_output_tokens += metrics.output_tokens
+            self.total_cost_usd += metrics.cost_usd
+            self.total_calls += 1
+            self.calls.append(metrics)
 
     def to_dict(self) -> dict:
-        return {
-            "total_input_tokens": self.total_input_tokens,
-            "total_output_tokens": self.total_output_tokens,
-            "total_cost_usd": round(self.total_cost_usd, 6),
-            "total_calls": self.total_calls,
-        }
+        with self._lock:
+            return {
+                "total_input_tokens": self.total_input_tokens,
+                "total_output_tokens": self.total_output_tokens,
+                "total_cost_usd": round(self.total_cost_usd, 6),
+                "total_calls": self.total_calls,
+            }
 
 
 # Thread-local storage for per-submission metrics
@@ -89,11 +93,20 @@ def get_current_metrics() -> Optional[SubmissionAIMetrics]:
     return getattr(_thread_local, "metrics", None)
 
 
+def set_tracking(metrics: SubmissionAIMetrics) -> None:
+    """Set the AI metrics tracker for the current thread (used by worker threads)."""
+    _thread_local.metrics = metrics
+
+
 def _calculate_cost(input_tokens: int, output_tokens: int) -> float:
-    """Calculate USD cost from token counts."""
+    """Calculate USD cost from token counts (includes thinking token estimate)."""
     input_cost = (input_tokens / 1_000_000) * PRICE_INPUT_PER_1M
-    output_cost = (output_tokens / 1_000_000) * PRICE_OUTPUT_PER_1M
-    return input_cost + output_cost
+    # Gemini 2.5 Flash uses thinking tokens internally — estimate ~60% of output is thinking
+    thinking_tokens = int(output_tokens * 0.6)
+    non_thinking_tokens = output_tokens - thinking_tokens
+    output_cost = (non_thinking_tokens / 1_000_000) * PRICE_OUTPUT_PER_1M
+    thinking_cost = (thinking_tokens / 1_000_000) * PRICE_THINKING_PER_1M
+    return input_cost + output_cost + thinking_cost
 
 
 def _extract_token_counts(response) -> tuple[int, int]:
@@ -151,6 +164,7 @@ def call_gemini(
             )
 
             # Add to submission-level tracker if active
+            # Check both thread-local and parent thread tracker
             tracker = get_current_metrics()
             if tracker:
                 tracker.add_call(call_metrics)

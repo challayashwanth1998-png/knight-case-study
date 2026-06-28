@@ -9,6 +9,7 @@ import logging
 from typing import Dict, Any
 from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor, as_completed
+import threading
 
 from models.database import SessionLocal, Submission, Document, AnalysisResult, RuleResult, AuditLog
 from services.document_processor import DocumentProcessor
@@ -16,7 +17,7 @@ from services.document_classifier import DocumentClassifier
 from services.data_extractor import DataExtractor
 from services.ai_analyzer import AIAnalyzer
 from rules import RulesEngine
-from utils.gemini import start_tracking, get_current_metrics
+from utils.gemini import start_tracking, get_current_metrics, set_tracking
 
 logger = logging.getLogger(__name__)
 
@@ -211,7 +212,10 @@ def _step_extract_text(db, submission_id: str, documents: list) -> None:
         except Exception as batch_err:
             logger.warning(f"Batch vision failed ({batch_err}), falling back to individual calls")
             # Fallback: individual parallel calls (old approach)
+            parent_tracker = get_current_metrics()
             def _extract_image(doc_path):
+                if parent_tracker:
+                    set_tracking(parent_tracker)
                 return processor.process(doc_path)
 
             with ThreadPoolExecutor(max_workers=3) as executor:
@@ -344,7 +348,10 @@ def _step_extract_data(db, submission_id: str, documents: list) -> None:
     if ai_pending:
         logger.info(f"  Running {len(ai_pending)} AI extractions in parallel...")
 
+        parent_tracker = get_current_metrics()
         def _ai_extract(doc):
+            if parent_tracker:
+                set_tracking(parent_tracker)
             structured_raw = doc.extracted_data.get("structured_raw") if doc.extracted_data else None
             return extractor.extract(
                 doc.classified_type, doc.extracted_text or "",

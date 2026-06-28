@@ -9,7 +9,7 @@ from typing import Dict, Any, List
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from config import settings
-from utils.gemini import call_gemini, call_gemini_json
+from utils.gemini import call_gemini, call_gemini_json, get_current_metrics, set_tracking
 
 logger = logging.getLogger(__name__)
 
@@ -23,14 +23,23 @@ class AIAnalyzer:
         # Pure Python — no AI needed
         results["completeness_report"] = self._check_completeness(extracted_data)
 
+        # Propagate metrics tracker to worker threads
+        parent_tracker = get_current_metrics()
+
+        def _tracked(fn, *args):
+            """Wrapper to propagate metrics tracker to worker thread."""
+            if parent_tracker:
+                set_tracking(parent_tracker)
+            return fn(*args)
+
         # Run ALL 4 analysis calls IN PARALLEL
         with ThreadPoolExecutor(max_workers=4) as executor:
-            future_summary = executor.submit(self._generate_summary, extracted_data)
-            future_conflicts = executor.submit(self._detect_conflicts, extracted_data)
-            future_risk = executor.submit(self._assess_risk, extracted_data)
+            future_summary = executor.submit(_tracked, self._generate_summary, extracted_data)
+            future_conflicts = executor.submit(_tracked, self._detect_conflicts, extracted_data)
+            future_risk = executor.submit(_tracked, self._assess_risk, extracted_data)
             # Recommendations uses completeness (Python, already done) + raw data
             future_recs = executor.submit(
-                self._generate_recommendations, extracted_data,
+                _tracked, self._generate_recommendations, extracted_data,
                 {"completeness_report": results["completeness_report"]}
             )
 

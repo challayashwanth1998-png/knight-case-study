@@ -621,17 +621,23 @@ body {
   gap: 12px;
   margin-top: 12px;
 }
-.cost-item {
+.cost-card .cost-item {
   text-align: center;
+  padding: 10px 8px;
+  background: rgba(255,255,255,0.12);
+  border-radius: 8px;
 }
-.cost-item-value {
+.cost-card .cost-item-value {
   font-size: 16px;
-  font-weight: 600;
+  font-weight: 700;
+  color: #ffffff;
 }
-.cost-item-label {
-  font-size: 10px;
-  color: rgba(255,255,255,0.5);
+.cost-card .cost-item-label {
+  font-size: 9px;
+  color: rgba(255,255,255,0.7);
   text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-top: 2px;
 }
 
 /* ── Empty State ──────────────────────────── */
@@ -771,9 +777,9 @@ body {
 .disk-bar-fill { height: 100%; background: var(--primary-light); border-radius: 3px; transition: width 0.5s ease; }
 
 .cost-summary-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
-.cost-item { text-align: center; padding: 12px; background: var(--base-lightest); border-radius: 8px; }
-.cost-value { font-size: 18px; font-weight: 800; color: var(--primary-dark); }
-.cost-label { font-size: 10px; color: var(--base); margin-top: 2px; text-transform: uppercase; letter-spacing: 0.5px; }
+.cost-summary-grid .cost-item { text-align: center; padding: 12px; background: var(--base-lightest); border-radius: 8px; }
+.cost-summary-grid .cost-value { font-size: 18px; font-weight: 800; color: var(--primary-dark); }
+.cost-summary-grid .cost-label { font-size: 10px; color: var(--base); margin-top: 2px; text-transform: uppercase; letter-spacing: 0.5px; }
 
 @media (max-width: 768px) {
   .analytics-row { grid-template-columns: 1fr; }

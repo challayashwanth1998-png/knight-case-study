@@ -24,7 +24,7 @@ logger = logging.getLogger("knight.security")
 
 SECURITY_HEADERS = {
     "X-Content-Type-Options": "nosniff",
-    "X-Frame-Options": "DENY",
+    "X-Frame-Options": "SAMEORIGIN",
     "X-XSS-Protection": "1; mode=block",
     "Referrer-Policy": "strict-origin-when-cross-origin",
     "Permissions-Policy": "camera=(), microphone=(), geolocation=()",
@@ -35,7 +35,8 @@ SECURITY_HEADERS = {
         "font-src 'self' https://fonts.gstatic.com; "
         "img-src 'self' data: blob:; "
         "connect-src 'self' *; "
-        "frame-src 'self'"
+        "frame-src 'self'; "
+        "frame-ancestors 'self' *"
     ),
     "Cache-Control": "no-store, no-cache, must-revalidate",
     "Pragma": "no-cache",
