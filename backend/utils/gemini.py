@@ -44,6 +44,7 @@ class AICallMetrics:
     """Metrics for a single Gemini API call."""
     input_tokens: int = 0
     output_tokens: int = 0
+    thinking_tokens: int = 0
     cost_usd: float = 0.0
     latency_ms: int = 0
     step_name: str = ""
@@ -98,27 +99,33 @@ def set_tracking(metrics: SubmissionAIMetrics) -> None:
     _thread_local.metrics = metrics
 
 
-def _calculate_cost(input_tokens: int, output_tokens: int) -> float:
-    """Calculate USD cost from token counts (includes thinking token estimate)."""
+def _calculate_cost(input_tokens: int, output_tokens: int, thinking_tokens: int = 0) -> float:
+    """Calculate USD cost from token counts with proper thinking token pricing."""
     input_cost = (input_tokens / 1_000_000) * PRICE_INPUT_PER_1M
-    # Gemini 2.5 Flash uses thinking tokens internally — estimate ~60% of output is thinking
-    thinking_tokens = int(output_tokens * 0.6)
-    non_thinking_tokens = output_tokens - thinking_tokens
-    output_cost = (non_thinking_tokens / 1_000_000) * PRICE_OUTPUT_PER_1M
+    output_cost = (output_tokens / 1_000_000) * PRICE_OUTPUT_PER_1M
     thinking_cost = (thinking_tokens / 1_000_000) * PRICE_THINKING_PER_1M
     return input_cost + output_cost + thinking_cost
 
 
-def _extract_token_counts(response) -> tuple[int, int]:
-    """Extract input/output token counts from Gemini response metadata."""
+def _extract_token_counts(response) -> tuple[int, int, int]:
+    """Extract input/output/thinking token counts from Gemini response metadata."""
     try:
         usage = response.usage_metadata
-        return (
-            getattr(usage, "prompt_token_count", 0) or 0,
-            getattr(usage, "candidates_token_count", 0) or 0,
-        )
+        input_t = getattr(usage, "prompt_token_count", 0) or 0
+        candidates_t = getattr(usage, "candidates_token_count", 0) or 0
+        # Gemini 2.5 Flash reports thinking tokens separately
+        thinking_t = getattr(usage, "thoughts_token_count", 0) or 0
+        # total_token_count includes all: input + output + thinking
+        total_t = getattr(usage, "total_token_count", 0) or 0
+        
+        # If thinking tokens aren't reported but total is much higher,
+        # infer thinking tokens from the difference
+        if thinking_t == 0 and total_t > (input_t + candidates_t + 100):
+            thinking_t = total_t - input_t - candidates_t
+        
+        return (input_t, candidates_t, thinking_t)
     except Exception:
-        return 0, 0
+        return 0, 0, 0
 
 
 # ── API Call Functions ──────────────────────────────────────
@@ -152,12 +159,13 @@ def call_gemini(
             text = _clean_json_fences(text)
 
             # Track metrics
-            input_tokens, output_tokens = _extract_token_counts(response)
-            cost = _calculate_cost(input_tokens, output_tokens)
+            input_tokens, output_tokens, thinking_tokens = _extract_token_counts(response)
+            cost = _calculate_cost(input_tokens, output_tokens, thinking_tokens)
 
             call_metrics = AICallMetrics(
                 input_tokens=input_tokens,
                 output_tokens=output_tokens,
+                thinking_tokens=thinking_tokens,
                 cost_usd=cost,
                 latency_ms=latency_ms,
                 step_name=step_name,
@@ -171,7 +179,7 @@ def call_gemini(
 
             logger.info(
                 f"Gemini call ({step_name}): "
-                f"{input_tokens}in/{output_tokens}out tokens, "
+                f"{input_tokens}in/{output_tokens}out/{thinking_tokens}think tokens, "
                 f"${cost:.5f}, {latency_ms}ms"
             )
 
