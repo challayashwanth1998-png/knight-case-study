@@ -56,6 +56,24 @@ export default function SubmissionsPage() {
     { key: "refer", label: "Referred" },
   ];
 
+  const exportCSV = () => {
+    const headers = ["ID", "Subject", "Source", "Status", "Decision", "Documents", "AI Cost", "Processing Time (s)", "AI Calls", "Date"];
+    const rows = filtered.map(s => [
+      s.id, s.email_subject || "", s.email_from || "", s.status, s.overall_decision || "",
+      s.document_count || 0, s.ai_cost_usd?.toFixed(4) || "0",
+      s.processing_duration_ms ? (s.processing_duration_ms / 1000).toFixed(1) : "",
+      s.ai_calls_count || 0,
+      new Date(s.created_at).toISOString(),
+    ]);
+    const csv = [headers, ...rows].map(r => r.join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = `knight_submissions_${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div style={{ maxWidth: 1100, margin: "0 auto" }}>
       <div className="page-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
@@ -63,9 +81,14 @@ export default function SubmissionsPage() {
           <h1 className="page-title">All Submissions</h1>
           <p className="page-description">{submissions.length} total submissions</p>
         </div>
-        <Link href="/submit" className="btn btn-primary">
-          + New Submission
-        </Link>
+        <div style={{ display: "flex", gap: 8 }}>
+          <button className="btn btn-secondary" onClick={exportCSV} style={{ fontSize: 12 }}>
+            ⬇ Export CSV
+          </button>
+          <Link href="/submit" className="btn btn-primary">
+            + New Submission
+          </Link>
+        </div>
       </div>
 
       {/* Filters + Search */}
@@ -111,6 +134,7 @@ export default function SubmissionsPage() {
                 <th>Decision</th>
                 <th>Documents</th>
                 <th>AI Cost</th>
+                <th>Time</th>
                 <th>Date</th>
                 <th style={{ width: 60 }}></th>
               </tr>
@@ -143,6 +167,9 @@ export default function SubmissionsPage() {
                   <td style={{ fontSize: 13 }}>{s.document_count ?? 0}</td>
                   <td style={{ fontSize: 12, fontFamily: "monospace" }}>
                     {s.ai_cost_usd > 0 ? `$${s.ai_cost_usd.toFixed(4)}` : "—"}
+                  </td>
+                  <td style={{ fontSize: 12, fontFamily: "monospace", color: "var(--primary)" }}>
+                    {s.processing_duration_ms ? `${(s.processing_duration_ms / 1000).toFixed(1)}s` : "—"}
                   </td>
                   <td style={{ fontSize: 12, color: "var(--base)" }}>
                     {new Date(s.created_at).toLocaleDateString()}
