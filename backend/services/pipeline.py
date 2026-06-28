@@ -42,6 +42,10 @@ def run_pipeline(submission_id: str) -> None:
             logger.error(f"Submission {submission_id} not found")
             return
 
+        # Set status to processing immediately
+        submission.status = "processing"
+        db.commit()
+
         documents = db.query(Document).filter(Document.submission_id == submission_id).all()
 
         _step_extract_text(db, submission_id, documents)

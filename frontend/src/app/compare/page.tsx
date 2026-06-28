@@ -10,7 +10,6 @@ export default function ComparePage() {
   const [rightId, setRightId] = useState<string>("");
   const [leftDetail, setLeftDetail] = useState<SubmissionDetail | null>(null);
   const [rightDetail, setRightDetail] = useState<SubmissionDetail | null>(null);
-  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     listSubmissions().then((subs) => {
@@ -57,7 +56,7 @@ export default function ComparePage() {
         <div style={{
           fontSize: 11, color: "#94A3B8", fontWeight: 500,
           textTransform: "uppercase", letterSpacing: "0.5px",
-          textAlign: "center", minWidth: 120,
+          textAlign: "center", minWidth: 140,
         }}>
           {label}
         </div>
@@ -72,11 +71,24 @@ export default function ComparePage() {
     );
   };
 
+  const getConflictCount = (d: SubmissionDetail) => {
+    try {
+      const conflicts = (d as any).conflicts || [];
+      return Array.isArray(conflicts) ? conflicts.length : 0;
+    } catch { return 0; }
+  };
+
+  const getRiskScore = (d: SubmissionDetail) => {
+    try {
+      return (d as any).risk_score || (d as any).ai_risk_score || "—";
+    } catch { return "—"; }
+  };
+
   return (
     <div className="page-container">
       <div className="page-header">
         <h1>🔀 Compare Submissions</h1>
-        <p className="page-subtitle">Side-by-side comparison of two processed submissions</p>
+        <p className="page-subtitle">Side-by-side comparison of two processed submissions — metrics, rules, and risk analysis</p>
       </div>
 
       {/* Selector */}
@@ -129,7 +141,7 @@ export default function ComparePage() {
                   borderRadius: 10, textAlign: "center",
                 }}>
                   <div style={{ fontSize: 11, color: "#94A3B8", marginBottom: 4 }}>
-                    {d.documents?.length || 0} documents
+                    {d.documents?.length || 0} documents • {d.rules?.filter(r => r.result === "PASS").length || 0}/{d.rules?.length || 0} rules passed
                   </div>
                   <div style={{ fontSize: 20, fontWeight: 800, color }}>
                     {d.overall_decision?.toUpperCase() || "PENDING"}
@@ -142,9 +154,9 @@ export default function ComparePage() {
             })}
           </div>
 
-          {/* Metrics Comparison */}
+          {/* Performance Metrics */}
           <div className="analytics-card" style={{ marginBottom: 16 }}>
-            <h3>Performance Metrics</h3>
+            <h3>⚡ Performance Metrics</h3>
             {compareMetric(
               "Processing Time",
               `${((leftDetail.processing_duration_ms || 0) / 1000).toFixed(1)}s`,
@@ -170,15 +182,47 @@ export default function ComparePage() {
               true,
             )}
             {compareMetric(
-              "Documents",
+              "Output Tokens",
+              (leftDetail.ai_output_tokens || 0).toLocaleString(),
+              (rightDetail.ai_output_tokens || 0).toLocaleString(),
+              true,
+            )}
+          </div>
+
+          {/* Document Metrics */}
+          <div className="analytics-card" style={{ marginBottom: 16 }}>
+            <h3>📄 Document Metrics</h3>
+            {compareMetric(
+              "Total Documents",
               leftDetail.documents?.length || 0,
               rightDetail.documents?.length || 0,
+            )}
+            {compareMetric(
+              "PDF Documents",
+              leftDetail.documents?.filter(d => d.file_type === "pdf").length || 0,
+              rightDetail.documents?.filter(d => d.file_type === "pdf").length || 0,
+            )}
+            {compareMetric(
+              "Excel Documents",
+              leftDetail.documents?.filter(d => d.file_type === "xlsx" || d.file_type === "xls").length || 0,
+              rightDetail.documents?.filter(d => d.file_type === "xlsx" || d.file_type === "xls").length || 0,
+            )}
+            {compareMetric(
+              "CDL Images",
+              leftDetail.documents?.filter(d => d.file_type === "image").length || 0,
+              rightDetail.documents?.filter(d => d.file_type === "image").length || 0,
+            )}
+            {compareMetric(
+              "Conflicts Found",
+              getConflictCount(leftDetail),
+              getConflictCount(rightDetail),
+              true,
             )}
           </div>
 
           {/* Rules Comparison */}
-          <div className="analytics-card">
-            <h3>Rules Comparison</h3>
+          <div className="analytics-card" style={{ marginBottom: 16 }}>
+            <h3>⚖️ Rules Comparison</h3>
             {compareMetric(
               "Rules Passed",
               leftDetail.rules?.filter(r => r.result === "PASS").length || 0,
@@ -197,6 +241,11 @@ export default function ComparePage() {
               true,
             )}
             {compareMetric(
+              "Info Items",
+              leftDetail.rules?.filter(r => r.result === "INFO").length || 0,
+              rightDetail.rules?.filter(r => r.result === "INFO").length || 0,
+            )}
+            {compareMetric(
               "Pass Rate",
               `${leftDetail.rules?.length
                 ? Math.round((leftDetail.rules.filter(r => r.result === "PASS").length / leftDetail.rules.length) * 100)
@@ -205,28 +254,103 @@ export default function ComparePage() {
                 ? Math.round((rightDetail.rules.filter(r => r.result === "PASS").length / rightDetail.rules.length) * 100)
                 : 0}%`,
             )}
+          </div>
 
-            {/* Failed rules detail */}
+          {/* Rule-by-Rule Detail */}
+          <div className="analytics-card">
+            <h3>📋 Rule-by-Rule Comparison</h3>
+            <div style={{ marginTop: 12 }}>
+              {/* Header */}
+              <div style={{
+                display: "grid", gridTemplateColumns: "80px 1fr 80px 80px",
+                gap: 8, padding: "8px 12px", background: "#F1F5F9", borderRadius: 6,
+                fontSize: 10, fontWeight: 600, color: "#64748B", textTransform: "uppercase",
+                letterSpacing: "0.5px",
+              }}>
+                <span>Rule ID</span>
+                <span>Rule Name</span>
+                <span style={{ textAlign: "center" }}>Left</span>
+                <span style={{ textAlign: "center" }}>Right</span>
+              </div>
+
+              {/* Rows — combine rules from both submissions */}
+              {(() => {
+                const allRuleIds = new Set([
+                  ...(leftDetail.rules || []).map(r => r.rule_id),
+                  ...(rightDetail.rules || []).map(r => r.rule_id),
+                ]);
+                const ruleIds = Array.from(allRuleIds).sort();
+
+                const resultColors: Record<string, string> = {
+                  PASS: "#059669", FAIL: "#DC2626", WARNING: "#D97706", INFO: "#3B82F6",
+                };
+                const resultBg: Record<string, string> = {
+                  PASS: "#F0FDF4", FAIL: "#FEF2F2", WARNING: "#FFFBEB", INFO: "#EFF6FF",
+                };
+
+                return ruleIds.map(ruleId => {
+                  const leftRule = leftDetail.rules?.find(r => r.rule_id === ruleId);
+                  const rightRule = rightDetail.rules?.find(r => r.rule_id === ruleId);
+                  const differ = leftRule?.result !== rightRule?.result;
+
+                  return (
+                    <div key={ruleId} style={{
+                      display: "grid", gridTemplateColumns: "80px 1fr 80px 80px",
+                      gap: 8, padding: "8px 12px", borderBottom: "1px solid #F1F5F9",
+                      alignItems: "center",
+                      background: differ ? "#FFFBEB08" : "transparent",
+                    }}>
+                      <span style={{ fontSize: 10, fontWeight: 600, fontFamily: "monospace", color: "#475569" }}>{ruleId}</span>
+                      <span style={{ fontSize: 11, color: "#64748B" }}>{leftRule?.rule_name || rightRule?.rule_name || "—"}</span>
+                      {[leftRule, rightRule].map((r, idx) => (
+                        <span key={idx} style={{
+                          textAlign: "center", fontSize: 10, fontWeight: 600, padding: "3px 8px",
+                          borderRadius: 4,
+                          background: r ? resultBg[r.result] || "#F1F5F9" : "#F1F5F9",
+                          color: r ? resultColors[r.result] || "#64748B" : "#94A3B8",
+                        }}>
+                          {r?.result || "N/A"}
+                        </span>
+                      ))}
+                    </div>
+                  );
+                });
+              })()}
+            </div>
+          </div>
+
+          {/* Failed rules detail */}
+          <div className="analytics-card" style={{ marginTop: 16 }}>
+            <h3>❌ Failed Rules Detail</h3>
             <div style={{
-              display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginTop: 16,
+              display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginTop: 12,
             }}>
               {[leftDetail, rightDetail].map((d, i) => {
                 const failures = d.rules?.filter(r => r.result === "FAIL") || [];
+                const warnings = d.rules?.filter(r => r.result === "WARNING") || [];
                 return (
                   <div key={i}>
                     <div style={{ fontSize: 11, fontWeight: 600, color: "#DC2626", marginBottom: 8 }}>
-                      Failed Rules ({failures.length})
+                      Failed ({failures.length}) • Warnings ({warnings.length})
                     </div>
                     {failures.length > 0 ? failures.map(r => (
                       <div key={r.id} style={{
                         fontSize: 11, padding: "6px 8px", marginBottom: 4,
                         background: "#FEF2F2", borderRadius: 4, borderLeft: "3px solid #DC2626",
                       }}>
-                        <strong>{r.rule_id}</strong>: {r.details?.slice(0, 60) || r.rule_name}
+                        <strong>{r.rule_id}</strong>: {r.details?.slice(0, 80) || r.rule_name}
                       </div>
                     )) : (
                       <div style={{ fontSize: 11, color: "#059669" }}>✅ No failures</div>
                     )}
+                    {warnings.length > 0 && warnings.map(r => (
+                      <div key={r.id} style={{
+                        fontSize: 11, padding: "6px 8px", marginBottom: 4, marginTop: 4,
+                        background: "#FFFBEB", borderRadius: 4, borderLeft: "3px solid #D97706",
+                      }}>
+                        <strong>{r.rule_id}</strong>: {r.details?.slice(0, 80) || r.rule_name}
+                      </div>
+                    ))}
                   </div>
                 );
               })}
