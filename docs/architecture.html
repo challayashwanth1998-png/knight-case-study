@@ -286,8 +286,8 @@
       </div>
       <div class="flex gap-10">
         <div class="node flex-1"><span class="node-icon">🌐</span><div class="node-label">REST API Router</div><div class="node-desc">CRUD submissions, file downloads, analytics aggregation, health checks, Swagger docs at /docs</div></div>
-        <div class="node flex-1"><span class="node-icon">🎯</span><div class="node-label">Pipeline Orchestrator</div><div class="node-desc">6-step sequential workflow with ThreadPoolExecutor for parallel image & AI calls. Tracks cost per run</div></div>
-        <div class="node flex-1"><span class="node-icon">📧</span><div class="node-label">Email Watcher</div><div class="node-desc">IMAP polling every 30s, auto-extracts attachments (PDF, Excel, images), creates submissions</div></div>
+        <div class="node flex-1"><span class="node-icon">🎯</span><div class="node-label">Pipeline Orchestrator</div><div class="node-desc">6-step workflow with ThreadPoolExecutor for parallel image, extraction & AI calls. Uploads all files to S3. ~45s end-to-end</div></div>
+        <div class="node flex-1"><span class="node-icon">📧</span><div class="node-label">Email Watcher</div><div class="node-desc">IMAP polling every 30s, auto-extracts attachments (PDF, Excel, images), uploads to S3, creates submissions</div></div>
       </div>
     </div>
 
@@ -307,9 +307,9 @@
         <div class="layer-title">Processing Layer <span class="layer-subtitle">— Core business logic</span></div>
       </div>
       <div class="nodes">
-        <div class="node flex-1"><span class="node-icon">📄</span><div class="node-label">Document Processor</div><div class="node-desc">PyMuPDF for PDF, openpyxl for Excel, pandas for CSV, Gemini OCR for images (parallelized)</div></div>
+        <div class="node flex-1"><span class="node-icon">📄</span><div class="node-label">Document Processor</div><div class="node-desc">PyMuPDF for PDF, openpyxl for Excel, pandas for CSV, batch Gemini Vision OCR for CDL images (all in 1 call)</div></div>
         <div class="node flex-1"><span class="node-icon">🏷️</span><div class="node-label">Document Classifier</div><div class="node-desc">Single batched Gemini call, content-based only (never uses filenames per guidelines)</div></div>
-        <div class="node flex-1"><span class="node-icon">🔍</span><div class="node-label">Data Extractor</div><div class="node-desc">Python regex for structured docs (zero AI cost), Gemini Vision only for CDL images</div></div>
+        <div class="node flex-1"><span class="node-icon">🔍</span><div class="node-label">Data Extractor</div><div class="node-desc">Python regex for structured docs (zero AI cost). AI extraction runs in parallel via ThreadPoolExecutor (4 workers)</div></div>
         <div class="node flex-1"><span class="node-icon">🧠</span><div class="node-label">AI Analyzer</div><div class="node-desc">4 parallel Gemini calls: company risk, driver risk, fleet, financial/loss analysis</div></div>
         <div class="node flex-1"><span class="node-icon">⚖️</span><div class="node-label">Rules Engine</div><div class="node-desc">21 configurable rules across 5 categories, severity levels, produces ACCEPT/REFER/DECLINE</div></div>
       </div>
@@ -328,7 +328,7 @@
           <div class="layer-title">External Services</div>
         </div>
         <div class="flex-col gap-8">
-          <div class="node w-full"><span class="node-icon">🧠</span><div class="node-label">Google Gemini 2.5 Flash</div><div class="node-desc">Vision + text generation via REST API • Used for classification, CDL OCR, and 4 parallel risk analyses • ~$0.005/submission avg</div></div>
+          <div class="node w-full"><span class="node-icon">🧠</span><div class="node-label">Google Gemini 2.5 Flash</div><div class="node-desc">Vision + text generation via REST API • Batch CDL OCR, classification, and 4 parallel risk analyses • ~$0.002/submission avg</div></div>
           <div class="node w-full"><span class="node-icon">📬</span><div class="node-label">IMAP Server</div><div class="node-desc">IMAPS port 993 encrypted • Polls inbox every 30s • Extracts all attachments from new emails automatically</div></div>
         </div>
       </div>
@@ -339,7 +339,7 @@
         </div>
         <div class="flex-col gap-8">
           <div class="node w-full"><span class="node-icon">🗃️</span><div class="node-label">SQLite Database</div><div class="node-desc">SQLAlchemy ORM • 6 tables: submissions, documents, analysis_results, rule_results, audit_logs, rule_configs</div></div>
-          <div class="node w-full"><span class="node-icon">📁</span><div class="node-label">File Storage</div><div class="node-desc">uploads/{submission_id}/ • Original documents preserved with metadata • Mounted Docker volume</div></div>
+          <div class="node w-full"><span class="node-icon">☁️</span><div class="node-label">AWS S3 Storage</div><div class="node-desc">knight-insurance-docs bucket • All uploaded documents stored in S3 under submissions/{id}/ • Versioned, durable, encrypted at rest</div></div>
         </div>
       </div>
     </div>
@@ -667,13 +667,13 @@
           </div>
         </div>
 
-        <!-- Volumes -->
+        <!-- Volumes + Cloud Storage -->
         <div class="layer layer-slate flex-1" style="margin-bottom:0;">
-          <div class="layer-header"><div class="layer-icon">📦</div><div class="layer-title" style="font-size:10px;">Persistent Storage <span class="layer-subtitle">— Docker volumes, survives restarts</span></div></div>
+          <div class="layer-header"><div class="layer-icon">📦</div><div class="layer-title" style="font-size:10px;">Persistent Storage <span class="layer-subtitle">— Docker volumes + AWS S3</span></div></div>
           <div class="flex-col gap-8">
             <div class="node w-full"><span class="node-icon">🗃️</span><div class="node-label">SQLite Database</div><div class="node-desc">./data/submissions.db → /app/data/<br/>SQLAlchemy ORM • 6 tables<br/>Mounted as Docker bind mount</div></div>
-            <div class="node w-full"><span class="node-icon">📁</span><div class="node-label">Document Storage</div><div class="node-desc">./uploads/ → /app/uploads/<br/>Original files organized by submission ID<br/>8GB EBS gp2 volume (expandable)</div></div>
-            <div class="node w-full"><span class="node-icon">🔧</span><div class="node-label">Configuration</div><div class="node-desc">.env file with GEMINI_API_KEY,<br/>IMAP_HOST, IMAP_USER, IMAP_PASS<br/>Not committed to git (in .gitignore)</div></div>
+            <div class="node w-full" style="border-left:3px solid var(--amber-500);"><span class="node-icon">☁️</span><div class="node-label">AWS S3 — Document Storage</div><div class="node-desc">knight-insurance-docs bucket<br/>All files uploaded to s3://submissions/{id}/<br/>Server-side encryption (AES-256) • Versioned<br/>IAM role-based access from EC2 instance</div></div>
+            <div class="node w-full"><span class="node-icon">🔧</span><div class="node-label">Configuration</div><div class="node-desc">.env file with GEMINI_API_KEY,<br/>IMAP_HOST, AWS credentials, S3 bucket<br/>Not committed to git (in .gitignore)</div></div>
           </div>
         </div>
       </div>
@@ -687,10 +687,11 @@
     <div class="layer layer-purple">
       <div class="layer-header">
         <div class="layer-icon">☁️</div>
-        <div class="layer-title">External Services <span class="layer-subtitle">— Third-party APIs & infrastructure</span></div>
+        <div class="layer-title">External Services <span class="layer-subtitle">— AWS + Third-party APIs</span></div>
       </div>
       <div class="flex gap-10">
-        <div class="node flex-1"><span class="node-icon">🧠</span><div class="node-label">Google Gemini API</div><div class="node-desc">generativelanguage.googleapis.com<br/>Model: gemini-2.5-flash<br/>REST API with API key auth<br/>~$0.005 per submission avg cost</div></div>
+        <div class="node flex-1"><span class="node-icon">🧠</span><div class="node-label">Google Gemini API</div><div class="node-desc">generativelanguage.googleapis.com<br/>Model: gemini-2.5-flash<br/>REST API with API key auth<br/>~$0.002 per submission avg cost</div></div>
+        <div class="node flex-1"><span class="node-icon">☁️</span><div class="node-label">AWS S3</div><div class="node-desc">knight-insurance-docs bucket<br/>Server-side encryption (AES-256)<br/>IAM role access from EC2<br/>All documents stored durably</div></div>
         <div class="node flex-1"><span class="node-icon">📬</span><div class="node-label">IMAP Email Server</div><div class="node-desc">Outreach Benefits mail server<br/>IMAPS port 993 (TLS encrypted)<br/>Polls INBOX for new submissions<br/>Marks processed emails as read</div></div>
         <div class="node flex-1"><span class="node-icon">🐙</span><div class="node-label">GitHub Repository</div><div class="node-desc">challayashwanth1998-png/knight-case-study<br/>Main branch • SSH deploy key<br/>Source code, Dockerfile, docker-compose.yml</div></div>
       </div>
@@ -790,10 +791,10 @@
         <div class="layer-title">Scalability & Performance <span class="layer-subtitle">— Optimized for speed</span></div>
       </div>
       <div class="flex gap-10">
-        <div class="node flex-1"><span class="node-icon">💾</span><div class="node-label">Response Caching</div><div class="node-desc">In-memory TTL cache (30s) for stats<br/>Avoids DB hit on every dashboard load<br/>Cache invalidation on new submissions</div></div>
-        <div class="node flex-1"><span class="node-icon">🧵</span><div class="node-label">Thread Pooling</div><div class="node-desc">ThreadPoolExecutor for parallel AI calls<br/>4 simultaneous risk analyses<br/>Parallel image OCR processing</div></div>
-        <div class="node flex-1"><span class="node-icon">📦</span><div class="node-label">GZip Compression</div><div class="node-desc">All responses > 500B compressed<br/>~60% bandwidth reduction<br/>Transparent to clients</div></div>
-        <div class="node flex-1"><span class="node-icon">🚀</span><div class="node-label">Deferred Loading</div><div class="node-desc">Heavy imports deferred to first request<br/>Fast cold start under memory pressure<br/>Lazy model/pipeline initialization</div></div>
+        <div class="node flex-1"><span class="node-icon">⚡</span><div class="node-label">Batch CDL OCR</div><div class="node-desc">All 5 CDL images sent in a single Gemini Vision call<br/>Reduced from 73s (5 calls) → 8s (1 call)<br/>~9x speedup for Step 1</div></div>
+        <div class="node flex-1"><span class="node-icon">🧵</span><div class="node-label">Parallel Extraction</div><div class="node-desc">ThreadPoolExecutor (4 workers) for data extraction<br/>6 concurrent AI calls instead of sequential<br/>Step 3 reduced from 72s → 15s</div></div>
+        <div class="node flex-1"><span class="node-icon">🔄</span><div class="node-label">Parallel AI Analysis</div><div class="node-desc">4 simultaneous risk analyses run concurrently<br/>Company, Driver, Fleet, Financial in parallel<br/>Step 4: ~18s instead of ~60s sequential</div></div>
+        <div class="node flex-1"><span class="node-icon">💾</span><div class="node-label">Response Caching</div><div class="node-desc">In-memory TTL cache (30s) for stats<br/>GZip compression for all responses<br/>Total pipeline: ~45s end-to-end</div></div>
       </div>
     </div>
 
