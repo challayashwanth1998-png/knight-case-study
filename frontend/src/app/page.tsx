@@ -2,18 +2,21 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
-import { listSubmissions, getStats } from "@/lib/api";
+import { listSubmissions, getStats, getAnalytics } from "@/lib/api";
 import type { Submission, DashboardStats } from "@/types";
 
 export default function DashboardPage() {
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [analytics, setAnalytics] = useState<any>(null);
 
   const loadData = useCallback(async () => {
     try {
       const [subs, st] = await Promise.all([listSubmissions(), getStats()]);
       setSubmissions(subs);
       setStats(st);
+      // Load analytics in background (non-blocking)
+      getAnalytics().then(setAnalytics).catch(() => {});
     } catch { /* backend might be down */ }
   }, []);
 
@@ -23,7 +26,7 @@ export default function DashboardPage() {
     return () => clearInterval(interval);
   }, [loadData]);
 
-  const recentSubs = submissions.slice(0, 5);
+  const recentSubs = submissions.slice(0, 8);
 
   return (
     <div style={{ maxWidth: 1100, margin: "0 auto" }}>
@@ -69,6 +72,46 @@ export default function DashboardPage() {
         </div>
       </div>
 
+      {/* Quick Performance Metrics (from analytics) */}
+      {analytics?.summary && (
+        <div style={{
+          display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 24,
+        }}>
+          <div className="card" style={{ textAlign: "center", padding: 14 }}>
+            <div style={{ fontSize: 18, fontWeight: 800, color: "#2563EB" }}>
+              {analytics.summary.avg_processing_time}s
+            </div>
+            <div style={{ fontSize: 10, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+              Avg Processing
+            </div>
+          </div>
+          <div className="card" style={{ textAlign: "center", padding: 14 }}>
+            <div style={{ fontSize: 18, fontWeight: 800, color: "#059669" }}>
+              ${analytics.summary.avg_ai_cost.toFixed(4)}
+            </div>
+            <div style={{ fontSize: 10, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+              Avg AI Cost
+            </div>
+          </div>
+          <div className="card" style={{ textAlign: "center", padding: 14 }}>
+            <div style={{ fontSize: 18, fontWeight: 800, color: "#7C3AED" }}>
+              {Math.round(analytics.summary.total_ai_calls / Math.max(analytics.summary.total_submissions, 1))}
+            </div>
+            <div style={{ fontSize: 10, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+              Avg AI Calls
+            </div>
+          </div>
+          <div className="card" style={{ textAlign: "center", padding: 14 }}>
+            <div style={{ fontSize: 18, fontWeight: 800, color: "#D97706" }}>
+              ${analytics.summary.total_ai_cost.toFixed(3)}
+            </div>
+            <div style={{ fontSize: 10, color: "#94A3B8", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+              Total AI Spend
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Decision Distribution + Recent Activity */}
       <div className="grid-2">
         {/* Decision Breakdown */}
@@ -112,9 +155,14 @@ export default function DashboardPage() {
 
         {/* Recent Activity */}
         <div className="card">
-          <h3 style={{ fontSize: 14, fontWeight: 700, marginBottom: 16, color: "var(--ink)" }}>
-            Recent Activity
-          </h3>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+            <h3 style={{ fontSize: 14, fontWeight: 700, color: "var(--ink)" }}>
+              Recent Activity
+            </h3>
+            <Link href="/submissions" style={{ fontSize: 11, color: "var(--primary-light)", textDecoration: "none" }}>
+              View All →
+            </Link>
+          </div>
           {recentSubs.length > 0 ? (
             <div>
               {recentSubs.map((s) => (
@@ -123,16 +171,22 @@ export default function DashboardPage() {
                     display: "flex", justifyContent: "space-between", alignItems: "center",
                     padding: "8px 0", borderBottom: "1px solid var(--border-light)",
                   }}>
-                    <div>
-                      <div style={{ fontSize: 13, fontWeight: 500 }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 13, fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                         {s.email_subject || `Submission ${s.id.slice(0, 8)}`}
                       </div>
-                      <div style={{ fontSize: 11, color: "var(--base)" }}>
-                        {new Date(s.created_at).toLocaleDateString()}
-                        {s.document_count ? ` · ${s.document_count} docs` : ""}
+                      <div style={{ fontSize: 11, color: "var(--base)", display: "flex", gap: 8 }}>
+                        <span>{new Date(s.created_at).toLocaleDateString()}</span>
+                        {s.document_count ? <span>· {s.document_count} docs</span> : null}
+                        {s.processing_duration_ms ? (
+                          <span>· {(s.processing_duration_ms / 1000).toFixed(1)}s</span>
+                        ) : null}
+                        {s.ai_cost_usd ? (
+                          <span>· ${s.ai_cost_usd.toFixed(4)}</span>
+                        ) : null}
                       </div>
                     </div>
-                    <div style={{ display: "flex", gap: 6 }}>
+                    <div style={{ display: "flex", gap: 6, flexShrink: 0, marginLeft: 8 }}>
                       <span className={`badge badge-${s.status}`}>{s.status}</span>
                       {s.overall_decision && (
                         <span className={`badge badge-${s.overall_decision}`}>{s.overall_decision}</span>
@@ -148,6 +202,33 @@ export default function DashboardPage() {
             </div>
           )}
         </div>
+      </div>
+
+      {/* Quick Links */}
+      <div style={{
+        display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginTop: 24,
+      }}>
+        {[
+          { href: "/submit", icon: "📤", label: "New Submission", desc: "Upload documents" },
+          { href: "/analytics", icon: "📈", label: "Analytics", desc: "View performance" },
+          { href: "/rules", icon: "⚖️", label: "Rules Engine", desc: "View underwriting rules" },
+          { href: "/architecture", icon: "🏗️", label: "Architecture", desc: "System diagram" },
+        ].map((link) => (
+          <Link key={link.href} href={link.href} style={{ textDecoration: "none" }}>
+            <div className="card" style={{
+              textAlign: "center", padding: 20, cursor: "pointer",
+              transition: "all 0.2s",
+            }}>
+              <div style={{ fontSize: 28 }}>{link.icon}</div>
+              <div style={{ fontSize: 13, fontWeight: 600, marginTop: 8, color: "var(--ink)" }}>
+                {link.label}
+              </div>
+              <div style={{ fontSize: 11, color: "var(--base)", marginTop: 4 }}>
+                {link.desc}
+              </div>
+            </div>
+          </Link>
+        ))}
       </div>
     </div>
   );
