@@ -6,7 +6,7 @@ import type {
 } from "@/types";
 
 const API_BASE = typeof window !== "undefined"
-  ? ""  // Same-origin: Nginx proxies /api/* to backend
+  ? `${window.location.protocol}//${window.location.hostname}:8000`
   : process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 async function api<T>(path: string, options?: RequestInit): Promise<T> {
