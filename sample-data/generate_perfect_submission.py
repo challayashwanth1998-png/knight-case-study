@@ -131,7 +131,7 @@ def create_application_pdf():
     e.append(Paragraph("COVERAGE REQUESTED", s["heading"]))
     e.append(_info_table([
         ["Auto Liability:", "$1,000,000 CSL"],
-        ["Physical Damage:", "Yes — Comprehensive & Collision, ACV basis"],
+        ["Physical Damage:", "Not Requested"],
         ["Cargo Coverage:", "Yes - $100,000"],
         ["General Liability:", "No"],
         ["Medical Payments:", "Yes - $5,000"],

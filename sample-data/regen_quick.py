@@ -88,7 +88,7 @@ e.append(_t([
 e.append(Paragraph("COVERAGE REQUESTED", S["heading"]))
 e.append(_t([
     ["Auto Liability:", "$1,000,000 CSL"],
-    ["Physical Damage:", "Yes - Comprehensive & Collision, ACV basis"],
+    ["Physical Damage:", "Not Requested"],
     ["Cargo Coverage:", "Yes - $100,000"],
     ["General Liability:", "No"],
     ["Medical Payments:", "Yes - $5,000"],
