@@ -7,22 +7,27 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #f8fafc; --surface: #ffffff; --surface2: #f1f5f9;
+    --bg: #e8edf5; --surface: rgba(255,255,255,0.75); --surface2: rgba(241,245,249,0.7);
     --ink: #0f172a; --text: #334155; --text2: #64748b; --text3: #94a3b8;
-    --border: #e2e8f0; --border2: #cbd5e1;
-    --blue: #3b82f6; --blue-d: #2563eb; --blue-l: #eff6ff; --blue-ll: #dbeafe;
-    --green: #10b981; --green-d: #059669; --green-l: #ecfdf5;
-    --amber: #f59e0b; --amber-d: #d97706; --amber-l: #fffbeb;
-    --purple: #8b5cf6; --purple-d: #7c3aed; --purple-l: #f5f3ff;
-    --teal: #14b8a6; --teal-d: #0d9488; --teal-l: #f0fdfa;
-    --red: #ef4444; --red-d: #dc2626; --red-l: #fef2f2;
+    --border: rgba(203,213,225,0.6); --border2: #cbd5e1;
+    --blue: #3b82f6; --blue-d: #2563eb; --blue-l: rgba(219,234,254,0.5); --blue-ll: rgba(191,219,254,0.4);
+    --green: #10b981; --green-d: #059669; --green-l: rgba(209,250,229,0.4);
+    --amber: #f59e0b; --amber-d: #d97706; --amber-l: rgba(254,243,199,0.4);
+    --purple: #8b5cf6; --purple-d: #7c3aed; --purple-l: rgba(237,233,254,0.4);
+    --teal: #14b8a6; --teal-d: #0d9488; --teal-l: rgba(204,251,241,0.4);
+    --red: #ef4444; --red-d: #dc2626; --red-l: rgba(254,226,226,0.4);
     --rose: #f43f5e; --indigo: #6366f1;
-    --radius: 12px; --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
-    --shadow-lg: 0 10px 30px rgba(0,0,0,0.08), 0 4px 12px rgba(0,0,0,0.04);
-    --shadow-xl: 0 20px 50px rgba(0,0,0,0.1), 0 8px 20px rgba(0,0,0,0.06);
+    --radius: 12px; --shadow: 0 2px 8px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04);
+    --shadow-lg: 0 10px 30px rgba(0,0,0,0.1), 0 4px 12px rgba(0,0,0,0.05);
+    --shadow-xl: 0 20px 50px rgba(0,0,0,0.12), 0 8px 20px rgba(0,0,0,0.06);
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); -webkit-font-smoothing: antialiased; }
+  body {
+    font-family: 'Inter', system-ui, sans-serif;
+    background: linear-gradient(160deg, #dbe4f3 0%, #e8edf5 25%, #f0e6f0 50%, #e4ecf7 75%, #dce5f4 100%);
+    background-attachment: fixed;
+    color: var(--text); -webkit-font-smoothing: antialiased; min-height: 100vh;
+  }
 
   /* ─── Hero Header ─── */
   .hero {
@@ -48,10 +53,11 @@
 
   /* ─── Tab Bar ─── */
   .tab-bar {
-    background: var(--surface); border-bottom: 1px solid var(--border);
+    background: rgba(255,255,255,0.6); backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
     padding: 0 48px; display: flex; gap: 0; max-width: 100%;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
-    overflow-x: auto;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+    overflow-x: auto; position: sticky; top: 0; z-index: 100;
   }
   .tab {
     padding: 14px 20px; font-size: 13px; font-weight: 500; color: var(--text2);
@@ -119,7 +125,8 @@
 
   /* ─── Cards ─── */
   .card {
-    background: var(--surface); border: 1px solid var(--border);
+    background: rgba(255,255,255,0.65); backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.5);
     border-radius: var(--radius); padding: 20px 24px;
     box-shadow: var(--shadow); transition: all 0.25s;
   }
@@ -135,7 +142,8 @@
 
   /* ─── Step Cards (Pipeline) ─── */
   .step-card {
-    background: var(--surface); border: 1px solid var(--border);
+    background: rgba(255,255,255,0.65); backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.5);
     border-radius: var(--radius); padding: 24px; position: relative;
     box-shadow: var(--shadow); transition: all 0.25s;
     border-left: 4px solid var(--blue);
@@ -212,10 +220,10 @@
   /* ─── Node boxes ─── */
   .nodes { display: flex; gap: 10px; flex-wrap: wrap; }
   .node {
-    background: white; border: 1px solid var(--border);
+    background: rgba(255,255,255,0.7); border: 1px solid rgba(255,255,255,0.5);
     border-radius: 8px; padding: 12px 14px;
     min-width: 120px; text-align: center;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.05);
     transition: all 0.2s; cursor: default;
   }
   .node:hover { box-shadow: var(--shadow); transform: translateY(-1px); border-color: var(--border2); }
@@ -243,8 +251,9 @@
 
   /* ─── Rule Category Cards ─── */
   .rule-card {
-    flex: 1; min-width: 170px; background: white; border-radius: var(--radius);
-    border: 1px solid var(--border); padding: 16px; box-shadow: var(--shadow);
+    flex: 1; min-width: 170px; background: rgba(255,255,255,0.65); backdrop-filter: blur(8px);
+    border-radius: var(--radius);
+    border: 1px solid rgba(255,255,255,0.5); padding: 16px; box-shadow: var(--shadow);
     transition: all 0.25s;
   }
   .rule-card:hover { box-shadow: var(--shadow-lg); transform: translateY(-2px); }
@@ -278,7 +287,8 @@
   .routing-row { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 16px; }
   .routing-card {
     flex: 1; min-width: 180px; padding: 14px 16px; border-radius: 10px;
-    border: 1px solid var(--border); background: white;
+    border: 1px solid rgba(255,255,255,0.5); background: rgba(255,255,255,0.6);
+    backdrop-filter: blur(8px);
     box-shadow: var(--shadow); text-align: center; transition: all 0.2s;
   }
   .routing-card:hover { box-shadow: var(--shadow-lg); transform: translateY(-2px); }
@@ -330,7 +340,8 @@
   /* ─── Deploy card ─── */
   .deploy-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
   .deploy-card {
-    background: white; border: 1px solid var(--border); border-radius: var(--radius);
+    background: rgba(255,255,255,0.65); backdrop-filter: blur(8px);
+    border: 1px solid rgba(255,255,255,0.5); border-radius: var(--radius);
     padding: 20px; box-shadow: var(--shadow); transition: all 0.2s;
   }
   .deploy-card:hover { box-shadow: var(--shadow-lg); transform: translateY(-2px); }
