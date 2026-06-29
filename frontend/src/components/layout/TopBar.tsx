@@ -6,6 +6,7 @@ const PAGE_TITLES: Record<string, { title: string; description: string }> = {
   "/": { title: "Dashboard", description: "Submission overview and analytics" },
   "/submit": { title: "New Submission", description: "Upload insurance documents" },
   "/submissions": { title: "All Submissions", description: "Browse and filter submissions" },
+  "/submitters": { title: "Submitter List", description: "Submitters grouped by email" },
   "/rules": { title: "Rules Engine", description: "Knight underwriting business rules" },
   "/guidelines": { title: "Guidelines", description: "Knight Specialty Insurance program guide" },
 };

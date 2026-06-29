@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react";
 import type { SubmissionDetail } from "@/types";
+import { sendEmail } from "@/lib/api";
 
 interface Props {
   submission: SubmissionDetail;
@@ -102,6 +103,8 @@ export default function EmailTab({ submission }: Props) {
   const [subject, setSubject] = useState(defaultSubject);
   const [body, setBody] = useState(buildBody);
   const [copied, setCopied] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [sendResult, setSendResult] = useState<{ ok: boolean; msg: string } | null>(null);
 
   const handleCopy = () => {
     const full = `To: ${to}\nSubject: ${subject}\n\n${body}`;
@@ -113,6 +116,20 @@ export default function EmailTab({ submission }: Props) {
   const handleMailto = () => {
     const mailto = `mailto:${encodeURIComponent(to)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
     window.open(mailto);
+  };
+
+  const handleSend = async () => {
+    if (!to) { setSendResult({ ok: false, msg: "Recipient email is required" }); return; }
+    setSending(true);
+    setSendResult(null);
+    try {
+      const res = await sendEmail({ to, subject, body, submission_id: submission.id });
+      setSendResult({ ok: true, msg: `Email sent from ${res.from} to ${res.to}` });
+    } catch (e: any) {
+      setSendResult({ ok: false, msg: e.message || "Failed to send email" });
+    } finally {
+      setSending(false);
+    }
   };
 
   const fieldStyle: React.CSSProperties = {
@@ -185,6 +202,18 @@ export default function EmailTab({ submission }: Props) {
         />
       </div>
 
+      {/* Send result message */}
+      {sendResult && (
+        <div style={{
+          padding: "10px 20px", fontSize: 12, fontWeight: 600,
+          background: sendResult.ok ? "var(--success-light)" : "var(--error-light)",
+          color: sendResult.ok ? "var(--success)" : "var(--error)",
+          borderTop: "1px solid var(--border)",
+        }}>
+          {sendResult.ok ? "✅" : "❌"} {sendResult.msg}
+        </div>
+      )}
+
       {/* Actions */}
       <div style={{
         padding: "12px 20px", borderTop: "1px solid var(--border)",
@@ -193,10 +222,19 @@ export default function EmailTab({ submission }: Props) {
         <button className="btn btn-secondary" onClick={handleCopy} style={{ fontSize: 12 }}>
           {copied ? "✓ Copied!" : "📋 Copy to Clipboard"}
         </button>
-        <button className="btn btn-primary" onClick={handleMailto} style={{ fontSize: 12 }}>
+        <button className="btn btn-secondary" onClick={handleMailto} style={{ fontSize: 12 }}>
           ✉️ Open in Mail Client
+        </button>
+        <button
+          className="btn btn-primary"
+          onClick={handleSend}
+          disabled={sending || !to}
+          style={{ fontSize: 12, opacity: sending ? 0.6 : 1 }}
+        >
+          {sending ? "⏳ Sending..." : "📤 Send Email"}
         </button>
       </div>
     </div>
   );
 }
+

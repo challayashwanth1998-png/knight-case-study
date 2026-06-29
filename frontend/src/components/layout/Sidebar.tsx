@@ -8,6 +8,7 @@ const NAV_ITEMS = [
   { href: "/", icon: "📊", label: "Dashboard" },
   { href: "/submit", icon: "📤", label: "New Submission" },
   { href: "/submissions", icon: "📋", label: "Underwriter View" },
+  { href: "/submitters", icon: "👥", label: "Submitter List" },
   { section: "Intelligence" },
   { href: "/analytics", icon: "📈", label: "Analytics" },
   { href: "/compare", icon: "🔀", label: "Compare" },

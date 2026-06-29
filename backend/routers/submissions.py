@@ -216,6 +216,120 @@ async def get_stats(db: Session = Depends(get_db)):
     return result
 
 
+@router.get("/submitters")
+async def get_submitters(db: Session = Depends(get_db)):
+    """Get unique submitters grouped by email_from with submission counts."""
+    rows = (
+        db.query(
+            Submission.email_from,
+            func.count(Submission.id).label("count"),
+            func.max(Submission.created_at).label("last_submission"),
+            func.min(Submission.created_at).label("first_submission"),
+        )
+        .group_by(Submission.email_from)
+        .order_by(func.max(Submission.created_at).desc())
+        .all()
+    )
+    submitters = []
+    for row in rows:
+        email = row[0] or "Unknown"
+        # Get decision breakdown for this submitter
+        sub_q = db.query(Submission).filter(Submission.email_from == row[0])
+        accepted = sub_q.filter(Submission.overall_decision == "accept").count()
+        declined = sub_q.filter(Submission.overall_decision == "decline").count()
+        referred = sub_q.filter(Submission.overall_decision == "refer").count()
+
+        submitters.append({
+            "email": email,
+            "name": email.split("@")[0].replace(".", " ").replace("_", " ").title() if "@" in email else email,
+            "submission_count": row[1],
+            "last_submission": str(row[2]) if row[2] else None,
+            "first_submission": str(row[3]) if row[3] else None,
+            "accepted": accepted,
+            "declined": declined,
+            "referred": referred,
+            "is_ui_upload": email == "UI Upload",
+        })
+    return submitters
+
+
+@router.get("/submitters/{email}/submissions")
+async def get_submitter_submissions(email: str, db: Session = Depends(get_db)):
+    """Get all submissions from a specific submitter."""
+    subs = (
+        db.query(Submission)
+        .filter(Submission.email_from == email)
+        .order_by(Submission.created_at.desc())
+        .all()
+    )
+    result = []
+    for s in subs:
+        doc_count = db.query(func.count(Document.id)).filter(Document.submission_id == s.id).scalar() or 0
+        result.append(_to_response(s, doc_count))
+    return result
+
+
+@router.post("/send-email")
+async def send_email(request: Request, db: Session = Depends(get_db)):
+    """Send an email via SMTP using the configured email credentials."""
+    import smtplib
+    from email.mime.text import MIMEText
+    from email.mime.multipart import MIMEMultipart
+
+    body = await request.json()
+    to_email = body.get("to", "")
+    subject = body.get("subject", "")
+    email_body = body.get("body", "")
+    submission_id = body.get("submission_id", "")
+
+    if not to_email or not subject:
+        raise HTTPException(400, "Missing 'to' or 'subject'")
+
+    # Use the IMAP credentials (same email server)
+    smtp_host = (settings.IMAP_HOST or "").replace("imap.", "smtp.")
+    smtp_user = settings.IMAP_USERNAME
+    smtp_pass = settings.IMAP_PASSWORD
+
+    if not smtp_host or not smtp_user or not smtp_pass:
+        raise HTTPException(500, "Email not configured: IMAP_HOST, IMAP_USERNAME, IMAP_PASSWORD required")
+
+    try:
+        msg = MIMEMultipart()
+        msg["From"] = smtp_user
+        msg["To"] = to_email
+        msg["Subject"] = subject
+        msg.attach(MIMEText(email_body, "plain"))
+
+        # Try SMTP SSL (port 465) first, fallback to STARTTLS (587)
+        try:
+            with smtplib.SMTP_SSL(smtp_host, 465, timeout=10) as server:
+                server.login(smtp_user, smtp_pass)
+                server.sendmail(smtp_user, [to_email], msg.as_string())
+        except Exception:
+            with smtplib.SMTP(smtp_host, 587, timeout=10) as server:
+                server.starttls()
+                server.login(smtp_user, smtp_pass)
+                server.sendmail(smtp_user, [to_email], msg.as_string())
+
+        # Log it
+        if submission_id:
+            db.add(AuditLog(
+                submission_id=submission_id,
+                action="email_sent",
+                details=f"Email sent to {to_email}: {subject}",
+            ))
+            db.commit()
+
+        logger.info(f"Email sent from {smtp_user} to {to_email}")
+        return {"status": "sent", "from": smtp_user, "to": to_email}
+
+    except smtplib.SMTPAuthenticationError:
+        raise HTTPException(500, "SMTP authentication failed — check email credentials")
+    except Exception as e:
+        logger.error(f"Failed to send email: {e}")
+        raise HTTPException(500, f"Failed to send email: {str(e)}")
+
+
 @router.get("/analytics")
 async def get_analytics(db: Session = Depends(get_db)):
     """Rich analytics data for the analytics dashboard."""

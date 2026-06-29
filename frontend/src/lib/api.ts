@@ -87,3 +87,29 @@ export const reviewSubmission = (id: string, body: {
       body: JSON.stringify(body),
     }
   );
+
+export interface Submitter {
+  email: string;
+  name: string;
+  submission_count: number;
+  last_submission: string | null;
+  first_submission: string | null;
+  accepted: number;
+  declined: number;
+  referred: number;
+  is_ui_upload: boolean;
+}
+
+export const getSubmitters = () =>
+  api<Submitter[]>("/api/submissions/submitters");
+
+export const getSubmitterSubmissions = (email: string) =>
+  api<Submission[]>(`/api/submissions/submitters/${encodeURIComponent(email)}/submissions`);
+
+export const sendEmail = (body: { to: string; subject: string; body: string; submission_id?: string }) =>
+  api<{ status: string; from: string; to: string }>("/api/submissions/send-email", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+
