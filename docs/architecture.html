@@ -4,125 +4,108 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Knight Insurance — System Architecture</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'Inter',sans-serif;background:#f8fafc;color:#0f172a;-webkit-font-smoothing:antialiased}
+body{font-family:Helvetica,Arial,sans-serif;background:#f8fafc;color:#333;-webkit-font-smoothing:antialiased}
 
 /* NAV */
-nav{position:sticky;top:0;z-index:100;height:48px;display:flex;align-items:center;padding:0 24px;background:#fff;border-bottom:1px solid #e2e8f0;box-shadow:0 1px 2px rgba(15,23,42,.04)}
-nav .logo{font-size:13px;font-weight:800;color:#1e3a8a;margin-right:20px}
-nav a{font-size:11.5px;font-weight:500;color:#64748b;text-decoration:none;padding:14px 10px;cursor:pointer;border-bottom:2px solid transparent;transition:.15s}
-nav a:hover{color:#0f172a}
-nav a.on{color:#1e3a8a;border-bottom-color:#1e3a8a;font-weight:600}
+.tnav{position:sticky;top:0;z-index:100;height:44px;display:flex;align-items:center;padding:0 20px;background:#fff;border-bottom:1px solid #ddd}
+.tnav .logo{font-size:13px;font-weight:700;color:#333;margin-right:20px}
+.tnav a{font-size:12px;color:#666;text-decoration:none;padding:12px 10px;cursor:pointer;border-bottom:2px solid transparent}
+.tnav a:hover{color:#333}
+.tnav a.on{color:#1a73e8;border-bottom-color:#1a73e8;font-weight:600}
 
-/* VIEWS */
-.V{display:none}.V.on{display:block;animation:fin .2s ease}
-@keyframes fin{from{opacity:0}to{opacity:1}}
+.V{display:none}.V.on{display:block}
 
-/* CANVAS */
-.C{max-width:1100px;margin:0 auto;padding:24px 24px 48px}
+/* Draw.io grid background */
+.draw-canvas{
+  background-color:#fff;
+  background-image:radial-gradient(circle,#ddd 1px,transparent 1px);
+  background-size:20px 20px;
+  border:1px solid #ddd;
+  border-radius:4px;
+  margin:16px;
+  padding:20px;
+  overflow-x:auto;
+}
 
-/* Section header */
-.sh{margin-bottom:20px;display:flex;align-items:center;gap:10px}
-.sh-i{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;color:#fff}
-.sh h2{font-size:16px;font-weight:700;letter-spacing:-.2px}
-.sh p{font-size:11px;color:#64748b}
+/* Draw.io SVG styles */
+svg text{font-family:Helvetica,Arial,sans-serif}
 
-/* ═══ SVG DIAGRAM CANVAS ═══ */
-.diagram{width:100%;overflow-x:auto}
-.diagram svg{display:block;margin:0 auto}
+/* draw.io color palette */
+/* blue: fill #dae8fc stroke #6c8ebf */
+/* green: fill #d5e8d4 stroke #82b366 */
+/* orange: fill #fff2cc stroke #d6b656 */
+/* red: fill #f8cecc stroke #b85450 */
+/* purple: fill #e1d5e7 stroke #9673a6 */
+/* gray: fill #f5f5f5 stroke #666666 */
+/* teal: fill #d5f5e3 stroke #27ae60 */
 
-/* SVG styles */
-.node-rect{fill:#fff;stroke:#e2e8f0;stroke-width:1.5;rx:10;ry:10;transition:.2s;cursor:default}
-.node-rect:hover{stroke:#94a3b8;filter:drop-shadow(0 2px 6px rgba(0,0,0,.06))}
-.node-label{font-family:'Inter',sans-serif;font-size:11px;font-weight:600;fill:#0f172a;text-anchor:middle;pointer-events:none}
-.node-sub{font-family:'Inter',sans-serif;font-size:8.5px;fill:#64748b;text-anchor:middle;pointer-events:none}
-.node-icon{font-size:16px;text-anchor:middle;pointer-events:none}
-.group-rect{fill:none;stroke-dasharray:6 3;rx:12;ry:12}
-.group-label{font-family:'Inter',sans-serif;font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase}
-.conn{fill:none;stroke-width:1.8;stroke-linecap:round}
-.conn-animated{stroke-dasharray:6 3;animation:dash .8s linear infinite}
-@keyframes dash{to{stroke-dashoffset:-18}}
-.arrow-head{stroke:none}
+/* Pipeline list */
+.plist{margin:0 16px 16px}
+.prow{display:flex;align-items:flex-start;gap:0;margin-bottom:0}
+.pnum{width:40px;display:flex;flex-direction:column;align-items:center;flex-shrink:0;padding-top:14px}
+.pnum span{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff}
+.pnum .pline{width:2px;height:24px}
+.pbody{flex:1;background:#fff;border:1.5px solid #6c8ebf;border-radius:4px;padding:12px 14px;margin-bottom:6px}
+.pbody h4{font-size:13px;font-weight:700;color:#333;margin-bottom:2px}
+.pbody p{font-size:11px;color:#666;margin-bottom:6px}
+.ptags{display:flex;flex-wrap:wrap;gap:4px}
+.ptag{padding:3px 8px;border-radius:3px;font-size:10px;border:1px solid #ddd;background:#f5f5f5;color:#333}
+.ptag-g{background:#d5e8d4;border-color:#82b366;color:#2d6a2e}
 
-/* Color palette for groups */
-.g-navy{stroke:#1e3a8a;fill:#1e3a8a}
-.g-blue{stroke:#3b82f6;fill:#3b82f6}
-.g-teal{stroke:#0d9488;fill:#0d9488}
-.g-green{stroke:#15803d;fill:#15803d}
-.g-amber{stroke:#d97706;fill:#d97706}
-.g-red{stroke:#b91c1c;fill:#b91c1c}
-.g-purple{stroke:#7c3aed;fill:#7c3aed}
-.g-slate{stroke:#475569;fill:#475569}
-.bg-navy{fill:rgba(30,58,138,.04)}.bg-blue{fill:rgba(59,130,246,.04)}.bg-teal{fill:rgba(13,148,136,.04)}.bg-amber{fill:rgba(217,119,6,.04)}.bg-purple{fill:rgba(124,58,237,.04)}.bg-slate{fill:rgba(71,85,105,.04)}.bg-green{fill:rgba(21,128,61,.04)}.bg-red{fill:rgba(185,28,28,.04)}
+/* Outcomes */
+.outs{display:flex;gap:8px;margin:0 16px 16px}
+.out{flex:1;padding:14px;border-radius:4px;text-align:center}
+.out h4{font-size:14px;font-weight:700;margin-bottom:2px}
+.out p{font-size:10px}
+.out-g{background:#d5e8d4;border:1.5px solid #82b366;color:#2d6a2e}
+.out-o{background:#fff2cc;border:1.5px solid #d6b656;color:#8a6d00}
+.out-r{background:#f8cecc;border:1.5px solid #b85450;color:#8b3a37}
 
-/* ═══ PIPELINE CARDS ═══ */
-.pipe{display:flex;flex-direction:column;gap:0}
-.pcard{display:grid;grid-template-columns:48px 1fr;gap:0;align-items:stretch}
-.pcard-num{display:flex;flex-direction:column;align-items:center}
-.pcard-dot{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:#fff;z-index:1;flex-shrink:0}
-.pcard-line{width:2px;flex:1;margin-top:-2px}
-.pcard-body{background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:16px;margin:0 0 0 -4px;transition:.15s}
-.pcard-body:hover{box-shadow:0 2px 8px rgba(0,0,0,.04)}
-.pcard-title{font-size:13px;font-weight:700;color:#0f172a}
-.pcard-sub{font-size:10px;color:#64748b;margin-top:1px}
-.pcard-chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
-.chip{padding:4px 10px;border-radius:6px;font-size:10px;font-weight:500;background:#f1f5f9;color:#334155;border:1px solid #e2e8f0}
-.chip-green{background:#f0fdf4;color:#15803d;border-color:#bbf7d0}
-
-/* outcome pills */
-.outcomes{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
-.opill{flex:1;min-width:120px;padding:12px;border-radius:10px;text-align:center;color:#fff}
-.opill-g{background:#15803d}.opill-a{background:#d97706}.opill-r{background:#b91c1c}
-.opill h4{font-size:14px;font-weight:800}.opill span{font-size:9px;opacity:.85}
-
-/* ═══ RULE PILLS ═══ */
-.rgroup{margin-bottom:16px}
-.rgroup-head{display:flex;align-items:center;gap:8px;margin-bottom:8px}
-.rgroup-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
-.rgroup-title{font-size:12px;font-weight:700;color:#0f172a}
-.rgroup-count{font-size:10px;color:#94a3b8;margin-left:auto}
-.rpills{display:flex;flex-wrap:wrap;gap:6px}
-.rpill{padding:5px 12px;border-radius:20px;font-size:10px;background:#fff;border:1px solid #e2e8f0;display:flex;align-items:center;gap:5px;transition:.15s}
-.rpill:hover{border-color:#94a3b8;box-shadow:0 1px 4px rgba(0,0,0,.04)}
-.rpill code{font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:600;color:#1e3a8a}
-.rpill span{color:#334155}
+/* Rules section */
+.rsec{margin:0 16px 14px}
+.rsec-head{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.rsec-dot{width:10px;height:10px;border-radius:2px;flex-shrink:0}
+.rsec-title{font-size:12px;font-weight:700;color:#333}
+.rsec-count{font-size:10px;color:#999;margin-left:auto}
+.rtable{width:100%;border-collapse:collapse;font-size:11px}
+.rtable td{padding:4px 8px;border:1px solid #eee}
+.rtable td:first-child{font-weight:600;color:#1a73e8;font-family:monospace;width:70px}
+.rtable tr:hover{background:#f9f9f9}
 
 /* Team cards */
-.teams{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
-@media(max-width:700px){.teams{grid-template-columns:repeat(2,1fr)}}
-.tcard{padding:12px;border-radius:8px;text-align:center;background:#fff;border:1px solid #e2e8f0;transition:.15s}
-.tcard:hover{box-shadow:0 2px 8px rgba(0,0,0,.04)}
-.tcard h4{font-size:11px;font-weight:700;color:#0f172a}
-.tcard p{font-size:9px;color:#64748b;margin-top:2px}
+.tcards{display:flex;gap:6px;margin:0 16px 16px;flex-wrap:wrap}
+.tc{flex:1;min-width:120px;padding:10px;text-align:center;border-radius:4px;background:#fff;border:1.5px solid #ddd}
+.tc h4{font-size:11px;font-weight:700;color:#333}
+.tc p{font-size:9px;color:#666}
 
 /* Infra grid */
-.igrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.igrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:0 16px 16px}
 @media(max-width:700px){.igrid{grid-template-columns:1fr}}
-.icard{background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:14px;transition:.15s}
-.icard:hover{box-shadow:0 2px 8px rgba(0,0,0,.04)}
-.icard-head{display:flex;align-items:center;gap:6px;margin-bottom:6px}
-.icard-ico{font-size:18px}
-.icard h4{font-size:11px;font-weight:700;color:#0f172a}
-.icard p{font-size:10px;color:#334155;line-height:1.4}
-.icard .tag{display:inline-block;margin-top:6px;padding:2px 8px;border-radius:4px;font-size:9px;font-weight:600;background:#eff6ff;color:#1e3a8a}
+.ic{background:#fff;border:1.5px solid #6c8ebf;border-radius:4px;padding:10px 12px}
+.ic h4{font-size:11px;font-weight:700;color:#333;margin-bottom:3px}
+.ic p{font-size:10px;color:#666;line-height:1.4}
+.ictag{display:inline-block;margin-top:4px;padding:2px 6px;border-radius:2px;font-size:9px;font-weight:600;background:#dae8fc;color:#3b6fa0}
 
 /* Numbered list */
-.nlist{counter-reset:n}
-.nitem{counter-increment:n;padding:14px 14px 14px 50px;background:#fff;border:1px solid #e2e8f0;border-radius:10px;margin-bottom:8px;position:relative;transition:.15s}
-.nitem:hover{box-shadow:0 2px 8px rgba(0,0,0,.04)}
-.nitem::before{content:counter(n);position:absolute;left:14px;top:14px;width:24px;height:24px;border-radius:50%;background:#1e3a8a;color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800}
-.nitem h3{font-size:12px;font-weight:700;color:#0f172a}
-.nitem p,.nitem li{font-size:11px;color:#334155;line-height:1.5;margin-top:2px}
-.nitem ul{padding-left:14px;margin-top:3px}
-.nitem code{background:#eff6ff;padding:1px 4px;border-radius:3px;font-size:10px;font-family:'JetBrains Mono',monospace;color:#1e3a8a}
-.nitem strong{color:#0f172a}
+.nl{margin:0 16px 16px;counter-reset:n}
+.ni{counter-increment:n;padding:10px 10px 10px 44px;background:#fff;border:1.5px solid #ddd;border-radius:4px;margin-bottom:6px;position:relative}
+.ni::before{content:counter(n);position:absolute;left:12px;top:10px;width:22px;height:22px;border-radius:50%;background:#6c8ebf;color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700}
+.ni h3{font-size:12px;font-weight:700;color:#333}
+.ni p,.ni li{font-size:11px;color:#555;line-height:1.5;margin-top:1px}
+.ni ul{padding-left:14px;margin-top:3px}
+.ni code{background:#dae8fc;padding:1px 4px;border-radius:2px;font-size:10px;color:#3b6fa0}
+.ni strong{color:#333}
+
+/* Section title */
+.stitle{margin:0 16px 12px;font-size:14px;font-weight:700;color:#333}
+.ssub{margin:-8px 16px 12px;font-size:11px;color:#888}
 </style>
 </head>
 <body>
 
-<nav>
+<div class="tnav">
   <div class="logo">Knight Insurance</div>
   <a class="on" data-v="hld">High-Level Design</a>
   <a data-v="pipe">Pipeline</a>
@@ -131,237 +114,232 @@ nav a.on{color:#1e3a8a;border-bottom-color:#1e3a8a;font-weight:600}
   <a data-v="infra">Infrastructure</a>
   <a data-v="why">Decisions</a>
   <a data-v="sec">Security</a>
-</nav>
+</div>
 
-<!-- ═══════════ HIGH-LEVEL DESIGN ═══════════ -->
-<div class="V on" id="hld"><div class="C">
-  <div class="sh"><div class="sh-i" style="background:#1e3a8a">🏗️</div><div><h2>High-Level System Design</h2><p>Positioned node diagram — presentation → orchestration → processing → data</p></div></div>
-  <div class="diagram">
-    <svg viewBox="0 0 960 620" width="960" height="620">
-      <!-- GROUP: Presentation -->
-      <rect x="20" y="10" width="920" height="90" class="group-rect g-green bg-green"/>
-      <text x="36" y="28" class="group-label g-green">▸ Presentation — Next.js 14 : 3000</text>
-      <rect x="40" y="38" width="120" height="50" class="node-rect"/><text x="100" y="56" class="node-label">📊 Dashboard</text><text x="100" y="72" class="node-sub">KPIs, charts</text>
-      <rect x="176" y="38" width="120" height="50" class="node-rect"/><text x="236" y="56" class="node-label">📤 Upload</text><text x="236" y="72" class="node-sub">Drag & drop</text>
-      <rect x="312" y="38" width="120" height="50" class="node-rect"/><text x="372" y="56" class="node-label">📋 Review</text><text x="372" y="72" class="node-sub">Approve / Reject</text>
-      <rect x="448" y="38" width="120" height="50" class="node-rect"/><text x="508" y="56" class="node-label">📈 Analytics</text><text x="508" y="72" class="node-sub">Token usage</text>
-      <rect x="584" y="38" width="120" height="50" class="node-rect"/><text x="644" y="56" class="node-label">🔀 Compare</text><text x="644" y="72" class="node-sub">Side-by-side</text>
-      <rect x="720" y="38" width="120" height="50" class="node-rect"/><text x="780" y="56" class="node-label">🏥 Health</text><text x="780" y="72" class="node-sub">System status</text>
+<!-- ═══ HLD ═══ -->
+<div class="V on" id="hld">
+  <div class="stitle">High-Level System Architecture</div>
+  <div class="draw-canvas">
+    <svg viewBox="0 0 920 580" width="920" height="580">
+      <!-- Row 1: Presentation -->
+      <rect x="10" y="8" width="900" height="80" rx="4" fill="#d5e8d4" stroke="#82b366" stroke-width="1.5"/>
+      <text x="20" y="24" font-size="10" font-weight="700" fill="#2d6a2e">PRESENTATION LAYER  —  Next.js 14 · Port 3000</text>
+      <rect x="24" y="34" width="130" height="42" rx="4" fill="#fff" stroke="#82b366" stroke-width="1.5"/><text x="89" y="52" font-size="10" font-weight="600" fill="#333" text-anchor="middle">Dashboard</text><text x="89" y="64" font-size="8" fill="#888" text-anchor="middle">KPIs, charts, costs</text>
+      <rect x="164" y="34" width="130" height="42" rx="4" fill="#fff" stroke="#82b366" stroke-width="1.5"/><text x="229" y="52" font-size="10" font-weight="600" fill="#333" text-anchor="middle">Upload Form</text><text x="229" y="64" font-size="8" fill="#888" text-anchor="middle">Multi-file drag+drop</text>
+      <rect x="304" y="34" width="130" height="42" rx="4" fill="#fff" stroke="#82b366" stroke-width="1.5"/><text x="369" y="52" font-size="10" font-weight="600" fill="#333" text-anchor="middle">Review Panel</text><text x="369" y="64" font-size="8" fill="#888" text-anchor="middle">Approve / Reject</text>
+      <rect x="444" y="34" width="130" height="42" rx="4" fill="#fff" stroke="#82b366" stroke-width="1.5"/><text x="509" y="52" font-size="10" font-weight="600" fill="#333" text-anchor="middle">Analytics</text><text x="509" y="64" font-size="8" fill="#888" text-anchor="middle">Token usage, trends</text>
+      <rect x="584" y="34" width="130" height="42" rx="4" fill="#fff" stroke="#82b366" stroke-width="1.5"/><text x="649" y="52" font-size="10" font-weight="600" fill="#333" text-anchor="middle">Compare</text><text x="649" y="64" font-size="8" fill="#888" text-anchor="middle">Side-by-side diff</text>
+      <rect x="724" y="34" width="130" height="42" rx="4" fill="#fff" stroke="#82b366" stroke-width="1.5"/><text x="789" y="52" font-size="10" font-weight="600" fill="#333" text-anchor="middle">Health</text><text x="789" y="64" font-size="8" fill="#888" text-anchor="middle">System status</text>
 
-      <!-- Arrow: Presentation → API -->
-      <path d="M480,100 L480,140" class="conn conn-animated g-green" marker-end="url(#ag)"/>
-      <rect x="440" y="108" width="80" height="16" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
-      <text x="480" y="119" style="font-size:8px;font-weight:600;fill:#64748b;text-anchor:middle;font-family:Inter">REST API</text>
+      <!-- Arrow down -->
+      <line x1="460" y1="88" x2="460" y2="110" stroke="#666" stroke-width="1.5"/>
+      <polygon points="455,110 465,110 460,118" fill="#666"/>
+      <rect x="420" y="93" width="80" height="14" rx="3" fill="#fff" stroke="#ddd" stroke-width="1"/><text x="460" y="103" font-size="8" fill="#888" text-anchor="middle">REST API</text>
 
-      <!-- GROUP: API -->
-      <rect x="120" y="140" width="720" height="90" class="group-rect g-blue bg-blue"/>
-      <text x="136" y="158" class="group-label g-blue">▸ API & Orchestration — FastAPI : 8000</text>
-      <rect x="156" y="168" width="150" height="50" class="node-rect"/><text x="231" y="186" class="node-label">🌐 REST Router</text><text x="231" y="202" class="node-sub">CRUD, Swagger docs</text>
-      <rect x="322" y="168" width="150" height="50" class="node-rect"/><text x="397" y="186" class="node-label">🎯 Pipeline Engine</text><text x="397" y="202" class="node-sub">6-step orchestration</text>
-      <rect x="488" y="168" width="150" height="50" class="node-rect"/><text x="563" y="186" class="node-label">📧 Email Watcher</text><text x="563" y="202" class="node-sub">IMAP poll 30s</text>
-      <rect x="654" y="168" width="150" height="50" class="node-rect"/><text x="729" y="186" class="node-label">🔍 Review API</text><text x="729" y="202" class="node-sub">Approve / Override</text>
+      <!-- Row 2: API -->
+      <rect x="80" y="118" width="760" height="80" rx="4" fill="#dae8fc" stroke="#6c8ebf" stroke-width="1.5"/>
+      <text x="90" y="134" font-size="10" font-weight="700" fill="#3b6fa0">API &amp; ORCHESTRATION  —  FastAPI · Port 8000</text>
+      <rect x="108" y="144" width="155" height="42" rx="4" fill="#fff" stroke="#6c8ebf" stroke-width="1.5"/><text x="185" y="162" font-size="10" font-weight="600" fill="#333" text-anchor="middle">REST Router</text><text x="185" y="174" font-size="8" fill="#888" text-anchor="middle">CRUD, Swagger docs</text>
+      <rect x="273" y="144" width="155" height="42" rx="4" fill="#fff" stroke="#6c8ebf" stroke-width="1.5"/><text x="350" y="162" font-size="10" font-weight="600" fill="#333" text-anchor="middle">Pipeline Engine</text><text x="350" y="174" font-size="8" fill="#888" text-anchor="middle">6-step orchestration</text>
+      <rect x="438" y="144" width="155" height="42" rx="4" fill="#fff" stroke="#6c8ebf" stroke-width="1.5"/><text x="515" y="162" font-size="10" font-weight="600" fill="#333" text-anchor="middle">Email Watcher</text><text x="515" y="174" font-size="8" fill="#888" text-anchor="middle">IMAP poll every 30s</text>
+      <rect x="603" y="144" width="155" height="42" rx="4" fill="#fff" stroke="#6c8ebf" stroke-width="1.5"/><text x="680" y="162" font-size="10" font-weight="600" fill="#333" text-anchor="middle">Review API</text><text x="680" y="174" font-size="8" fill="#888" text-anchor="middle">Approve / Override</text>
 
-      <!-- Arrow: API → Processing -->
-      <path d="M480,230 L480,270" class="conn conn-animated g-blue" marker-end="url(#ab)"/>
-      <rect x="435" y="238" width="90" height="16" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
-      <text x="480" y="249" style="font-size:8px;font-weight:600;fill:#64748b;text-anchor:middle;font-family:Inter">Pipeline call</text>
+      <!-- Arrow down -->
+      <line x1="460" y1="198" x2="460" y2="220" stroke="#666" stroke-width="1.5"/>
+      <polygon points="455,220 465,220 460,228" fill="#666"/>
+      <rect x="414" y="203" width="92" height="14" rx="3" fill="#fff" stroke="#ddd" stroke-width="1"/><text x="460" y="213" font-size="8" fill="#888" text-anchor="middle">Pipeline call</text>
 
-      <!-- GROUP: Processing -->
-      <rect x="20" y="270" width="920" height="90" class="group-rect g-teal bg-teal"/>
-      <text x="36" y="288" class="group-label g-teal">▸ Processing Layer — AI + Rules + Conflict Detection</text>
-      <rect x="40" y="298" width="132" height="50" class="node-rect"/><text x="106" y="316" class="node-label">📄 Extractor</text><text x="106" y="332" class="node-sub">PyMuPDF, openpyxl</text>
-      <rect x="188" y="298" width="132" height="50" class="node-rect"/><text x="254" y="316" class="node-label">🏷️ Classifier</text><text x="254" y="332" class="node-sub">Content-only</text>
-      <rect x="336" y="298" width="132" height="50" class="node-rect"/><text x="402" y="316" class="node-label">🔍 Data Extract</text><text x="402" y="332" class="node-sub">Regex + Vision</text>
-      <rect x="484" y="298" width="132" height="50" class="node-rect"/><text x="550" y="316" class="node-label">🧠 AI Analyzer</text><text x="550" y="332" class="node-sub">4 parallel calls</text>
-      <rect x="632" y="298" width="132" height="50" class="node-rect"/><text x="698" y="316" class="node-label">⚖️ Rules</text><text x="698" y="332" class="node-sub">27 rules · 6 cat.</text>
-      <rect x="780" y="298" width="132" height="50" class="node-rect"/><text x="846" y="316" class="node-label">🔀 Conflicts</text><text x="846" y="332" class="node-sub">Cross-doc checks</text>
+      <!-- Row 3: Processing -->
+      <rect x="10" y="228" width="900" height="80" rx="4" fill="#fff2cc" stroke="#d6b656" stroke-width="1.5"/>
+      <text x="20" y="244" font-size="10" font-weight="700" fill="#8a6d00">PROCESSING LAYER  —  AI + Rules + Conflict Detection</text>
+      <rect x="24" y="254" width="135" height="42" rx="4" fill="#fff" stroke="#d6b656" stroke-width="1.5"/><text x="91" y="272" font-size="10" font-weight="600" fill="#333" text-anchor="middle">Text Extractor</text><text x="91" y="284" font-size="8" fill="#888" text-anchor="middle">PyMuPDF, openpyxl</text>
+      <rect x="169" y="254" width="135" height="42" rx="4" fill="#fff" stroke="#d6b656" stroke-width="1.5"/><text x="236" y="272" font-size="10" font-weight="600" fill="#333" text-anchor="middle">Classifier</text><text x="236" y="284" font-size="8" fill="#888" text-anchor="middle">Content-only (no names)</text>
+      <rect x="314" y="254" width="135" height="42" rx="4" fill="#fff" stroke="#d6b656" stroke-width="1.5"/><text x="381" y="272" font-size="10" font-weight="600" fill="#333" text-anchor="middle">Data Extractor</text><text x="381" y="284" font-size="8" fill="#888" text-anchor="middle">Regex + Vision hybrid</text>
+      <rect x="459" y="254" width="135" height="42" rx="4" fill="#fff" stroke="#d6b656" stroke-width="1.5"/><text x="526" y="272" font-size="10" font-weight="600" fill="#333" text-anchor="middle">AI Analyzer</text><text x="526" y="284" font-size="8" fill="#888" text-anchor="middle">4 parallel Gemini</text>
+      <rect x="604" y="254" width="135" height="42" rx="4" fill="#fff" stroke="#d6b656" stroke-width="1.5"/><text x="671" y="272" font-size="10" font-weight="600" fill="#333" text-anchor="middle">Rules Engine</text><text x="671" y="284" font-size="8" fill="#888" text-anchor="middle">27 rules · 6 categories</text>
+      <rect x="749" y="254" width="135" height="42" rx="4" fill="#fff" stroke="#d6b656" stroke-width="1.5"/><text x="816" y="272" font-size="10" font-weight="600" fill="#333" text-anchor="middle">Conflict Detect</text><text x="816" y="284" font-size="8" fill="#888" text-anchor="middle">Cross-doc validation</text>
 
-      <!-- Arrows between processing nodes -->
-      <path d="M172,323 L188,323" class="conn g-teal" marker-end="url(#at)"/>
-      <path d="M320,323 L336,323" class="conn g-teal" marker-end="url(#at)"/>
-      <path d="M468,323 L484,323" class="conn g-teal" marker-end="url(#at)"/>
-      <path d="M616,323 L632,323" class="conn g-teal" marker-end="url(#at)"/>
-      <path d="M764,323 L780,323" class="conn g-teal" marker-end="url(#at)"/>
+      <!-- Processing arrows -->
+      <line x1="159" y1="275" x2="169" y2="275" stroke="#d6b656" stroke-width="1" marker-end="url(#aro)"/>
+      <line x1="304" y1="275" x2="314" y2="275" stroke="#d6b656" stroke-width="1" marker-end="url(#aro)"/>
+      <line x1="449" y1="275" x2="459" y2="275" stroke="#d6b656" stroke-width="1" marker-end="url(#aro)"/>
+      <line x1="594" y1="275" x2="604" y2="275" stroke="#d6b656" stroke-width="1" marker-end="url(#aro)"/>
+      <line x1="739" y1="275" x2="749" y2="275" stroke="#d6b656" stroke-width="1" marker-end="url(#aro)"/>
 
-      <!-- Arrow: Processing → Decision -->
-      <path d="M480,360 L480,400" class="conn conn-animated g-teal" marker-end="url(#at)"/>
-      <rect x="430" y="368" width="100" height="16" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
-      <text x="480" y="379" style="font-size:8px;font-weight:600;fill:#64748b;text-anchor:middle;font-family:Inter">Decision output</text>
+      <!-- Arrow down -->
+      <line x1="460" y1="308" x2="460" y2="330" stroke="#666" stroke-width="1.5"/>
+      <polygon points="455,330 465,330 460,338" fill="#666"/>
+      <rect x="414" y="313" width="92" height="14" rx="3" fill="#fff" stroke="#ddd" stroke-width="1"/><text x="460" y="323" font-size="8" fill="#888" text-anchor="middle">Decision output</text>
 
-      <!-- Decision diamonds -->
-      <polygon points="255,430 340,400 425,430 340,460" fill="#f0fdf4" stroke="#15803d" stroke-width="2"/>
-      <text x="340" y="428" style="font-size:10px;font-weight:700;fill:#15803d;text-anchor:middle;font-family:Inter">✅ Accept</text>
-      <text x="340" y="444" style="font-size:8px;fill:#15803d;text-anchor:middle;font-family:Inter">→ Standard</text>
-      <polygon points="395,430 480,400 565,430 480,460" fill="#fefce8" stroke="#d97706" stroke-width="2"/>
-      <text x="480" y="428" style="font-size:10px;font-weight:700;fill:#d97706;text-anchor:middle;font-family:Inter">⚠️ Refer</text>
-      <text x="480" y="444" style="font-size:8px;fill:#d97706;text-anchor:middle;font-family:Inter">→ Specialty</text>
-      <polygon points="535,430 620,400 705,430 620,460" fill="#fef2f2" stroke="#b91c1c" stroke-width="2"/>
-      <text x="620" y="428" style="font-size:10px;font-weight:700;fill:#b91c1c;text-anchor:middle;font-family:Inter">❌ Decline</text>
-      <text x="620" y="444" style="font-size:8px;fill:#b91c1c;text-anchor:middle;font-family:Inter">→ Senior UW</text>
+      <!-- Decision row -->
+      <rect x="130" y="338" width="200" height="50" rx="4" fill="#d5e8d4" stroke="#82b366" stroke-width="2"/>
+      <text x="230" y="360" font-size="12" font-weight="700" fill="#2d6a2e" text-anchor="middle">ACCEPT</text>
+      <text x="230" y="376" font-size="9" fill="#2d6a2e" text-anchor="middle">0 failures, 0 warnings</text>
+      <rect x="360" y="338" width="200" height="50" rx="4" fill="#fff2cc" stroke="#d6b656" stroke-width="2"/>
+      <text x="460" y="360" font-size="12" font-weight="700" fill="#8a6d00" text-anchor="middle">REFER</text>
+      <text x="460" y="376" font-size="9" fill="#8a6d00" text-anchor="middle">0 failures, 1+ warnings</text>
+      <rect x="590" y="338" width="200" height="50" rx="4" fill="#f8cecc" stroke="#b85450" stroke-width="2"/>
+      <text x="690" y="360" font-size="12" font-weight="700" fill="#8b3a37" text-anchor="middle">DECLINE</text>
+      <text x="690" y="376" font-size="9" fill="#8b3a37" text-anchor="middle">1+ failures</text>
 
-      <!-- Arrow: Decision → Data stores -->
-      <path d="M340,460 L240,500" class="conn conn-animated g-purple"/>
-      <path d="M620,460 L720,500" class="conn conn-animated g-slate"/>
+      <!-- Arrows to data stores -->
+      <line x1="230" y1="388" x2="230" y2="420" stroke="#666" stroke-width="1.5"/>
+      <polygon points="225,420 235,420 230,428" fill="#666"/>
+      <line x1="690" y1="388" x2="690" y2="420" stroke="#666" stroke-width="1.5"/>
+      <polygon points="685,420 695,420 690,428" fill="#666"/>
 
-      <!-- GROUP: External -->
-      <rect x="40" y="490" width="380" height="110" class="group-rect g-purple bg-purple"/>
-      <text x="56" y="508" class="group-label g-purple">▸ External Services</text>
-      <rect x="60" y="518" width="160" height="50" class="node-rect"/><text x="140" y="536" class="node-label">🧠 Gemini 2.5 Flash</text><text x="140" y="552" class="node-sub">Vision + Text · $0.05-0.09</text>
-      <rect x="236" y="518" width="160" height="50" class="node-rect"/><text x="316" y="536" class="node-label">📬 IMAP Server</text><text x="316" y="552" class="node-sub">IMAPS 993 · TLS</text>
+      <!-- Row 5: Data stores -->
+      <rect x="40" y="428" width="380" height="70" rx="4" fill="#e1d5e7" stroke="#9673a6" stroke-width="1.5"/>
+      <text x="50" y="444" font-size="10" font-weight="700" fill="#6a4d80">EXTERNAL SERVICES</text>
+      <rect x="58" y="454" width="160" height="34" rx="4" fill="#fff" stroke="#9673a6" stroke-width="1.5"/><text x="138" y="474" font-size="10" font-weight="600" fill="#333" text-anchor="middle">Gemini 2.5 Flash</text>
+      <rect x="228" y="454" width="160" height="34" rx="4" fill="#fff" stroke="#9673a6" stroke-width="1.5"/><text x="308" y="474" font-size="10" font-weight="600" fill="#333" text-anchor="middle">IMAP Server</text>
 
-      <!-- Arrow between groups -->
-      <path d="M420,545 L540,545" class="conn conn-animated g-slate" marker-end="url(#as)"/>
-      <rect x="448" y="537" width="64" height="16" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
-      <text x="480" y="548" style="font-size:8px;font-weight:600;fill:#64748b;text-anchor:middle;font-family:Inter">data sync</text>
+      <!-- Arrow between -->
+      <line x1="420" y1="463" x2="500" y2="463" stroke="#666" stroke-width="1.5" marker-end="url(#arg)"/>
 
-      <!-- GROUP: Data -->
-      <rect x="540" y="490" width="380" height="110" class="group-rect g-slate bg-slate"/>
-      <text x="556" y="508" class="group-label g-slate">▸ Data Layer</text>
-      <rect x="560" y="518" width="160" height="50" class="node-rect"/><text x="640" y="536" class="node-label">🗃️ SQLite / Postgres</text><text x="640" y="552" class="node-sub">SQLAlchemy · 6 tables</text>
-      <rect x="736" y="518" width="160" height="50" class="node-rect"/><text x="816" y="536" class="node-label">☁️ AWS S3</text><text x="816" y="552" class="node-sub">AES-256 · Versioned</text>
+      <rect x="500" y="428" width="380" height="70" rx="4" fill="#f5f5f5" stroke="#666" stroke-width="1.5"/>
+      <text x="510" y="444" font-size="10" font-weight="700" fill="#555">DATA LAYER</text>
+      <rect x="518" y="454" width="160" height="34" rx="4" fill="#fff" stroke="#666" stroke-width="1.5"/><text x="598" y="474" font-size="10" font-weight="600" fill="#333" text-anchor="middle">SQLite / PostgreSQL</text>
+      <rect x="688" y="454" width="160" height="34" rx="4" fill="#fff" stroke="#666" stroke-width="1.5"/><text x="768" y="474" font-size="10" font-weight="600" fill="#333" text-anchor="middle">AWS S3</text>
 
-      <!-- Arrow markers -->
+      <!-- Markers -->
       <defs>
-        <marker id="ag" viewBox="0 0 8 8" refX="8" refY="4" markerWidth="8" markerHeight="8" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#15803d"/></marker>
-        <marker id="ab" viewBox="0 0 8 8" refX="8" refY="4" markerWidth="8" markerHeight="8" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#3b82f6"/></marker>
-        <marker id="at" viewBox="0 0 8 8" refX="8" refY="4" markerWidth="8" markerHeight="8" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#0d9488"/></marker>
-        <marker id="as" viewBox="0 0 8 8" refX="8" refY="4" markerWidth="8" markerHeight="8" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#475569"/></marker>
+        <marker id="aro" viewBox="0 0 6 6" refX="6" refY="3" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#d6b656"/></marker>
+        <marker id="arg" viewBox="0 0 8 8" refX="8" refY="4" markerWidth="8" markerHeight="8" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#666"/></marker>
       </defs>
     </svg>
   </div>
-</div></div>
+</div>
 
-<!-- ═══════════ PIPELINE ═══════════ -->
-<div class="V" id="pipe"><div class="C">
-  <div class="sh"><div class="sh-i" style="background:#0d9488">⚡</div><div><h2>6-Step Processing Pipeline</h2><p>End-to-end ~45 seconds · Parallel processing</p></div></div>
-  <div class="pipe">
-    <div class="pcard"><div class="pcard-num"><div class="pcard-dot" style="background:#1e3a8a">1</div><div class="pcard-line" style="background:#1e3a8a"></div></div><div class="pcard-body"><div class="pcard-title">Text Extraction</div><div class="pcard-sub">Parallel image processing via ThreadPoolExecutor</div><div class="pcard-chips"><div class="chip">📕 PDF → PyMuPDF</div><div class="chip">📗 Excel → openpyxl</div><div class="chip">📊 CSV → pandas</div><div class="chip">🖼️ Images → Gemini Vision</div></div></div></div>
-    <div class="pcard"><div class="pcard-num"><div class="pcard-dot" style="background:#3b82f6">2</div><div class="pcard-line" style="background:#3b82f6"></div></div><div class="pcard-body"><div class="pcard-title">Document Classification</div><div class="pcard-sub">Single batched Gemini call — content-based only (⚠️ never filenames)</div><div class="pcard-chips"><div class="chip">insurance_application</div><div class="chip">driver_list</div><div class="chip">equipment_list</div><div class="chip">loss_run</div><div class="chip">ifta_report</div><div class="chip">drivers_license</div></div></div></div>
-    <div class="pcard"><div class="pcard-num"><div class="pcard-dot" style="background:#15803d">3</div><div class="pcard-line" style="background:#15803d"></div></div><div class="pcard-body"><div class="pcard-title">Data Extraction</div><div class="pcard-sub">Hybrid: Python regex ($0) + Gemini Vision (images only)</div><div class="pcard-chips"><div class="chip chip-green">📗 Excel/CSV — $0</div><div class="chip chip-green">📕 PDF text — $0</div><div class="chip">🪪 CDL images → Vision</div><div class="chip">🔄 Name dedup</div></div></div></div>
-    <div class="pcard"><div class="pcard-num"><div class="pcard-dot" style="background:#d97706">4</div><div class="pcard-line" style="background:#d97706"></div></div><div class="pcard-body"><div class="pcard-title">AI Risk Analysis</div><div class="pcard-sub">4 parallel Gemini calls for comprehensive risk assessment</div><div class="pcard-chips"><div class="chip">🏢 Company risk</div><div class="chip">👤 Driver risk</div><div class="chip">🚛 Fleet risk</div><div class="chip">📊 Financial risk</div></div></div></div>
-    <div class="pcard"><div class="pcard-num"><div class="pcard-dot" style="background:#b91c1c">5</div><div class="pcard-line" style="background:#b91c1c"></div></div><div class="pcard-body"><div class="pcard-title">Rules Engine + Conflict Detection</div><div class="pcard-sub">27 rules across 6 categories + cross-document validation</div><div class="pcard-chips"><div class="chip">🏢 Eligibility · 4</div><div class="chip">👤 Driver · 7</div><div class="chip">⚠️ Exposure · 4</div><div class="chip">📋 Submission · 4</div><div class="chip">⛽ IFTA · 4</div><div class="chip">🔀 Conflict · 6</div></div></div></div>
-    <div class="pcard"><div class="pcard-num"><div class="pcard-dot" style="background:#475569">6</div><div class="pcard-line" style="background:transparent"></div></div><div class="pcard-body"><div class="pcard-title">Decision + Team Routing</div><div class="pcard-sub">Underwriter: Approve ✅ · Reject ❌ · Override ⚡</div><div class="outcomes"><div class="opill opill-g"><h4>✅ Accept</h4><span>→ Standard Review</span></div><div class="opill opill-a"><h4>⚠️ Refer</h4><span>→ Specialty / Driver / Ops</span></div><div class="opill opill-r"><h4>❌ Decline</h4><span>→ Senior Underwriting</span></div></div></div></div>
+<!-- ═══ PIPELINE ═══ -->
+<div class="V" id="pipe">
+  <div class="stitle">6-Step Processing Pipeline</div>
+  <div class="ssub">End-to-end ~45 seconds with parallel processing</div>
+  <div class="plist">
+    <div class="prow"><div class="pnum"><span style="background:#6c8ebf">1</span><div class="pline" style="background:#6c8ebf"></div></div><div class="pbody"><h4>Text Extraction</h4><p>Parallel image processing via ThreadPoolExecutor</p><div class="ptags"><div class="ptag">PDF — PyMuPDF</div><div class="ptag">Excel — openpyxl</div><div class="ptag">CSV — pandas</div><div class="ptag">Images — Gemini Vision OCR</div></div></div></div>
+    <div class="prow"><div class="pnum"><span style="background:#82b366">2</span><div class="pline" style="background:#82b366"></div></div><div class="pbody" style="border-color:#82b366"><h4>Document Classification</h4><p>Single batched Gemini call — content-based only (never filenames)</p><div class="ptags"><div class="ptag">insurance_application</div><div class="ptag">driver_list</div><div class="ptag">equipment_list</div><div class="ptag">loss_run</div><div class="ptag">ifta_report</div><div class="ptag">drivers_license</div></div></div></div>
+    <div class="prow"><div class="pnum"><span style="background:#d6b656">3</span><div class="pline" style="background:#d6b656"></div></div><div class="pbody" style="border-color:#d6b656"><h4>Data Extraction</h4><p>Hybrid: Python regex ($0 cost) + Gemini Vision (images only)</p><div class="ptags"><div class="ptag ptag-g">Excel/CSV — $0</div><div class="ptag ptag-g">PDF text — $0</div><div class="ptag">CDL images — Vision</div><div class="ptag">Name deduplication</div></div></div></div>
+    <div class="prow"><div class="pnum"><span style="background:#9673a6">4</span><div class="pline" style="background:#9673a6"></div></div><div class="pbody" style="border-color:#9673a6"><h4>AI Risk Analysis</h4><p>4 parallel Gemini calls for comprehensive risk assessment</p><div class="ptags"><div class="ptag">Company risk</div><div class="ptag">Driver risk</div><div class="ptag">Fleet risk</div><div class="ptag">Financial risk</div></div></div></div>
+    <div class="prow"><div class="pnum"><span style="background:#b85450">5</span><div class="pline" style="background:#b85450"></div></div><div class="pbody" style="border-color:#b85450"><h4>Rules Engine + Conflict Detection</h4><p>27 rules across 6 categories + cross-document validation</p><div class="ptags"><div class="ptag">Eligibility · 4</div><div class="ptag">Driver · 7</div><div class="ptag">Exposure · 4</div><div class="ptag">Submission · 4</div><div class="ptag">IFTA · 4</div><div class="ptag">Conflict · 6</div></div></div></div>
+    <div class="prow"><div class="pnum"><span style="background:#666">6</span></div><div class="pbody" style="border-color:#666"><h4>Decision + Team Routing</h4><p>Underwriter: Approve / Reject / Override with notes</p></div></div>
   </div>
-</div></div>
-
-<!-- ═══════════ RULES ═══════════ -->
-<div class="V" id="rules"><div class="C">
-  <div class="sh"><div class="sh-i" style="background:#b91c1c">⚖️</div><div><h2>27 Business Rules · 6 Categories</h2><p>Pill-style rules with configurable severity</p></div></div>
-
-  <div class="rgroup"><div class="rgroup-head"><div class="rgroup-dot" style="background:#15803d"></div><div class="rgroup-title">Eligibility</div><div class="rgroup-count">4 rules</div></div><div class="rpills"><div class="rpill"><code>ELIG-001</code><span>Years ≥ 2</span></div><div class="rpill"><code>ELIG-002</code><span>Vehicle types</span></div><div class="rpill"><code>ELIG-003</code><span>States</span></div><div class="rpill"><code>ELIG-004</code><span>Radius</span></div></div></div>
-  <div class="rgroup"><div class="rgroup-head"><div class="rgroup-dot" style="background:#3b82f6"></div><div class="rgroup-title">Driver</div><div class="rgroup-count">7 rules</div></div><div class="rpills"><div class="rpill"><code>DRV-001</code><span>Valid CDL</span></div><div class="rpill"><code>DRV-002</code><span>Age 23–70</span></div><div class="rpill"><code>DRV-003</code><span>2yr exp</span></div><div class="rpill"><code>DRV-004</code><span>Max violations</span></div><div class="rpill"><code>DRV-005</code><span>No major</span></div><div class="rpill"><code>DRV-006</code><span>At-fault</span></div><div class="rpill"><code>DRV-007</code><span>MVR</span></div></div></div>
-  <div class="rgroup"><div class="rgroup-head"><div class="rgroup-dot" style="background:#d97706"></div><div class="rgroup-title">Exposure</div><div class="rgroup-count">4 rules</div></div><div class="rpills"><div class="rpill"><code>EXP-001</code><span>Hazmat</span></div><div class="rpill"><code>EXP-002</code><span>Commodities</span></div><div class="rpill"><code>EXP-003</code><span>Max units</span></div><div class="rpill"><code>EXP-004</code><span>Mexico 50mi</span></div></div></div>
-  <div class="rgroup"><div class="rgroup-head"><div class="rgroup-dot" style="background:#7c3aed"></div><div class="rgroup-title">Submission</div><div class="rgroup-count">4 rules</div></div><div class="rpills"><div class="rpill"><code>SEL-001</code><span>FEIN/DOT</span></div><div class="rpill"><code>SEL-002</code><span>Tow trucks</span></div><div class="rpill"><code>SEL-003</code><span>$13K/unit</span></div><div class="rpill"><code>SEL-004</code><span>Sole prop</span></div></div></div>
-  <div class="rgroup"><div class="rgroup-head"><div class="rgroup-dot" style="background:#0d9488"></div><div class="rgroup-title">IFTA</div><div class="rgroup-count">4 rules</div></div><div class="rpills"><div class="rpill"><code>IFTA-001</code><span>Filings</span></div><div class="rpill"><code>IFTA-002</code><span>Mileage</span></div><div class="rpill"><code>IFTA-003</code><span>Multi-state</span></div><div class="rpill"><code>IFTA-004</code><span>Border</span></div></div></div>
-  <div class="rgroup"><div class="rgroup-head"><div class="rgroup-dot" style="background:#b91c1c"></div><div class="rgroup-title">Conflict Detection</div><div class="rgroup-count">6 rules</div></div><div class="rpills"><div class="rpill"><code>CON-001</code><span>Vehicle count</span></div><div class="rpill"><code>CON-002</code><span>Driver count</span></div><div class="rpill"><code>CON-003</code><span>Company name</span></div><div class="rpill"><code>CON-004</code><span>FEIN/DOT</span></div><div class="rpill"><code>CON-005</code><span>Dup CDLs</span></div><div class="rpill"><code>CON-006</code><span>Dup VINs</span></div></div></div>
-
-  <div style="margin-top:20px"><div class="outcomes"><div class="opill opill-g"><h4>✅ Accept</h4><span>0 failures, 0 warnings</span></div><div class="opill opill-a"><h4>⚠️ Refer</h4><span>0 failures, ≥1 warning</span></div><div class="opill opill-r"><h4>❌ Decline</h4><span>≥1 failure</span></div></div></div>
-
-  <h3 style="font-size:13px;font-weight:700;margin:20px 0 8px">🚦 Team Routing</h3>
-  <div class="teams">
-    <div class="tcard" style="border-top:3px solid #15803d"><h4>Standard</h4><p>Clean submissions</p></div>
-    <div class="tcard" style="border-top:3px solid #d97706"><h4>Specialty Risk</h4><p>Hazmat, border</p></div>
-    <div class="tcard" style="border-top:3px solid #7c3aed"><h4>Driver Review</h4><p>Violations, CDL</p></div>
-    <div class="tcard" style="border-top:3px solid #0d9488"><h4>Operations</h4><p>Missing, conflicts</p></div>
-    <div class="tcard" style="border-top:3px solid #b91c1c"><h4>Senior UW</h4><p>Declined</p></div>
+  <div class="outs">
+    <div class="out out-g"><h4>ACCEPT</h4><p>Standard Review</p></div>
+    <div class="out out-o"><h4>REFER</h4><p>Specialty / Driver / Ops</p></div>
+    <div class="out out-r"><h4>DECLINE</h4><p>Senior Underwriting</p></div>
   </div>
-</div></div>
+</div>
 
-<!-- ═══════════ DATA FLOW ═══════════ -->
-<div class="V" id="data"><div class="C">
-  <div class="sh"><div class="sh-i" style="background:#d97706">📊</div><div><h2>Data Flow Diagram</h2><p>Documents in → extraction → analysis → decision out</p></div></div>
-  <div class="diagram">
-    <svg viewBox="0 0 960 400" width="960" height="400">
-      <!-- Input column -->
-      <rect x="20" y="10" width="260" height="380" class="group-rect g-blue bg-blue"/>
-      <text x="36" y="28" class="group-label g-blue">▸ Input Documents</text>
-      <rect x="40" y="40" width="220" height="36" class="node-rect"/><text x="150" y="60" class="node-label">📄 Insurance Application</text>
-      <rect x="40" y="84" width="220" height="36" class="node-rect"/><text x="150" y="104" class="node-label">👤 Driver Roster (Excel)</text>
-      <rect x="40" y="128" width="220" height="36" class="node-rect"/><text x="150" y="148" class="node-label">🚛 Equipment (Excel)</text>
-      <rect x="40" y="172" width="220" height="36" class="node-rect"/><text x="150" y="192" class="node-label">📊 Loss Runs (PDF)</text>
-      <rect x="40" y="216" width="220" height="36" class="node-rect"/><text x="150" y="236" class="node-label">⛽ IFTA Reports (PDF)</text>
-      <rect x="40" y="260" width="220" height="36" class="node-rect"/><text x="150" y="280" class="node-label">🪪 CDL Images</text>
+<!-- ═══ RULES ═══ -->
+<div class="V" id="rules">
+  <div class="stitle">27 Business Rules · 6 Categories</div>
+  <div class="ssub">Configurable severity · Enable/disable per rule</div>
+  <div class="rsec"><div class="rsec-head"><div class="rsec-dot" style="background:#82b366"></div><div class="rsec-title">Eligibility</div><div class="rsec-count">4 rules</div></div><table class="rtable"><tr><td>ELIG-001</td><td>Years in business ≥ 2</td></tr><tr><td>ELIG-002</td><td>Covered vehicle types (semi-trucks only)</td></tr><tr><td>ELIG-003</td><td>Non-covered states exclusion</td></tr><tr><td>ELIG-004</td><td>Operating radius within limits</td></tr></table></div>
+  <div class="rsec"><div class="rsec-head"><div class="rsec-dot" style="background:#6c8ebf"></div><div class="rsec-title">Driver</div><div class="rsec-count">7 rules</div></div><table class="rtable"><tr><td>DRV-001</td><td>Valid CDL required for all drivers</td></tr><tr><td>DRV-002</td><td>Driver age between 23–70</td></tr><tr><td>DRV-003</td><td>Minimum 2 years driving experience</td></tr><tr><td>DRV-004</td><td>Maximum 3 violations in 3 years</td></tr><tr><td>DRV-005</td><td>No major violations (DUI, reckless, etc.)</td></tr><tr><td>DRV-006</td><td>Maximum 2 at-fault accidents</td></tr><tr><td>DRV-007</td><td>MVR check required</td></tr></table></div>
+  <div class="rsec"><div class="rsec-head"><div class="rsec-dot" style="background:#d6b656"></div><div class="rsec-title">Exposure</div><div class="rsec-count">4 rules</div></div><table class="rtable"><tr><td>EXP-001</td><td>Hazardous materials prohibited</td></tr><tr><td>EXP-002</td><td>Prohibited commodities check</td></tr><tr><td>EXP-003</td><td>Maximum power units ≤ 26</td></tr><tr><td>EXP-004</td><td>Mexico border operations (50 miles)</td></tr></table></div>
+  <div class="rsec"><div class="rsec-head"><div class="rsec-dot" style="background:#9673a6"></div><div class="rsec-title">Submission</div><div class="rsec-count">4 rules</div></div><table class="rtable"><tr><td>SEL-001</td><td>FEIN and DOT number required</td></tr><tr><td>SEL-002</td><td>Tow trucks excluded</td></tr><tr><td>SEL-003</td><td>Minimum premium per power unit ($13,000)</td></tr><tr><td>SEL-004</td><td>Sole proprietor documentation check</td></tr></table></div>
+  <div class="rsec"><div class="rsec-head"><div class="rsec-dot" style="background:#27ae60"></div><div class="rsec-title">IFTA</div><div class="rsec-count">4 rules</div></div><table class="rtable"><tr><td>IFTA-001</td><td>IFTA filings required</td></tr><tr><td>IFTA-002</td><td>Minimum annual mileage threshold</td></tr><tr><td>IFTA-003</td><td>Multi-state operation eligibility</td></tr><tr><td>IFTA-004</td><td>Border state check</td></tr></table></div>
+  <div class="rsec"><div class="rsec-head"><div class="rsec-dot" style="background:#b85450"></div><div class="rsec-title">Conflict Detection</div><div class="rsec-count">6 rules</div></div><table class="rtable"><tr><td>CON-001</td><td>Vehicle count mismatch across documents</td></tr><tr><td>CON-002</td><td>Driver count mismatch across documents</td></tr><tr><td>CON-003</td><td>Company name inconsistency</td></tr><tr><td>CON-004</td><td>FEIN/DOT number conflict</td></tr><tr><td>CON-005</td><td>Duplicate CDL numbers detected</td></tr><tr><td>CON-006</td><td>Duplicate VINs detected</td></tr></table></div>
 
-      <!-- Arrow -->
-      <path d="M280,200 L350,200" class="conn conn-animated g-blue" marker-end="url(#adb)"/>
+  <div class="stitle" style="margin-top:16px">Team Routing</div>
+  <div class="tcards">
+    <div class="tc" style="border-top:3px solid #82b366"><h4>Standard Review</h4><p>Clean submissions</p></div>
+    <div class="tc" style="border-top:3px solid #d6b656"><h4>Specialty Risk</h4><p>Hazmat, border, excess</p></div>
+    <div class="tc" style="border-top:3px solid #9673a6"><h4>Driver Review</h4><p>Violations, age, CDL</p></div>
+    <div class="tc" style="border-top:3px solid #27ae60"><h4>Operations</h4><p>Missing docs, conflicts</p></div>
+    <div class="tc" style="border-top:3px solid #b85450"><h4>Senior UW</h4><p>Declined submissions</p></div>
+  </div>
+</div>
 
-      <!-- Extracted column -->
-      <rect x="350" y="10" width="240" height="380" class="group-rect g-green bg-green"/>
-      <text x="366" y="28" class="group-label g-green">▸ Extracted Data</text>
-      <rect x="370" y="44" width="200" height="36" class="node-rect"/><text x="470" y="64" class="node-label">🏢 Company Profile</text>
-      <rect x="370" y="92" width="200" height="36" class="node-rect"/><text x="470" y="112" class="node-label">👤 Driver Records</text>
-      <rect x="370" y="140" width="200" height="36" class="node-rect"/><text x="470" y="160" class="node-label">🚛 Vehicle Fleet</text>
-      <rect x="370" y="188" width="200" height="36" class="node-rect"/><text x="470" y="208" class="node-label">📊 Claims History</text>
-      <rect x="370" y="236" width="200" height="36" class="node-rect"/><text x="470" y="256" class="node-label">⛽ Mileage Data</text>
+<!-- ═══ DATA FLOW ═══ -->
+<div class="V" id="data">
+  <div class="stitle">Data Flow Diagram</div>
+  <div class="draw-canvas">
+    <svg viewBox="0 0 920 360" width="920" height="360">
+      <rect x="10" y="8" width="260" height="340" rx="4" fill="#dae8fc" stroke="#6c8ebf" stroke-width="1.5"/>
+      <text x="20" y="24" font-size="10" font-weight="700" fill="#3b6fa0">INPUT DOCUMENTS</text>
+      <rect x="24" y="36" width="232" height="30" rx="3" fill="#fff" stroke="#6c8ebf" stroke-width="1"/><text x="140" y="55" font-size="10" fill="#333" text-anchor="middle">Insurance Application (PDF)</text>
+      <rect x="24" y="74" width="232" height="30" rx="3" fill="#fff" stroke="#6c8ebf" stroke-width="1"/><text x="140" y="93" font-size="10" fill="#333" text-anchor="middle">Driver Roster (Excel)</text>
+      <rect x="24" y="112" width="232" height="30" rx="3" fill="#fff" stroke="#6c8ebf" stroke-width="1"/><text x="140" y="131" font-size="10" fill="#333" text-anchor="middle">Equipment Schedule (Excel)</text>
+      <rect x="24" y="150" width="232" height="30" rx="3" fill="#fff" stroke="#6c8ebf" stroke-width="1"/><text x="140" y="169" font-size="10" fill="#333" text-anchor="middle">Loss Runs (PDF)</text>
+      <rect x="24" y="188" width="232" height="30" rx="3" fill="#fff" stroke="#6c8ebf" stroke-width="1"/><text x="140" y="207" font-size="10" fill="#333" text-anchor="middle">IFTA Reports (PDF)</text>
+      <rect x="24" y="226" width="232" height="30" rx="3" fill="#fff" stroke="#6c8ebf" stroke-width="1"/><text x="140" y="245" font-size="10" fill="#333" text-anchor="middle">CDL Images (JPG/PNG)</text>
 
-      <!-- Arrow -->
-      <path d="M590,200 L660,200" class="conn conn-animated g-green" marker-end="url(#adg)"/>
+      <line x1="270" y1="178" x2="330" y2="178" stroke="#666" stroke-width="1.5" marker-end="url(#adf)"/>
 
-      <!-- Output column -->
-      <rect x="660" y="10" width="280" height="380" class="group-rect g-amber bg-amber"/>
-      <text x="676" y="28" class="group-label g-amber">▸ AI Analysis Output</text>
-      <rect x="680" y="44" width="240" height="36" class="node-rect"/><text x="800" y="64" class="node-label">📋 Risk Assessment + Score</text>
-      <rect x="680" y="92" width="240" height="36" class="node-rect"/><text x="800" y="112" class="node-label">⚠️ Data Conflicts Found</text>
-      <rect x="680" y="140" width="240" height="36" class="node-rect"/><text x="800" y="160" class="node-label">📝 Recommendations</text>
-      <rect x="680" y="188" width="240" height="36" class="node-rect"/><text x="800" y="208" class="node-label">⚖️ 27 Rules: Pass / Fail / Warn</text>
-      <rect x="680" y="246" width="240" height="42" rx="10" ry="10" fill="#eff6ff" stroke="#1e3a8a" stroke-width="2"/>
-      <text x="800" y="268" style="font-size:12px;font-weight:700;fill:#1e3a8a;text-anchor:middle;font-family:Inter">✅ Decision + Team Routing</text>
+      <rect x="330" y="8" width="250" height="340" rx="4" fill="#d5e8d4" stroke="#82b366" stroke-width="1.5"/>
+      <text x="340" y="24" font-size="10" font-weight="700" fill="#2d6a2e">EXTRACTED DATA</text>
+      <rect x="344" y="40" width="222" height="30" rx="3" fill="#fff" stroke="#82b366" stroke-width="1"/><text x="455" y="59" font-size="10" fill="#333" text-anchor="middle">Company Profile</text>
+      <rect x="344" y="80" width="222" height="30" rx="3" fill="#fff" stroke="#82b366" stroke-width="1"/><text x="455" y="99" font-size="10" fill="#333" text-anchor="middle">Driver Records</text>
+      <rect x="344" y="120" width="222" height="30" rx="3" fill="#fff" stroke="#82b366" stroke-width="1"/><text x="455" y="139" font-size="10" fill="#333" text-anchor="middle">Vehicle Fleet</text>
+      <rect x="344" y="160" width="222" height="30" rx="3" fill="#fff" stroke="#82b366" stroke-width="1"/><text x="455" y="179" font-size="10" fill="#333" text-anchor="middle">Claims History</text>
+      <rect x="344" y="200" width="222" height="30" rx="3" fill="#fff" stroke="#82b366" stroke-width="1"/><text x="455" y="219" font-size="10" fill="#333" text-anchor="middle">Mileage Data</text>
 
-      <defs>
-        <marker id="adb" viewBox="0 0 8 8" refX="8" refY="4" markerWidth="8" markerHeight="8" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#3b82f6"/></marker>
-        <marker id="adg" viewBox="0 0 8 8" refX="8" refY="4" markerWidth="8" markerHeight="8" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#15803d"/></marker>
-      </defs>
+      <line x1="580" y1="178" x2="640" y2="178" stroke="#666" stroke-width="1.5" marker-end="url(#adf)"/>
+
+      <rect x="640" y="8" width="270" height="340" rx="4" fill="#fff2cc" stroke="#d6b656" stroke-width="1.5"/>
+      <text x="650" y="24" font-size="10" font-weight="700" fill="#8a6d00">AI OUTPUT</text>
+      <rect x="654" y="40" width="242" height="30" rx="3" fill="#fff" stroke="#d6b656" stroke-width="1"/><text x="775" y="59" font-size="10" fill="#333" text-anchor="middle">Risk Assessment + Score</text>
+      <rect x="654" y="80" width="242" height="30" rx="3" fill="#fff" stroke="#d6b656" stroke-width="1"/><text x="775" y="99" font-size="10" fill="#333" text-anchor="middle">Data Conflicts</text>
+      <rect x="654" y="120" width="242" height="30" rx="3" fill="#fff" stroke="#d6b656" stroke-width="1"/><text x="775" y="139" font-size="10" fill="#333" text-anchor="middle">Recommendations</text>
+      <rect x="654" y="160" width="242" height="30" rx="3" fill="#fff" stroke="#d6b656" stroke-width="1"/><text x="775" y="179" font-size="10" fill="#333" text-anchor="middle">27 Rules: Pass / Fail / Warn</text>
+      <rect x="654" y="210" width="242" height="36" rx="3" fill="#dae8fc" stroke="#6c8ebf" stroke-width="2"/><text x="775" y="232" font-size="11" font-weight="700" fill="#3b6fa0" text-anchor="middle">Decision + Team Routing</text>
+
+      <defs><marker id="adf" viewBox="0 0 8 8" refX="8" refY="4" markerWidth="8" markerHeight="8" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#666"/></marker></defs>
     </svg>
   </div>
-</div></div>
+</div>
 
-<!-- ═══════════ INFRA ═══════════ -->
-<div class="V" id="infra"><div class="C">
-  <div class="sh"><div class="sh-i" style="background:#475569">🚀</div><div><h2>Deployment Architecture</h2><p>AWS EC2 · Docker · S3 · IMAP</p></div></div>
+<!-- ═══ INFRA ═══ -->
+<div class="V" id="infra">
+  <div class="stitle">Deployment Architecture</div>
+  <div class="ssub">AWS EC2 · Docker · S3 · IMAP email integration</div>
   <div class="igrid">
-    <div class="icard"><div class="icard-head"><span class="icard-ico">💻</span><h4>Compute</h4></div><p>EC2 t2.micro · 1 vCPU · Ubuntu 22.04</p><div class="tag">Free Tier</div></div>
-    <div class="icard"><div class="icard-head"><span class="icard-ico">🐳</span><h4>Frontend</h4></div><p>Next.js 14 · Node 18 · Port 3000</p><div class="tag">app_frontend</div></div>
-    <div class="icard"><div class="icard-head"><span class="icard-ico">⚙️</span><h4>Backend</h4></div><p>FastAPI · Uvicorn · Port 8000</p><div class="tag">app_backend</div></div>
-    <div class="icard"><div class="icard-head"><span class="icard-ico">📧</span><h4>Email</h4></div><p>IMAP daemon · Polls 30s</p><div class="tag">Integrated</div></div>
-    <div class="icard"><div class="icard-head"><span class="icard-ico">☁️</span><h4>S3 Storage</h4></div><p>AES-256 · Versioned</p><div class="tag">IAM Role</div></div>
-    <div class="icard"><div class="icard-head"><span class="icard-ico">🗃️</span><h4>Database</h4></div><p>SQLAlchemy ORM · 6 tables</p><div class="tag">Postgres-Ready</div></div>
-    <div class="icard"><div class="icard-head"><span class="icard-ico">🔒</span><h4>Security</h4></div><p>SSH key · .env creds</p><div class="tag">SG: 22,3000,8000</div></div>
-    <div class="icard"><div class="icard-head"><span class="icard-ico">🧠</span><h4>Gemini API</h4></div><p>2.5 Flash · $0.05–0.09</p><div class="tag" style="background:#fefce8;color:#854d0e">Pay Per Use</div></div>
-    <div class="icard"><div class="icard-head"><span class="icard-ico">🐙</span><h4>GitHub</h4></div><p>SSH deploy · main branch</p><div class="tag">Git Deploy</div></div>
+    <div class="ic"><h4>Compute</h4><p>EC2 t2.micro · 1 vCPU, 1GB RAM · Ubuntu 22.04 · Docker Compose</p><div class="ictag">Free Tier</div></div>
+    <div class="ic"><h4>Frontend Container</h4><p>Next.js 14 · Node 18 Alpine · Port 3000 · Multi-stage build</p><div class="ictag">app_frontend</div></div>
+    <div class="ic"><h4>Backend Container</h4><p>FastAPI · Uvicorn ASGI · Port 8000 · Swagger at /docs</p><div class="ictag">app_backend</div></div>
+    <div class="ic"><h4>Email Intake</h4><p>IMAP daemon thread · Polls every 30s · Auto-extract attachments</p><div class="ictag">Integrated</div></div>
+    <div class="ic"><h4>Object Storage</h4><p>AWS S3 · AES-256 server-side encryption · Versioned</p><div class="ictag">IAM Role</div></div>
+    <div class="ic"><h4>Database</h4><p>SQLAlchemy ORM · SQLite (dev) · 6 tables · Bind mount</p><div class="ictag">Postgres-Ready</div></div>
+    <div class="ic"><h4>Security Group</h4><p>Ports 22 (SSH), 3000 (UI), 8000 (API) · Key-pair auth</p><div class="ictag">VPC Default</div></div>
+    <div class="ic"><h4>AI Service</h4><p>Gemini 2.5 Flash · Vision + Text · ~$0.05–0.09 per submission</p><div class="ictag" style="background:#fff2cc;color:#8a6d00">Pay Per Use</div></div>
+    <div class="ic"><h4>Source Control</h4><p>GitHub · knight-case-study · Main branch · SSH deploy</p><div class="ictag">Git Deploy</div></div>
   </div>
-</div></div>
+</div>
 
-<!-- ═══════════ DECISIONS ═══════════ -->
-<div class="V" id="why"><div class="C">
-  <div class="sh"><div class="sh-i" style="background:#7c3aed">🎯</div><div><h2>Design Decisions</h2><p>Key choices and rationale</p></div></div>
-  <div class="nlist">
-    <div class="nitem"><h3>Content-Based Classification</h3><p>Never uses filenames — only content. Handles "scan001.pdf" correctly every time.</p></div>
-    <div class="nitem"><h3>Hybrid Extraction</h3><p>Excel/CSV use <strong>Python regex at $0</strong>. Only CDL images use Gemini Vision. Saves ~70% on API costs.</p></div>
-    <div class="nitem"><h3>Parallel Processing</h3><p><code>ThreadPoolExecutor</code> · 4 workers · <strong>~45s</strong> vs ~3min sequential.</p></div>
-    <div class="nitem"><h3>Configurable Rules</h3><p>27 rules in DB with severity + enable/disable. No code changes to tune.</p></div>
-    <div class="nitem"><h3>Cross-Document Conflicts</h3><p>Validates counts, names, FEIN/DOT, duplicate CDLs and VINs across documents.</p></div>
-    <div class="nitem"><h3>Team Routing</h3><p>Auto-routes to Standard, Specialty, Driver, Ops, or Senior UW based on rules.</p></div>
-    <div class="nitem"><h3>Dual Intake</h3><p>Web upload + IMAP email. Agents don't need a portal login.</p></div>
-    <div class="nitem"><h3>Database Portability</h3><p>SQLAlchemy ORM. SQLite → PostgreSQL with <strong>one connection string</strong>.</p></div>
+<!-- ═══ DECISIONS ═══ -->
+<div class="V" id="why">
+  <div class="stitle">Design Decisions</div>
+  <div class="ssub">Key architectural choices and rationale</div>
+  <div class="nl">
+    <div class="ni"><h3>Content-Based Classification</h3><p>Never uses filenames — only document content. Handles "scan001.pdf" correctly every time.</p></div>
+    <div class="ni"><h3>Hybrid Extraction Strategy</h3><p>Excel/CSV use <strong>Python regex at $0 cost</strong>. Only CDL images use Gemini Vision. Saves ~70% on API costs.</p></div>
+    <div class="ni"><h3>Parallel Processing</h3><p><code>ThreadPoolExecutor</code> with 4 workers. Full pipeline: <strong>~45 seconds</strong> vs ~3 minutes sequential.</p></div>
+    <div class="ni"><h3>Configurable Rules Engine</h3><p>All 27 rules stored in DB with severity levels and enable/disable. Underwriters can tune without code changes.</p></div>
+    <div class="ni"><h3>Cross-Document Conflict Detection</h3><p>Validates vehicle/driver counts, company names, FEIN/DOT numbers, duplicate CDLs and VINs across all documents.</p></div>
+    <div class="ni"><h3>Automated Team Routing</h3><p>Auto-routes to Standard Review, Specialty Risk, Driver Review, Operations, or Senior UW based on triggered rules.</p></div>
+    <div class="ni"><h3>Dual Intake Channels</h3><p>Web upload form + IMAP email integration. Insurance agents can email submissions without logging into any portal.</p></div>
+    <div class="ni"><h3>Database Portability</h3><p>SQLAlchemy ORM abstraction layer. Switch from SQLite to PostgreSQL with <strong>one connection string change</strong>.</p></div>
   </div>
-</div></div>
+</div>
 
-<!-- ═══════════ SECURITY ═══════════ -->
-<div class="V" id="sec"><div class="C">
-  <div class="sh"><div class="sh-i" style="background:#15803d">🔒</div><div><h2>Security & Governance</h2><p>Audit trail · Encryption · Human-in-the-loop</p></div></div>
-  <div class="nlist">
-    <div class="nitem"><h3>Complete Audit Trail</h3><p>Every action logged: uploads, classification, extraction, AI, rules, decisions, reviews.</p></div>
-    <div class="nitem"><h3>Data Encryption</h3><ul><li><strong>At rest:</strong> S3 AES-256</li><li><strong>In transit:</strong> IMAP TLS, Gemini HTTPS</li><li><strong>Creds:</strong> Env vars, never in git</li></ul></div>
-    <div class="nitem"><h3>Human-in-the-Loop</h3><p>No auto-approval. Must <strong>Approve</strong>, <strong>Reject</strong>, or <strong>Override</strong> with notes.</p></div>
-    <div class="nitem"><h3>AI Transparency</h3><p>Tracks input/output tokens, cost, call count per submission.</p></div>
-    <div class="nitem"><h3>Scalability Path</h3><ul><li><strong>DB:</strong> SQLite → PostgreSQL</li><li><strong>Compute:</strong> EC2 → ECS/Fargate</li><li><strong>AI:</strong> Gemini auto-scales</li><li><strong>Queue:</strong> SQS/Redis for async</li></ul></div>
+<!-- ═══ SECURITY ═══ -->
+<div class="V" id="sec">
+  <div class="stitle">Security &amp; Governance</div>
+  <div class="ssub">Audit trail, encryption, human-in-the-loop review</div>
+  <div class="nl">
+    <div class="ni"><h3>Complete Audit Trail</h3><p>Every action logged to <code>audit_logs</code> table: uploads, classification, extraction, AI calls, rules evaluation, decisions, and reviews.</p></div>
+    <div class="ni"><h3>Data Encryption</h3><ul><li><strong>At rest:</strong> S3 AES-256 server-side encryption</li><li><strong>In transit:</strong> IMAP over TLS, Gemini API over HTTPS</li><li><strong>Credentials:</strong> Environment variables, never committed to source control</li></ul></div>
+    <div class="ni"><h3>Human-in-the-Loop Review</h3><p>No auto-approval of any submission. Underwriter must explicitly <strong>Approve</strong>, <strong>Reject</strong>, or <strong>Override</strong> with notes and timestamp.</p></div>
+    <div class="ni"><h3>AI Cost Transparency</h3><p>System tracks <strong>input tokens, output tokens, API cost, and call count</strong> for every submission processed.</p></div>
+    <div class="ni"><h3>Production Scalability Path</h3><ul><li><strong>Database:</strong> SQLite → PostgreSQL (RDS)</li><li><strong>Compute:</strong> EC2 → ECS/Fargate horizontal scaling</li><li><strong>AI:</strong> Gemini API auto-scales with built-in rate limiting</li><li><strong>Queue:</strong> Add SQS or Redis for async processing at scale</li></ul></div>
   </div>
-</div></div>
+</div>
 
 <script>
-document.querySelectorAll('nav a').forEach(a=>{
+document.querySelectorAll('.tnav a').forEach(a=>{
   a.addEventListener('click',()=>{
-    document.querySelectorAll('nav a').forEach(x=>x.classList.remove('on'));
+    document.querySelectorAll('.tnav a').forEach(x=>x.classList.remove('on'));
     document.querySelectorAll('.V').forEach(x=>x.classList.remove('on'));
     a.classList.add('on');
     document.getElementById(a.dataset.v).classList.add('on');
