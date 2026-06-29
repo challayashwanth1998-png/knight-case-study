@@ -95,6 +95,15 @@ class SubmissionResponse(BaseModel):
     status: str
     overall_decision: Optional[str] = None
     decision_reason: Optional[str] = None
+    # Team routing
+    assigned_team: Optional[str] = None
+    assigned_to: Optional[str] = None
+    # Review workflow
+    review_status: Optional[str] = None
+    review_notes: Optional[str] = None
+    reviewed_by: Optional[str] = None
+    reviewed_at: Optional[datetime] = None
+    # Timestamps
     received_at: Optional[datetime] = None
     processed_at: Optional[datetime] = None
     created_at: datetime
@@ -119,6 +128,15 @@ class SubmissionDetailResponse(BaseModel):
     status: str
     overall_decision: Optional[str] = None
     decision_reason: Optional[str] = None
+    # Team routing
+    assigned_team: Optional[str] = None
+    assigned_to: Optional[str] = None
+    # Review workflow
+    review_status: Optional[str] = None
+    review_notes: Optional[str] = None
+    reviewed_by: Optional[str] = None
+    reviewed_at: Optional[datetime] = None
+    # Timestamps
     received_at: Optional[datetime] = None
     processed_at: Optional[datetime] = None
     created_at: datetime
@@ -135,6 +153,14 @@ class SubmissionDetailResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class ReviewRequest(BaseModel):
+    """Request body for underwriter review action."""
+    action: str  # approve, reject, override
+    notes: Optional[str] = None
+    decision_override: Optional[str] = None  # only for override: accept, decline, refer
+    reviewer_name: str = "Underwriter"
 
 
 # ─── Pipeline ─────────────────────────────────────────────────

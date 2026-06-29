@@ -10,6 +10,15 @@ export interface Submission {
   status: string;
   overall_decision: string | null;
   decision_reason: string | null;
+  // Team routing
+  assigned_team: string | null;
+  assigned_to: string | null;
+  // Review workflow
+  review_status: string | null;
+  review_notes: string | null;
+  reviewed_by: string | null;
+  reviewed_at: string | null;
+  // Timestamps
   received_at: string | null;
   processed_at: string | null;
   created_at: string;

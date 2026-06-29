@@ -431,7 +431,65 @@ async def download_document(submission_id: str, document_id: str, db: Session = 
     return FileResponse(path=doc.file_path, filename=doc.original_filename)
 
 
-# ── Rules Reference Endpoint ──────────────────────────────────
+# ── Review Workflow Endpoint ──────────────────────────────────
+
+@router.post("/{submission_id}/review")
+async def review_submission(submission_id: str, body: dict, db: Session = Depends(get_db)):
+    """Underwriter review action: approve, reject, or override a submission."""
+    submission = db.query(Submission).filter(Submission.id == submission_id).first()
+    if not submission:
+        raise HTTPException(404, "Submission not found")
+    if submission.status != "complete":
+        raise HTTPException(400, "Submission must be complete before review")
+
+    action = body.get("action", "").lower()
+    notes = body.get("notes", "")
+    reviewer = body.get("reviewer_name", "Underwriter")
+    decision_override = body.get("decision_override")
+
+    if action not in ("approve", "reject", "override"):
+        raise HTTPException(400, "Action must be: approve, reject, or override")
+
+    from datetime import datetime, timezone
+    now = datetime.now(timezone.utc)
+
+    if action == "approve":
+        submission.review_status = "approved"
+        audit_msg = f"Submission approved by {reviewer}"
+    elif action == "reject":
+        submission.review_status = "rejected"
+        audit_msg = f"Submission rejected by {reviewer}"
+    elif action == "override":
+        if decision_override not in ("accept", "decline", "refer"):
+            raise HTTPException(400, "decision_override must be: accept, decline, or refer")
+        submission.review_status = "overridden"
+        old_decision = submission.overall_decision
+        submission.overall_decision = decision_override
+        submission.decision_reason = (
+            f"Overridden by {reviewer}: {old_decision} → {decision_override}. "
+            f"Notes: {notes or 'N/A'}"
+        )
+        audit_msg = f"Decision overridden by {reviewer}: {old_decision} → {decision_override}"
+
+    submission.review_notes = notes
+    submission.reviewed_by = reviewer
+    submission.reviewed_at = now
+
+    # Audit log
+    db.add(AuditLog(
+        submission_id=submission_id,
+        action=f"review_{action}",
+        details=f"{audit_msg}. Notes: {notes}" if notes else audit_msg,
+        step_number=7,
+    ))
+    db.commit()
+
+    return {
+        "status": "ok",
+        "review_status": submission.review_status,
+        "overall_decision": submission.overall_decision,
+        "message": audit_msg,
+    }
 
 @router.get("/meta/rules")
 async def get_rules_reference():

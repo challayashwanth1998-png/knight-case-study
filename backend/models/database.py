@@ -41,6 +41,17 @@ class Submission(Base):
     overall_decision = Column(String(20), nullable=True)  # accept, decline, refer
     decision_reason = Column(Text, nullable=True)
 
+    # Team routing
+    assigned_team = Column(String(50), nullable=True)
+    assigned_to = Column(String(100), nullable=True)
+
+    # Underwriter review workflow
+    review_status = Column(String(20), nullable=True)
+    # pending_review, approved, rejected, overridden
+    review_notes = Column(Text, nullable=True)
+    reviewed_by = Column(String(100), nullable=True)
+    reviewed_at = Column(DateTime, nullable=True)
+
     # Timestamps
     received_at = Column(DateTime, default=utcnow)
     processed_at = Column(DateTime, nullable=True)
@@ -59,6 +70,7 @@ class Submission(Base):
     analysis_results = relationship("AnalysisResult", back_populates="submission", cascade="all, delete-orphan")
     rule_results = relationship("RuleResult", back_populates="submission", cascade="all, delete-orphan")
     audit_logs = relationship("AuditLog", back_populates="submission", cascade="all, delete-orphan")
+
 
 
 class Document(Base):

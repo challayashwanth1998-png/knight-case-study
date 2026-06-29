@@ -72,3 +72,18 @@ export const getLogs = (limit = 200) =>
 
 export const getHealth = () =>
   api<any>("/api/submissions/health");
+
+export const reviewSubmission = (id: string, body: {
+  action: "approve" | "reject" | "override";
+  notes?: string;
+  decision_override?: string;
+  reviewer_name?: string;
+}) =>
+  api<{ status: string; review_status: string; overall_decision: string; message: string }>(
+    `/api/submissions/${id}/review`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    }
+  );

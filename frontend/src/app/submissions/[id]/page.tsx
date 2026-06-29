@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { getSubmission } from "@/lib/api";
+import { getSubmission, reviewSubmission } from "@/lib/api";
 import type { SubmissionDetail, Tab } from "@/types";
 import ProgressTracker from "@/components/submission/ProgressTracker";
 import AICostCard from "@/components/submission/AICostCard";
@@ -26,6 +26,15 @@ const TABS: { key: Tab; label: string }[] = [
   { key: "audit", label: "Audit Log" },
 ];
 
+const TEAM_COLORS: Record<string, string> = {
+  "Senior Underwriting": "#dc2626",
+  "Specialty Risk": "#d97706",
+  "Driver Review": "#7c3aed",
+  "Operations": "#2563eb",
+  "Standard Review": "#059669",
+  "General Underwriting": "#6b7280",
+};
+
 export default function SubmissionDetailPage() {
   const params = useParams();
   const router = useRouter();
@@ -34,6 +43,9 @@ export default function SubmissionDetailPage() {
   const [submission, setSubmission] = useState<SubmissionDetail | null>(null);
   const [activeTab, setActiveTab] = useState<Tab>("summary");
   const [loading, setLoading] = useState(true);
+  const [reviewNotes, setReviewNotes] = useState("");
+  const [overrideDecision, setOverrideDecision] = useState("accept");
+  const [reviewLoading, setReviewLoading] = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -47,6 +59,23 @@ export default function SubmissionDetailPage() {
     const interval = setInterval(load, 3000);
     return () => clearInterval(interval);
   }, [load]);
+
+  const handleReview = async (action: "approve" | "reject" | "override") => {
+    setReviewLoading(true);
+    try {
+      await reviewSubmission(id, {
+        action,
+        notes: reviewNotes,
+        decision_override: action === "override" ? overrideDecision : undefined,
+        reviewer_name: "Underwriter",
+      });
+      await load();
+      setReviewNotes("");
+    } catch (e) {
+      console.error("Review failed:", e);
+    }
+    setReviewLoading(false);
+  };
 
   if (loading) {
     return (
@@ -85,6 +114,14 @@ export default function SubmissionDetailPage() {
     audit: submission.audit_log.length,
   };
 
+  const teamColor = TEAM_COLORS[submission.assigned_team || ""] || "#6b7280";
+  const reviewBadge = submission.review_status ? ({
+    approved: { bg: "#dcfce7", color: "#15803d", label: "✅ Approved" },
+    rejected: { bg: "#fee2e2", color: "#b91c1c", label: "❌ Rejected" },
+    overridden: { bg: "#fef3c7", color: "#92400e", label: "⚡ Overridden" },
+    pending_review: { bg: "#e0e7ff", color: "#3730a3", label: "⏳ Pending Review" },
+  } as Record<string, { bg: string; color: string; label: string }>)[submission.review_status] : null;
+
   return (
     <div style={{ maxWidth: 1100, margin: "0 auto" }}>
       {/* Header */}
@@ -110,6 +147,22 @@ export default function SubmissionDetailPage() {
               {submission.overall_decision && (
                 <span className={`badge badge-${submission.overall_decision}`}>
                   {submission.overall_decision}
+                </span>
+              )}
+              {submission.assigned_team && (
+                <span style={{
+                  fontSize: 11, fontWeight: 600, padding: "2px 10px", borderRadius: 4,
+                  background: `${teamColor}18`, color: teamColor, border: `1px solid ${teamColor}40`,
+                }}>
+                  📋 {submission.assigned_team}
+                </span>
+              )}
+              {reviewBadge && (
+                <span style={{
+                  fontSize: 11, fontWeight: 600, padding: "2px 10px", borderRadius: 4,
+                  background: reviewBadge.bg, color: reviewBadge.color,
+                }}>
+                  {reviewBadge.label}
                 </span>
               )}
               <span style={{ fontSize: 11, color: "var(--base)", fontFamily: "monospace" }}>
@@ -149,6 +202,85 @@ export default function SubmissionDetailPage() {
             style={{ marginTop: 12 }}
           >
             {submission.decision_reason}
+          </div>
+        )}
+
+        {/* Underwriter Review Panel */}
+        {submission.status === "complete" && submission.review_status === "pending_review" && (
+          <div className="card" style={{
+            marginTop: 12, padding: 16,
+            border: "1px solid var(--primary)", background: "var(--primary-lighter)",
+          }}>
+            <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 10, color: "var(--ink)" }}>
+              🔍 Underwriter Review Required
+            </div>
+            <textarea
+              placeholder="Review notes (optional)..."
+              value={reviewNotes}
+              onChange={(e) => setReviewNotes(e.target.value)}
+              rows={2}
+              style={{
+                width: "100%", padding: 8, borderRadius: 6, border: "1px solid var(--border)",
+                fontSize: 13, marginBottom: 10, resize: "vertical", fontFamily: "inherit",
+              }}
+            />
+            <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+              <button
+                className="btn btn-sm"
+                style={{ background: "#059669", color: "white", border: "none", cursor: "pointer" }}
+                onClick={() => handleReview("approve")}
+                disabled={reviewLoading}
+              >
+                ✅ Approve
+              </button>
+              <button
+                className="btn btn-sm"
+                style={{ background: "#dc2626", color: "white", border: "none", cursor: "pointer" }}
+                onClick={() => handleReview("reject")}
+                disabled={reviewLoading}
+              >
+                ❌ Reject
+              </button>
+              <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                <select
+                  value={overrideDecision}
+                  onChange={(e) => setOverrideDecision(e.target.value)}
+                  style={{ padding: "4px 8px", borderRadius: 4, fontSize: 12, border: "1px solid var(--border)" }}
+                >
+                  <option value="accept">Accept</option>
+                  <option value="refer">Refer</option>
+                  <option value="decline">Decline</option>
+                </select>
+                <button
+                  className="btn btn-sm"
+                  style={{ background: "#d97706", color: "white", border: "none", cursor: "pointer" }}
+                  onClick={() => handleReview("override")}
+                  disabled={reviewLoading}
+                >
+                  ⚡ Override
+                </button>
+              </div>
+              {reviewLoading && <span className="spinner" style={{ width: 14, height: 14 }} />}
+            </div>
+          </div>
+        )}
+
+        {/* Review Result */}
+        {submission.reviewed_by && submission.review_status !== "pending_review" && (
+          <div className="card" style={{ marginTop: 12, padding: 12, fontSize: 12 }}>
+            <span style={{ fontWeight: 600 }}>
+              Reviewed by {submission.reviewed_by}
+            </span>
+            {submission.reviewed_at && (
+              <span style={{ color: "var(--base)", marginLeft: 8 }}>
+                {new Date(submission.reviewed_at).toLocaleString()}
+              </span>
+            )}
+            {submission.review_notes && (
+              <div style={{ marginTop: 6, color: "var(--text2)", fontStyle: "italic" }}>
+                &ldquo;{submission.review_notes}&rdquo;
+              </div>
+            )}
           </div>
         )}
       </div>

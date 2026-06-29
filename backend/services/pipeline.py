@@ -770,6 +770,10 @@ def _step_rules(db, submission_id: str, unified: dict) -> None:
             {},
         ))
 
+    # ── Cross-document conflict detection ──
+    conflict_evals = _check_cross_document_conflicts(unified)
+    evaluations.extend(conflict_evals)
+
     for ev in evaluations:
         db.add(RuleResult(
             submission_id=submission_id,
@@ -815,14 +819,46 @@ def _step_decision(db, submission_id: str, unified: dict) -> None:
         decision = "accept"
         reason = "All rules passed. Eligible pending final approval."
 
+    # ── Team routing ──
+    assigned_team = _determine_routing_team(decision, rules)
+
     submission.overall_decision = decision
     submission.decision_reason = reason
+    submission.assigned_team = assigned_team
+    submission.review_status = "pending_review"
     submission.status = "complete"
     db.commit()
 
-    logger.info(f"[{submission_id}] Decision: {decision}")
-    _audit(db, submission_id, "decision", f"{decision}: {reason}", step=step)
+    logger.info(f"[{submission_id}] Decision: {decision} → {assigned_team}")
+    _audit(db, submission_id, "decision",
+           f"{decision}: {reason} [Routed to {assigned_team}]", step=step)
     db.commit()
+
+
+def _determine_routing_team(decision: str, rules: list) -> str:
+    """Determine which underwriting team should review based on decision and rule categories."""
+    if decision == "decline":
+        return "Senior Underwriting"
+
+    if decision == "accept":
+        return "Standard Review"
+
+    # For 'refer', route based on what issues were found
+    issue_categories = set()
+    for r in rules:
+        if r.result in ("FAIL", "WARNING"):
+            issue_categories.add(r.category)
+
+    if "exposure" in issue_categories:
+        return "Specialty Risk"
+    if "driver" in issue_categories:
+        return "Driver Review"
+    if "submission" in issue_categories or "conflict" in issue_categories:
+        return "Operations"
+    if "eligibility" in issue_categories:
+        return "Specialty Risk"
+
+    return "General Underwriting"
 
 
 # ─── Filename-Classification Mismatch Detection ─────────────
@@ -884,6 +920,170 @@ def _check_filename_classification_mismatch(documents: list) -> list:
                 "expected": type_labels.get(suggested_type, suggested_type),
             })
     return mismatches
+
+
+# ─── Cross-Document Conflict Detection ───────────────────────
+
+def _check_cross_document_conflicts(unified: dict) -> list:
+    """Detect conflicts across documents: count mismatches, name inconsistencies, duplicates."""
+    from rules.base import RuleEvaluation
+    results = []
+    app = unified.get("application", {})
+    drivers = unified.get("drivers", [])
+    vehicles = unified.get("vehicles", [])
+    ifta_reports = unified.get("ifta_reports", [])
+    loss_runs = unified.get("loss_runs", [])
+
+    # CON-001: Vehicle count mismatch (application vs equipment schedule)
+    app_units = None
+    for key in ("number_of_power_units", "power_units", "units", "num_units", "number_of_units"):
+        val = app.get(key)
+        if val is not None:
+            try:
+                app_units = int(val)
+            except (ValueError, TypeError):
+                pass
+            break
+    if app_units is not None and vehicles:
+        from rules.base import is_power_unit
+        actual_power_units = sum(1 for v in vehicles if is_power_unit(v))
+        if app_units != actual_power_units:
+            results.append(RuleEvaluation(
+                "CON-001", "Vehicle Count Mismatch", "conflict",
+                "WARNING", "high",
+                f"Application states {app_units} power units but equipment schedule lists {actual_power_units}.",
+                {"app_units": app_units, "schedule_units": actual_power_units},
+            ))
+        else:
+            results.append(RuleEvaluation(
+                "CON-001", "Vehicle Count Mismatch", "conflict",
+                "PASS", "high",
+                f"Vehicle count consistent: {app_units} power units in both application and schedule.",
+                {},
+            ))
+
+    # CON-002: Driver count mismatch (application vs roster)
+    app_drivers = None
+    for key in ("number_of_drivers", "drivers", "num_drivers", "regular_drivers"):
+        val = app.get(key)
+        if val is not None:
+            try:
+                app_drivers = int(val)
+            except (ValueError, TypeError):
+                pass
+            break
+    if app_drivers is not None and drivers:
+        roster_count = len(drivers)
+        if app_drivers != roster_count:
+            results.append(RuleEvaluation(
+                "CON-002", "Driver Count Mismatch", "conflict",
+                "WARNING", "high",
+                f"Application states {app_drivers} drivers but roster lists {roster_count}.",
+                {"app_drivers": app_drivers, "roster_drivers": roster_count},
+            ))
+        else:
+            results.append(RuleEvaluation(
+                "CON-002", "Driver Count Mismatch", "conflict",
+                "PASS", "high",
+                f"Driver count consistent: {app_drivers} in both application and roster.",
+                {},
+            ))
+
+    # CON-003: Company name inconsistency across documents
+    names = set()
+    app_name = (app.get("company_name") or app.get("business_name") or "").strip()
+    if app_name:
+        names.add(app_name.lower())
+    for ifta in ifta_reports:
+        ifta_name = (ifta.get("company_name") or "").strip()
+        if ifta_name:
+            names.add(ifta_name.lower())
+    for lr in loss_runs:
+        lr_name = (lr.get("insured") or lr.get("company_name") or "").strip()
+        if lr_name:
+            names.add(lr_name.lower())
+
+    if len(names) > 1:
+        results.append(RuleEvaluation(
+            "CON-003", "Company Name Inconsistency", "conflict",
+            "WARNING", "medium",
+            f"Different company names found across documents: {', '.join(sorted(names))}",
+            {"names_found": sorted(list(names))},
+        ))
+    elif names:
+        results.append(RuleEvaluation(
+            "CON-003", "Company Name Inconsistency", "conflict",
+            "PASS", "medium",
+            f"Company name consistent across all documents.",
+            {},
+        ))
+
+    # CON-004: FEIN/DOT mismatch across documents
+    feins = set()
+    app_fein = (app.get("fein") or app.get("ssn") or "").strip()
+    if app_fein:
+        feins.add(app_fein)
+    for ifta in ifta_reports:
+        ifta_fein = (ifta.get("fein") or "").strip()
+        if ifta_fein:
+            feins.add(ifta_fein)
+    for lr in loss_runs:
+        lr_fein = (lr.get("fein") or "").strip()
+        if lr_fein:
+            feins.add(lr_fein)
+    if len(feins) > 1:
+        results.append(RuleEvaluation(
+            "CON-004", "FEIN Mismatch Across Documents", "conflict",
+            "WARNING", "high",
+            f"Multiple FEIN values found: {', '.join(sorted(feins))}",
+            {"feins": sorted(list(feins))},
+        ))
+
+    # CON-005: Duplicate CDL numbers in driver roster
+    if drivers:
+        cdl_map = {}
+        for d in drivers:
+            cdl = str(d.get("cdl_number") or d.get("license_number") or "").strip().upper()
+            if cdl and cdl != "NONE" and cdl != "N/A":
+                cdl_map.setdefault(cdl, []).append(d.get("name") or d.get("driver_name") or "Unknown")
+        duplicates = {cdl: names for cdl, names in cdl_map.items() if len(names) > 1}
+        if duplicates:
+            dup_details = "; ".join(f"{cdl}: {', '.join(names)}" for cdl, names in duplicates.items())
+            results.append(RuleEvaluation(
+                "CON-005", "Duplicate CDL Numbers", "conflict",
+                "WARNING", "high",
+                f"{len(duplicates)} duplicate CDL(s) in roster: {dup_details}",
+                {"duplicates": {k: v for k, v in duplicates.items()}},
+            ))
+        else:
+            results.append(RuleEvaluation(
+                "CON-005", "Duplicate CDL Numbers", "conflict",
+                "PASS", "high", "No duplicate CDL numbers found in roster.", {},
+            ))
+
+    # CON-006: Duplicate VINs in equipment schedule
+    if vehicles:
+        vin_map = {}
+        for v in vehicles:
+            vin = str(v.get("vin") or "").strip().upper()
+            if vin and len(vin) > 5:
+                vin_map.setdefault(vin, []).append(v.get("unit") or v.get("unit_number") or "?")
+        dup_vins = {vin: units for vin, units in vin_map.items() if len(units) > 1}
+        if dup_vins:
+            dup_details = "; ".join(f"{vin}: units {', '.join(units)}" for vin, units in dup_vins.items())
+            results.append(RuleEvaluation(
+                "CON-006", "Duplicate VINs", "conflict",
+                "WARNING", "high",
+                f"{len(dup_vins)} duplicate VIN(s): {dup_details}",
+                {"duplicates": {k: v for k, v in dup_vins.items()}},
+            ))
+        else:
+            results.append(RuleEvaluation(
+                "CON-006", "Duplicate VINs", "conflict",
+                "PASS", "high", "No duplicate VINs found in equipment schedule.", {},
+            ))
+
+    return results
 
 
 # ─── Unified Data Builder ────────────────────────────────────
