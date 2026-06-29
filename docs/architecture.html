@@ -4,486 +4,389 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Knight Insurance — System Architecture</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{
-  font-family:'Inter',sans-serif;
-  background:linear-gradient(170deg,#e8e0f0 0%,#eee8f5 20%,#f2eff8 40%,#f0ecf4 60%,#ebe5f0 80%,#e5dde8 100%);
-  background-attachment:fixed;
-  color:#1c1917;-webkit-font-smoothing:antialiased;min-height:100vh;
-}
+body{font-family:'Inter',sans-serif;background:#f8fafc;color:#0f172a;-webkit-font-smoothing:antialiased}
 
 /* ═══ NAV ═══ */
-.topnav{
-  position:sticky;top:0;z-index:100;
+.nav{
+  position:sticky;top:0;z-index:100;height:48px;
   display:flex;align-items:center;gap:0;
-  padding:0 clamp(20px,4vw,48px);height:50px;
-  background:rgba(240,236,244,.75);backdrop-filter:saturate(180%) blur(16px);
-  border-bottom:1px solid rgba(0,0,0,.06);
+  padding:0 24px;
+  background:#ffffff;border-bottom:1px solid #e2e8f0;
+  box-shadow:0 1px 2px rgba(15,23,42,.05);
 }
-.topnav .logo{font-size:14px;font-weight:800;color:#292524;margin-right:28px;letter-spacing:-.5px;white-space:nowrap}
-.topnav .logo span{color:#8b5cf6}
-.topnav a{
-  font-size:12px;font-weight:500;color:#78716c;text-decoration:none;
-  padding:15px 14px;display:inline-block;cursor:pointer;
+.nav .logo{font-size:13px;font-weight:800;color:#1e3a8a;margin-right:24px;letter-spacing:-.3px}
+.nav a{
+  font-size:12px;font-weight:500;color:#64748b;text-decoration:none;
+  padding:14px 12px;cursor:pointer;
   border-bottom:2px solid transparent;transition:.15s;
 }
-.topnav a:hover{color:#1c1917}
-.topnav a.on{color:#7c3aed;border-bottom-color:#8b5cf6;font-weight:600}
+.nav a:hover{color:#0f172a}
+.nav a.on{color:#1e3a8a;border-bottom-color:#1e3a8a;font-weight:600}
 
 /* ═══ VIEWS ═══ */
-.V{display:none;animation:fadeUp .3s ease}.V.on{display:block}
-@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.V{display:none;animation:fadeIn .25s ease}.V.on{display:block}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
 
-/* ═══ DIAGRAM CANVAS ═══ */
-.canvas{padding:32px clamp(16px,4vw,48px) 64px;max-width:1200px;margin:0 auto}
+/* ═══ CANVAS ═══ */
+.canvas{max-width:1100px;margin:0 auto;padding:28px 24px 64px}
 
-/* ═══ VIEW TITLE ═══ */
-.vtitle{margin-bottom:28px}
-.vtitle .badge{
-  display:inline-block;padding:4px 12px;border-radius:6px;
-  font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;
-  margin-bottom:8px;
+/* ═══ VIEW HEADER ═══ */
+.vh{margin-bottom:24px;display:flex;align-items:center;gap:12px}
+.vh-icon{width:36px;height:36px;border-radius:8px;background:#1e3a8a;color:#fff;display:flex;align-items:center;justify-content:center;font-size:16px}
+.vh h2{font-size:18px;font-weight:700;color:#0f172a;letter-spacing:-.3px}
+.vh p{font-size:12px;color:#64748b}
+
+/* ═══ DRAW.IO STYLE COMPONENTS ═══ */
+
+/* Container / Swim lane */
+.d-container{
+  border:2px solid #1e3a8a;border-radius:8px;
+  background:#fff;margin-bottom:0;overflow:hidden;
 }
-.vtitle h2{font-size:28px;font-weight:900;letter-spacing:-1px;color:#1c1917}
-.vtitle p{font-size:13px;color:#78716c;margin-top:4px}
-
-/* ═══ SWIM LANE (horizontal band) ═══ */
-.lane{
-  border-radius:14px;padding:20px 24px;margin-bottom:0;
-  backdrop-filter:blur(6px);border:1px solid rgba(0,0,0,.04);
+.d-container-head{
+  background:#1e3a8a;color:#fff;padding:8px 16px;
+  font-size:12px;font-weight:700;display:flex;align-items:center;gap:8px;
+  letter-spacing:.2px;
 }
-.lane-head{display:flex;align-items:center;gap:10px;margin-bottom:14px}
-.lane-ico{
-  width:36px;height:36px;border-radius:10px;
+.d-container-head .tag{font-size:10px;font-weight:400;opacity:.7;margin-left:auto}
+.d-container-body{padding:16px;display:flex;gap:12px;flex-wrap:wrap}
+
+/* Colored containers */
+.d-container.blue{border-color:#3b82f6}.d-container.blue .d-container-head{background:#3b82f6}
+.d-container.teal{border-color:#0d9488}.d-container.teal .d-container-head{background:#0d9488}
+.d-container.amber{border-color:#d97706}.d-container.amber .d-container-head{background:#d97706}
+.d-container.red{border-color:#b91c1c}.d-container.red .d-container-head{background:#b91c1c}
+.d-container.slate{border-color:#475569}.d-container.slate .d-container-head{background:#475569}
+.d-container.green{border-color:#15803d}.d-container.green .d-container-head{background:#15803d}
+.d-container.purple{border-color:#7c3aed}.d-container.purple .d-container-head{background:#7c3aed}
+
+/* Node (component box) — draw.io rectangle */
+.d-node{
+  flex:1;min-width:120px;padding:10px 12px;
+  background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:6px;
+  text-align:center;transition:.2s;
+}
+.d-node:hover{border-color:#94a3b8;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.d-node .ico{font-size:18px;margin-bottom:4px}
+.d-node .nm{font-size:11px;font-weight:600;color:#0f172a}
+.d-node .ds{font-size:9px;color:#64748b;margin-top:2px;line-height:1.3}
+
+/* Arrow connector */
+.d-arrow{display:flex;align-items:center;justify-content:center;height:40px;position:relative}
+.d-arrow svg{display:block}
+.d-arrow-line{stroke-dasharray:6 3;animation:flowD .8s linear infinite}
+@keyframes flowD{to{stroke-dashoffset:-18}}
+.d-arrow-label{
+  position:absolute;left:50%;transform:translateX(-50%);top:10px;
+  padding:1px 8px;border-radius:4px;font-size:9px;font-weight:600;
+  color:#64748b;background:#f8fafc;border:1px solid #e2e8f0;
+}
+
+/* Horizontal arrow */
+.d-arrow-h{display:flex;align-items:center;justify-content:center;padding:0 4px}
+.d-arrow-h svg{display:block}
+.d-arrow-h-line{stroke-dasharray:6 3;animation:flowR .8s linear infinite}
+@keyframes flowR{to{stroke-dashoffset:-18}}
+
+/* Step card (pipeline) */
+.d-step{
+  background:#fff;border:1.5px solid #e2e8f0;border-radius:8px;
+  padding:18px 20px;border-left:4px solid #1e3a8a;
+}
+.d-step:hover{box-shadow:0 2px 8px rgba(0,0,0,.04)}
+.d-step-head{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.d-step-num{
+  width:28px;height:28px;border-radius:6px;
   display:flex;align-items:center;justify-content:center;
-  font-size:17px;color:#fff;flex-shrink:0;
+  font-size:13px;font-weight:800;color:#fff;flex-shrink:0;
 }
-.lane-title{font-size:13px;font-weight:700;letter-spacing:-.2px}
-.lane-sub{font-size:10px;font-weight:400;opacity:.6;margin-left:4px}
-.lane-nodes{display:flex;gap:10px;flex-wrap:wrap}
+.d-step-title{font-size:14px;font-weight:700;color:#0f172a}
+.d-step-sub{font-size:11px;color:#64748b;margin-top:1px}
+.d-step-grid{display:flex;gap:8px;flex-wrap:wrap}
+.d-step-item{
+  flex:1;min-width:100px;padding:8px;border-radius:6px;text-align:center;
+  background:#f8fafc;border:1px solid #e2e8f0;
+}
+.d-step-item .nm{font-size:10px;font-weight:600;color:#0f172a}
+.d-step-item .ds{font-size:8px;color:#64748b;margin-top:1px}
 
-/* ═══ NODE (component box) ═══ */
-.nd{
-  flex:1;min-width:130px;padding:14px 16px;text-align:center;
-  border-radius:10px;background:rgba(255,255,255,.65);
-  border:1px solid rgba(0,0,0,.05);
-  backdrop-filter:blur(6px);
-  transition:.25s;cursor:default;
+/* Decision diamonds — draw.io style */
+.d-decisions{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+.d-decision{
+  flex:1;min-width:160px;padding:16px;border-radius:8px;
+  text-align:center;color:#fff;border:none;
 }
-.nd:hover{background:rgba(255,255,255,.85);transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.06)}
-.nd .ic{font-size:22px;margin-bottom:5px}
-.nd .nm{font-size:11px;font-weight:700;color:#1c1917}
-.nd .ds{font-size:9px;color:#78716c;margin-top:3px;line-height:1.3}
+.d-decision .d-ico{font-size:24px;margin-bottom:4px}
+.d-decision .d-name{font-size:15px;font-weight:800}
+.d-decision .d-desc{font-size:10px;opacity:.85;margin-top:2px}
+.d-accept{background:#15803d}.d-refer{background:#d97706}.d-decline{background:#b91c1c}
 
-/* ═══ ANIMATED SVG ARROWS ═══ */
-.arrow-wrap{display:flex;justify-content:center;padding:4px 0;position:relative;height:52px}
-.arrow-wrap svg{display:block}
-@keyframes flowDown{to{stroke-dashoffset:-24}}
-@keyframes flowRight{to{stroke-dashoffset:-24}}
-@keyframes pulse{0%,100%{opacity:.4}50%{opacity:1}}
-.flow-line{stroke-dasharray:8 4;animation:flowDown 1s linear infinite}
-.flow-line-h{stroke-dasharray:8 4;animation:flowRight 1s linear infinite}
-.arrow-label{
-  position:absolute;left:50%;transform:translateX(-50%);top:14px;
-  padding:2px 10px;border-radius:10px;font-size:9px;font-weight:600;
-  color:#78716c;background:rgba(240,236,244,.9);
-  border:1px solid rgba(0,0,0,.06);letter-spacing:.3px;
+/* Rule card */
+.d-rcard{
+  background:#fff;border:1.5px solid #e2e8f0;border-radius:8px;padding:16px;
 }
-
-/* ═══ LANE COLORS ═══ */
-.lane-green{background:rgba(16,185,129,.08)}.lane-green .lane-ico{background:linear-gradient(135deg,#059669,#34d399)}.lane-green .lane-title{color:#059669}
-.lane-blue{background:rgba(59,130,246,.08)}.lane-blue .lane-ico{background:linear-gradient(135deg,#3b82f6,#6366f1)}.lane-blue .lane-title{color:#2563eb}
-.lane-teal{background:rgba(20,184,166,.08)}.lane-teal .lane-ico{background:linear-gradient(135deg,#0d9488,#2dd4bf)}.lane-teal .lane-title{color:#0d9488}
-.lane-purple{background:rgba(139,92,246,.08)}.lane-purple .lane-ico{background:linear-gradient(135deg,#7c3aed,#a78bfa)}.lane-purple .lane-title{color:#7c3aed}
-.lane-amber{background:rgba(245,158,11,.08)}.lane-amber .lane-ico{background:linear-gradient(135deg,#d97706,#fbbf24)}.lane-amber .lane-title{color:#d97706}
-.lane-red{background:rgba(239,68,68,.08)}.lane-red .lane-ico{background:linear-gradient(135deg,#dc2626,#f87171)}.lane-red .lane-title{color:#dc2626}
-.lane-slate{background:rgba(100,116,139,.06)}.lane-slate .lane-ico{background:linear-gradient(135deg,#475569,#94a3b8)}.lane-slate .lane-title{color:#475569}
-
-/* ═══ DECISION OUTCOMES ═══ */
-.outcomes{display:flex;gap:14px;flex-wrap:wrap;justify-content:center}
-.ocard{
-  flex:1;min-width:170px;padding:20px;border-radius:14px;
-  text-align:center;color:#fff;transition:.3s;cursor:default;
-}
-.ocard:hover{transform:translateY(-4px) scale(1.02);box-shadow:0 12px 40px rgba(0,0,0,.12)}
-.ocard .o-ico{font-size:28px;margin-bottom:4px}
-.ocard .o-name{font-size:16px;font-weight:900;letter-spacing:.3px}
-.ocard .o-desc{font-size:10px;opacity:.85;margin-top:3px}
-.oc-green{background:linear-gradient(135deg,#059669,#34d399)}
-.oc-amber{background:linear-gradient(135deg,#d97706,#fbbf24)}
-.oc-red{background:linear-gradient(135deg,#dc2626,#f87171)}
-
-/* ═══ PIPELINE STEP ═══ */
-.pstep{
-  background:rgba(255,255,255,.5);backdrop-filter:blur(8px);
-  border:1px solid rgba(0,0,0,.04);border-radius:14px;
-  padding:24px;border-left:4px solid #8b5cf6;
-}
-.pstep:hover{box-shadow:0 8px 28px rgba(0,0,0,.05)}
-.pstep-head{display:flex;align-items:center;gap:10px;margin-bottom:14px}
-.pstep-num{width:30px;height:30px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:#fff;flex-shrink:0}
-.pstep-title{font-size:15px;font-weight:700;color:#1c1917}
-.pstep-sub{font-size:11px;color:#78716c;margin-top:1px}
-.pstep-grid{display:flex;gap:10px;flex-wrap:wrap}
-.pstep-item{
-  flex:1;min-width:110px;padding:10px;border-radius:8px;text-align:center;
-  background:rgba(255,255,255,.5);border:1px solid rgba(0,0,0,.04);transition:.2s;
-}
-.pstep-item:hover{background:rgba(255,255,255,.8);border-color:rgba(139,92,246,.2)}
-.pstep-item .nm{font-size:11px;font-weight:600;color:#1c1917}
-.pstep-item .ds{font-size:9px;color:#78716c;margin-top:2px}
-
-/* ═══ RULE CARDS ═══ */
-.rcards{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px}
-.rcard{
-  background:rgba(255,255,255,.55);backdrop-filter:blur(6px);
-  border:1px solid rgba(0,0,0,.04);border-radius:12px;padding:16px;transition:.25s;
-}
-.rcard:hover{background:rgba(255,255,255,.8);box-shadow:0 6px 20px rgba(0,0,0,.05);transform:translateY(-2px)}
-.rcard-head{display:flex;align-items:center;gap:6px;padding-bottom:10px;margin-bottom:10px;border-bottom:1px solid rgba(0,0,0,.05)}
-.rcard-title{font-size:12px;font-weight:700;color:#1c1917}
-.rcard-count{margin-left:auto;font-size:10px;color:#94a3b8;font-weight:600}
-.ri{display:flex;gap:6px;padding:4px 0;font-size:11px;border-bottom:1px solid rgba(0,0,0,.02)}
+.d-rcard:hover{box-shadow:0 2px 8px rgba(0,0,0,.04)}
+.d-rcard-head{display:flex;align-items:center;gap:6px;padding-bottom:8px;margin-bottom:8px;border-bottom:1px solid #f1f5f9}
+.d-rcard-title{font-size:12px;font-weight:700;color:#0f172a}
+.d-rcard-count{margin-left:auto;font-size:10px;color:#94a3b8;font-weight:600}
+.ri{display:flex;gap:6px;padding:3px 0;font-size:11px;border-bottom:1px solid #f8fafc}
 .ri:last-child{border:none}
-.ri .rid{font-weight:700;color:#7c3aed;font-family:'JetBrains Mono',monospace;font-size:10px;min-width:56px}
-.ri .rd{color:#57534e}
+.ri .rid{font-weight:600;color:#1e3a8a;font-family:'JetBrains Mono',monospace;font-size:10px;min-width:56px}
+.ri .rd{color:#334155}
 
-/* ═══ ROUTING CARDS ═══ */
-.route-row{display:flex;gap:12px;flex-wrap:wrap;margin-top:16px}
-.route-card{
-  flex:1;min-width:160px;padding:14px;border-radius:10px;text-align:center;
-  background:rgba(255,255,255,.5);border:1px solid rgba(0,0,0,.04);transition:.2s;
+/* Team routing row */
+.d-teams{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+.d-team{
+  flex:1;min-width:140px;padding:12px;border-radius:6px;text-align:center;
+  background:#fff;border:1.5px solid #e2e8f0;
 }
-.route-card:hover{background:rgba(255,255,255,.8);box-shadow:0 4px 16px rgba(0,0,0,.05)}
-.route-card .rn{font-size:12px;font-weight:700;color:#1c1917}
-.route-card .rd{font-size:10px;color:#78716c;margin-top:3px}
+.d-team:hover{box-shadow:0 2px 8px rgba(0,0,0,.04)}
+.d-team .rn{font-size:11px;font-weight:700;color:#0f172a}
+.d-team .rd{font-size:9px;color:#64748b;margin-top:2px}
 
-/* ═══ DATA FLOW 3-COL ═══ */
-.df-grid{display:grid;grid-template-columns:1fr 60px 1fr 60px 1fr;gap:0;align-items:start}
-@media(max-width:900px){.df-grid{grid-template-columns:1fr;gap:12px}.df-grid .df-arrow{display:none!important}}
-.df-arrow{display:flex;align-items:center;justify-content:center;height:100%;padding-top:40px}
+/* 3-col data flow */
+.d-flow3{display:grid;grid-template-columns:1fr 48px 1fr 48px 1fr;gap:0;align-items:start}
+@media(max-width:800px){.d-flow3{grid-template-columns:1fr;gap:12px}.d-flow3 .d-arrow-h{display:none!important}}
 
-/* ═══ DEPLOY GRID ═══ */
-.dgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
-.dbox{
-  background:rgba(255,255,255,.5);backdrop-filter:blur(6px);
-  border:1px solid rgba(0,0,0,.04);border-radius:12px;padding:20px;transition:.25s;
+/* Deploy grid */
+.d-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
+.d-box{
+  background:#fff;border:1.5px solid #e2e8f0;border-radius:8px;padding:16px;
 }
-.dbox:hover{background:rgba(255,255,255,.8);box-shadow:0 6px 24px rgba(0,0,0,.05);transform:translateY(-2px)}
-.dbox h4{font-size:13px;font-weight:700;color:#1c1917;margin-bottom:6px;display:flex;align-items:center;gap:6px}
-.dbox p{font-size:11px;color:#57534e;line-height:1.5}
-.dtag{display:inline-block;margin-top:8px;padding:2px 8px;border-radius:5px;font-size:10px;font-weight:600;background:rgba(139,92,246,.08);color:#7c3aed}
+.d-box:hover{box-shadow:0 2px 8px rgba(0,0,0,.04)}
+.d-box h4{font-size:12px;font-weight:700;color:#0f172a;margin-bottom:4px;display:flex;align-items:center;gap:6px}
+.d-box p{font-size:11px;color:#334155;line-height:1.5}
+.d-tag{display:inline-block;margin-top:6px;padding:2px 8px;border-radius:4px;font-size:9px;font-weight:600;background:#eff6ff;color:#1e3a8a}
 
-/* ═══ NUMBERED ITEMS ═══ */
-.nlist{counter-reset:n}
-.ni{
-  counter-increment:n;padding:20px 20px 20px 64px;
-  border-radius:12px;background:rgba(255,255,255,.5);backdrop-filter:blur(6px);
-  border:1px solid rgba(0,0,0,.04);margin-bottom:12px;position:relative;transition:.2s;
+/* Numbered items */
+.d-nlist{counter-reset:n}
+.d-ni{
+  counter-increment:n;padding:16px 16px 16px 56px;
+  background:#fff;border:1.5px solid #e2e8f0;border-radius:8px;
+  margin-bottom:10px;position:relative;
 }
-.ni:hover{background:rgba(255,255,255,.8);box-shadow:0 6px 24px rgba(0,0,0,.04);transform:translateY(-1px)}
-.ni::before{
-  content:counter(n);position:absolute;left:18px;top:20px;
-  width:30px;height:30px;border-radius:9px;
-  background:linear-gradient(135deg,#7c3aed,#a855f7);color:#fff;
-  display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;
+.d-ni:hover{box-shadow:0 2px 8px rgba(0,0,0,.04)}
+.d-ni::before{
+  content:counter(n);position:absolute;left:16px;top:16px;
+  width:26px;height:26px;border-radius:6px;background:#1e3a8a;color:#fff;
+  display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;
 }
-.ni h3{font-size:14px;font-weight:700;color:#1c1917}
-.ni p,.ni li{font-size:12px;color:#57534e;line-height:1.6;margin-top:3px}
-.ni ul{padding-left:16px;margin-top:4px}.ni li{margin-bottom:2px}
-.ni strong{color:#1c1917}
-.ni code{background:rgba(139,92,246,.08);padding:1px 6px;border-radius:4px;font-size:11px;font-family:'JetBrains Mono',monospace;color:#7c3aed}
+.d-ni h3{font-size:13px;font-weight:700;color:#0f172a}
+.d-ni p,.d-ni li{font-size:12px;color:#334155;line-height:1.5;margin-top:2px}
+.d-ni ul{padding-left:16px;margin-top:4px}.d-ni li{margin-bottom:1px}
+.d-ni strong{color:#0f172a}
+.d-ni code{background:#eff6ff;padding:1px 5px;border-radius:3px;font-size:11px;font-family:'JetBrains Mono',monospace;color:#1e3a8a}
 </style>
 </head>
 <body>
 
-<div class="topnav">
-  <div class="logo">Knight<span>.</span>AI</div>
+<div class="nav">
+  <div class="logo">Knight Insurance</div>
   <a class="on" data-v="hld">High-Level Design</a>
   <a data-v="pipe">Pipeline</a>
   <a data-v="rules">Rules Engine</a>
   <a data-v="data">Data Flow</a>
   <a data-v="infra">Infrastructure</a>
-  <a data-v="why">Design Decisions</a>
+  <a data-v="decisions">Decisions</a>
   <a data-v="sec">Security</a>
 </div>
 
-<!-- ═══════════════════════════════════════
-     HIGH-LEVEL DESIGN
-═══════════════════════════════════════ -->
+<!-- ═══ HIGH-LEVEL DESIGN ═══ -->
 <div class="V on" id="hld"><div class="canvas">
-  <div class="vtitle">
-    <div class="badge" style="background:rgba(139,92,246,.08);color:#7c3aed">🏗️ Architecture</div>
-    <h2>High-Level System Design</h2>
-    <p>4-tier architecture — presentation → orchestration → processing → data</p>
-  </div>
+  <div class="vh"><div class="vh-icon">🏗️</div><div><h2>High-Level System Design</h2><p>4-tier architecture — presentation → orchestration → processing → data</p></div></div>
 
-  <!-- TIER 1 -->
-  <div class="lane lane-green">
-    <div class="lane-head"><div class="lane-ico" style="background:linear-gradient(135deg,#059669,#34d399)">🖥️</div><div class="lane-title">Presentation Layer <span class="lane-sub">— Next.js 14 · Port 3000</span></div></div>
-    <div class="lane-nodes">
-      <div class="nd"><div class="ic">📊</div><div class="nm">Dashboard</div><div class="ds">KPIs, charts, cost tracking</div></div>
-      <div class="nd"><div class="ic">📤</div><div class="nm">Upload Form</div><div class="ds">Multi-file drag & drop</div></div>
-      <div class="nd"><div class="ic">📋</div><div class="nm">Review Panel</div><div class="ds">Approve / Reject / Override</div></div>
-      <div class="nd"><div class="ic">📈</div><div class="nm">Analytics</div><div class="ds">Token usage, trends</div></div>
-      <div class="nd"><div class="ic">🔀</div><div class="nm">Compare</div><div class="ds">Side-by-side diff</div></div>
-      <div class="nd"><div class="ic">🏥</div><div class="nm">Health</div><div class="ds">DB, AI, disk status</div></div>
+  <div class="d-container green">
+    <div class="d-container-head">🖥️ PRESENTATION LAYER <span class="tag">Next.js 14 · Port 3000</span></div>
+    <div class="d-container-body">
+      <div class="d-node"><div class="ico">📊</div><div class="nm">Dashboard</div><div class="ds">KPIs, charts, costs</div></div>
+      <div class="d-node"><div class="ico">📤</div><div class="nm">Upload</div><div class="ds">Multi-file drag & drop</div></div>
+      <div class="d-node"><div class="ico">📋</div><div class="nm">Review Panel</div><div class="ds">Approve / Reject / Override</div></div>
+      <div class="d-node"><div class="ico">📈</div><div class="nm">Analytics</div><div class="ds">Token usage, trends</div></div>
+      <div class="d-node"><div class="ico">🔀</div><div class="nm">Compare</div><div class="ds">Side-by-side diff</div></div>
+      <div class="d-node"><div class="ico">🏥</div><div class="nm">Health</div><div class="ds">System status</div></div>
     </div>
   </div>
 
-  <div class="arrow-wrap">
-    <svg width="3" height="52"><line x1="1.5" y1="0" x2="1.5" y2="42" stroke="#059669" stroke-width="2.5" class="flow-line"/><polygon points="-2,42 5,42 1.5,52" fill="#059669"/></svg>
-    <span class="arrow-label">REST API calls</span>
+  <div class="d-arrow">
+    <svg width="2" height="40"><line x1="1" y1="0" x2="1" y2="32" stroke="#1e3a8a" stroke-width="2" class="d-arrow-line"/><polygon points="-2,32 4,32 1,40" fill="#1e3a8a"/></svg>
+    <span class="d-arrow-label">REST API</span>
   </div>
 
-  <!-- TIER 2 -->
-  <div class="lane lane-blue">
-    <div class="lane-head"><div class="lane-ico">⚙️</div><div class="lane-title">API & Orchestration <span class="lane-sub">— FastAPI · Port 8000</span></div></div>
-    <div class="lane-nodes">
-      <div class="nd"><div class="ic">🌐</div><div class="nm">REST Router</div><div class="ds">CRUD, Swagger docs</div></div>
-      <div class="nd"><div class="ic">🎯</div><div class="nm">Pipeline Engine</div><div class="ds">6-step orchestration</div></div>
-      <div class="nd"><div class="ic">📧</div><div class="nm">Email Watcher</div><div class="ds">IMAP poll every 30s</div></div>
-      <div class="nd"><div class="ic">🔍</div><div class="nm">Review API</div><div class="ds">Approve / Reject / Override</div></div>
+  <div class="d-container blue">
+    <div class="d-container-head">⚙️ API & ORCHESTRATION <span class="tag">FastAPI · Port 8000</span></div>
+    <div class="d-container-body">
+      <div class="d-node"><div class="ico">🌐</div><div class="nm">REST Router</div><div class="ds">CRUD, Swagger</div></div>
+      <div class="d-node"><div class="ico">🎯</div><div class="nm">Pipeline Engine</div><div class="ds">6-step orchestration</div></div>
+      <div class="d-node"><div class="ico">📧</div><div class="nm">Email Watcher</div><div class="ds">IMAP poll 30s</div></div>
+      <div class="d-node"><div class="ico">🔍</div><div class="nm">Review API</div><div class="ds">Approve / Reject</div></div>
     </div>
   </div>
 
-  <div class="arrow-wrap">
-    <svg width="3" height="52"><line x1="1.5" y1="0" x2="1.5" y2="42" stroke="#3b82f6" stroke-width="2.5" class="flow-line"/><polygon points="-2,42 5,42 1.5,52" fill="#3b82f6"/></svg>
-    <span class="arrow-label">Pipeline invocation</span>
+  <div class="d-arrow">
+    <svg width="2" height="40"><line x1="1" y1="0" x2="1" y2="32" stroke="#3b82f6" stroke-width="2" class="d-arrow-line"/><polygon points="-2,32 4,32 1,40" fill="#3b82f6"/></svg>
+    <span class="d-arrow-label">Pipeline</span>
   </div>
 
-  <!-- TIER 3 -->
-  <div class="lane lane-teal">
-    <div class="lane-head"><div class="lane-ico">🧠</div><div class="lane-title">Processing Layer <span class="lane-sub">— AI + Rules + Conflict Detection</span></div></div>
-    <div class="lane-nodes">
-      <div class="nd"><div class="ic">📄</div><div class="nm">Text Extractor</div><div class="ds">PyMuPDF, openpyxl, OCR</div></div>
-      <div class="nd"><div class="ic">🏷️</div><div class="nm">Classifier</div><div class="ds">Content-only (never filenames)</div></div>
-      <div class="nd"><div class="ic">🔍</div><div class="nm">Data Extractor</div><div class="ds">Regex (free) + Vision</div></div>
-      <div class="nd"><div class="ic">🧠</div><div class="nm">AI Analyzer</div><div class="ds">4 parallel Gemini calls</div></div>
-      <div class="nd"><div class="ic">⚖️</div><div class="nm">Rules Engine</div><div class="ds">27 rules · 6 categories</div></div>
-      <div class="nd"><div class="ic">🔀</div><div class="nm">Conflict Detector</div><div class="ds">Cross-doc validation</div></div>
+  <div class="d-container teal">
+    <div class="d-container-head">🧠 PROCESSING LAYER <span class="tag">AI + Rules + Conflicts</span></div>
+    <div class="d-container-body">
+      <div class="d-node"><div class="ico">📄</div><div class="nm">Text Extractor</div><div class="ds">PyMuPDF, openpyxl</div></div>
+      <div class="d-node"><div class="ico">🏷️</div><div class="nm">Classifier</div><div class="ds">Content-only</div></div>
+      <div class="d-node"><div class="ico">🔍</div><div class="nm">Data Extractor</div><div class="ds">Regex + Vision</div></div>
+      <div class="d-node"><div class="ico">🧠</div><div class="nm">AI Analyzer</div><div class="ds">4 parallel calls</div></div>
+      <div class="d-node"><div class="ico">⚖️</div><div class="nm">Rules Engine</div><div class="ds">27 rules</div></div>
+      <div class="d-node"><div class="ico">🔀</div><div class="nm">Conflict Detector</div><div class="ds">Cross-doc checks</div></div>
     </div>
   </div>
 
-  <div class="arrow-wrap">
-    <svg width="3" height="52"><line x1="1.5" y1="0" x2="1.5" y2="42" stroke="#8b5cf6" stroke-width="2.5" class="flow-line"/><polygon points="-2,42 5,42 1.5,52" fill="#8b5cf6"/></svg>
-    <span class="arrow-label">External calls + storage</span>
+  <div class="d-arrow">
+    <svg width="2" height="40"><line x1="1" y1="0" x2="1" y2="32" stroke="#0d9488" stroke-width="2" class="d-arrow-line"/><polygon points="-2,32 4,32 1,40" fill="#0d9488"/></svg>
+    <span class="d-arrow-label">API + Storage</span>
   </div>
 
-  <!-- TIER 4 (split) -->
-  <div style="display:grid;grid-template-columns:1fr 60px 1fr;gap:0;align-items:stretch">
-    <div class="lane lane-purple" style="margin:0">
-      <div class="lane-head"><div class="lane-ico">☁️</div><div class="lane-title">External Services</div></div>
-      <div style="display:flex;flex-direction:column;gap:8px">
-        <div class="nd"><div class="ic">🧠</div><div class="nm">Gemini 2.5 Flash</div><div class="ds">Vision + text · $0.05–0.09/sub</div></div>
-        <div class="nd"><div class="ic">📬</div><div class="nm">IMAP Mail Server</div><div class="ds">IMAPS 993 · TLS encrypted</div></div>
+  <div style="display:grid;grid-template-columns:1fr 48px 1fr;gap:0;align-items:stretch">
+    <div class="d-container purple" style="margin:0">
+      <div class="d-container-head">☁️ EXTERNAL SERVICES</div>
+      <div class="d-container-body" style="flex-direction:column">
+        <div class="d-node"><div class="ico">🧠</div><div class="nm">Gemini 2.5 Flash</div><div class="ds">Vision + Text · $0.05–0.09/sub</div></div>
+        <div class="d-node"><div class="ico">📬</div><div class="nm">IMAP Server</div><div class="ds">IMAPS 993 · TLS</div></div>
       </div>
     </div>
-    <div style="display:flex;align-items:center;justify-content:center">
-      <svg width="60" height="3"><line x1="0" y1="1.5" x2="50" y2="1.5" stroke="#8b5cf6" stroke-width="2" class="flow-line-h"/><polygon points="50,0 60,1.5 50,3" fill="#8b5cf6"/></svg>
+    <div class="d-arrow-h" style="height:100%;align-items:center;display:flex;justify-content:center">
+      <svg width="48" height="2"><line x1="0" y1="1" x2="40" y2="1" stroke="#475569" stroke-width="2" class="d-arrow-h-line"/><polygon points="40,-1 48,1 40,3" fill="#475569"/></svg>
     </div>
-    <div class="lane lane-slate" style="margin:0">
-      <div class="lane-head"><div class="lane-ico">💾</div><div class="lane-title">Data Layer</div></div>
-      <div style="display:flex;flex-direction:column;gap:8px">
-        <div class="nd"><div class="ic">🗃️</div><div class="nm">SQLite / PostgreSQL</div><div class="ds">SQLAlchemy ORM · 6 tables</div></div>
-        <div class="nd"><div class="ic">☁️</div><div class="nm">AWS S3</div><div class="ds">AES-256 · Versioned · Durable</div></div>
+    <div class="d-container slate" style="margin:0">
+      <div class="d-container-head">💾 DATA LAYER</div>
+      <div class="d-container-body" style="flex-direction:column">
+        <div class="d-node"><div class="ico">🗃️</div><div class="nm">SQLite / PostgreSQL</div><div class="ds">SQLAlchemy ORM · 6 tables</div></div>
+        <div class="d-node"><div class="ico">☁️</div><div class="nm">AWS S3</div><div class="ds">AES-256 · Versioned</div></div>
       </div>
     </div>
   </div>
 </div></div>
 
-<!-- ═══════════════════════════════════════
-     PIPELINE
-═══════════════════════════════════════ -->
+<!-- ═══ PIPELINE ═══ -->
 <div class="V" id="pipe"><div class="canvas">
-  <div class="vtitle">
-    <div class="badge" style="background:rgba(20,184,166,.08);color:#0d9488">⚡ Pipeline</div>
-    <h2>6-Step Processing Pipeline</h2>
-    <p>End-to-end in ~45 seconds with parallel processing</p>
-  </div>
+  <div class="vh"><div class="vh-icon" style="background:#0d9488">⚡</div><div><h2>6-Step Processing Pipeline</h2><p>End-to-end in ~45 seconds with parallel processing</p></div></div>
 
-  <div class="pstep" style="border-left-color:#8b5cf6"><div class="pstep-head"><div class="pstep-num" style="background:linear-gradient(135deg,#7c3aed,#a78bfa)">1</div><div><div class="pstep-title">Text Extraction</div><div class="pstep-sub">Parallel image processing via ThreadPoolExecutor</div></div></div>
-    <div class="pstep-grid"><div class="pstep-item"><div class="nm">📕 PDF</div><div class="ds">PyMuPDF (fitz)</div></div><div class="pstep-item"><div class="nm">📗 Excel</div><div class="ds">openpyxl</div></div><div class="pstep-item"><div class="nm">📊 CSV</div><div class="ds">pandas</div></div><div class="pstep-item"><div class="nm">🖼️ Images</div><div class="ds">Gemini Vision OCR</div></div></div>
-  </div>
-  <div class="arrow-wrap"><svg width="3" height="52"><line x1="1.5" y1="0" x2="1.5" y2="42" stroke="#6366f1" stroke-width="2.5" class="flow-line"/><polygon points="-2,42 5,42 1.5,52" fill="#6366f1"/></svg></div>
+  <div class="d-step" style="border-left-color:#1e3a8a"><div class="d-step-head"><div class="d-step-num" style="background:#1e3a8a">1</div><div><div class="d-step-title">Text Extraction</div><div class="d-step-sub">Parallel image processing via ThreadPoolExecutor</div></div></div>
+    <div class="d-step-grid"><div class="d-step-item"><div class="nm">📕 PDF</div><div class="ds">PyMuPDF</div></div><div class="d-step-item"><div class="nm">📗 Excel</div><div class="ds">openpyxl</div></div><div class="d-step-item"><div class="nm">📊 CSV</div><div class="ds">pandas</div></div><div class="d-step-item"><div class="nm">🖼️ Images</div><div class="ds">Gemini Vision</div></div></div></div>
+  <div class="d-arrow"><svg width="2" height="40"><line x1="1" y1="0" x2="1" y2="32" stroke="#3b82f6" stroke-width="2" class="d-arrow-line"/><polygon points="-2,32 4,32 1,40" fill="#3b82f6"/></svg></div>
 
-  <div class="pstep" style="border-left-color:#6366f1"><div class="pstep-head"><div class="pstep-num" style="background:linear-gradient(135deg,#4f46e5,#818cf8)">2</div><div><div class="pstep-title">Document Classification</div><div class="pstep-sub">Single batched Gemini call — content-based only (⚠ never filenames)</div></div></div>
-    <div class="pstep-grid"><div class="pstep-item"><div class="nm">insurance_application</div></div><div class="pstep-item"><div class="nm">driver_list</div></div><div class="pstep-item"><div class="nm">equipment_list</div></div><div class="pstep-item"><div class="nm">loss_run</div></div><div class="pstep-item"><div class="nm">ifta_report</div></div><div class="pstep-item"><div class="nm">drivers_license</div></div></div>
-  </div>
-  <div class="arrow-wrap"><svg width="3" height="52"><line x1="1.5" y1="0" x2="1.5" y2="42" stroke="#10b981" stroke-width="2.5" class="flow-line"/><polygon points="-2,42 5,42 1.5,52" fill="#10b981"/></svg></div>
+  <div class="d-step" style="border-left-color:#3b82f6"><div class="d-step-head"><div class="d-step-num" style="background:#3b82f6">2</div><div><div class="d-step-title">Document Classification</div><div class="d-step-sub">Single batched Gemini call — content-based only (never filenames)</div></div></div>
+    <div class="d-step-grid"><div class="d-step-item"><div class="nm">insurance_application</div></div><div class="d-step-item"><div class="nm">driver_list</div></div><div class="d-step-item"><div class="nm">equipment_list</div></div><div class="d-step-item"><div class="nm">loss_run</div></div><div class="d-step-item"><div class="nm">ifta_report</div></div><div class="d-step-item"><div class="nm">drivers_license</div></div></div></div>
+  <div class="d-arrow"><svg width="2" height="40"><line x1="1" y1="0" x2="1" y2="32" stroke="#15803d" stroke-width="2" class="d-arrow-line"/><polygon points="-2,32 4,32 1,40" fill="#15803d"/></svg></div>
 
-  <div class="pstep" style="border-left-color:#10b981"><div class="pstep-head"><div class="pstep-num" style="background:linear-gradient(135deg,#059669,#34d399)">3</div><div><div class="pstep-title">Data Extraction</div><div class="pstep-sub">Hybrid: Python regex ($0) + Gemini Vision (images only)</div></div></div>
-    <div class="pstep-grid"><div class="pstep-item"><div class="nm">📗 Excel/CSV</div><div class="ds"><b style="color:#059669">Zero AI cost</b></div></div><div class="pstep-item"><div class="nm">📕 PDF text</div><div class="ds"><b style="color:#059669">Zero AI cost</b></div></div><div class="pstep-item"><div class="nm">🪪 CDL images</div><div class="ds">Gemini Vision</div></div><div class="pstep-item"><div class="nm">🔄 Dedup</div><div class="ds">Name matching</div></div></div>
-  </div>
-  <div class="arrow-wrap"><svg width="3" height="52"><line x1="1.5" y1="0" x2="1.5" y2="42" stroke="#f59e0b" stroke-width="2.5" class="flow-line"/><polygon points="-2,42 5,42 1.5,52" fill="#f59e0b"/></svg></div>
+  <div class="d-step" style="border-left-color:#15803d"><div class="d-step-head"><div class="d-step-num" style="background:#15803d">3</div><div><div class="d-step-title">Data Extraction</div><div class="d-step-sub">Hybrid: Python regex ($0) + Gemini Vision (images only)</div></div></div>
+    <div class="d-step-grid"><div class="d-step-item"><div class="nm">📗 Excel/CSV</div><div class="ds" style="color:#15803d;font-weight:600">$0 cost</div></div><div class="d-step-item"><div class="nm">📕 PDF text</div><div class="ds" style="color:#15803d;font-weight:600">$0 cost</div></div><div class="d-step-item"><div class="nm">🪪 CDL images</div><div class="ds">Gemini Vision</div></div><div class="d-step-item"><div class="nm">🔄 Dedup</div><div class="ds">Name matching</div></div></div></div>
+  <div class="d-arrow"><svg width="2" height="40"><line x1="1" y1="0" x2="1" y2="32" stroke="#d97706" stroke-width="2" class="d-arrow-line"/><polygon points="-2,32 4,32 1,40" fill="#d97706"/></svg></div>
 
-  <div class="pstep" style="border-left-color:#f59e0b"><div class="pstep-head"><div class="pstep-num" style="background:linear-gradient(135deg,#d97706,#fbbf24)">4</div><div><div class="pstep-title">AI Risk Analysis</div><div class="pstep-sub">4 parallel Gemini calls for comprehensive risk assessment</div></div></div>
-    <div class="pstep-grid"><div class="pstep-item"><div class="nm">🏢 Company</div><div class="ds">DOT, MC, profile</div></div><div class="pstep-item"><div class="nm">👤 Driver</div><div class="ds">CDL, violations</div></div><div class="pstep-item"><div class="nm">🚛 Fleet</div><div class="ds">VIN, age, type</div></div><div class="pstep-item"><div class="nm">📊 Financial</div><div class="ds">Claims, loss ratio</div></div></div>
-  </div>
-  <div class="arrow-wrap"><svg width="3" height="52"><line x1="1.5" y1="0" x2="1.5" y2="42" stroke="#ef4444" stroke-width="2.5" class="flow-line"/><polygon points="-2,42 5,42 1.5,52" fill="#ef4444"/></svg></div>
+  <div class="d-step" style="border-left-color:#d97706"><div class="d-step-head"><div class="d-step-num" style="background:#d97706">4</div><div><div class="d-step-title">AI Risk Analysis</div><div class="d-step-sub">4 parallel Gemini calls for comprehensive risk assessment</div></div></div>
+    <div class="d-step-grid"><div class="d-step-item"><div class="nm">🏢 Company</div><div class="ds">DOT, MC, profile</div></div><div class="d-step-item"><div class="nm">👤 Driver</div><div class="ds">CDL, violations</div></div><div class="d-step-item"><div class="nm">🚛 Fleet</div><div class="ds">VIN, age, type</div></div><div class="d-step-item"><div class="nm">📊 Financial</div><div class="ds">Claims, loss ratio</div></div></div></div>
+  <div class="d-arrow"><svg width="2" height="40"><line x1="1" y1="0" x2="1" y2="32" stroke="#b91c1c" stroke-width="2" class="d-arrow-line"/><polygon points="-2,32 4,32 1,40" fill="#b91c1c"/></svg></div>
 
-  <div class="pstep" style="border-left-color:#ef4444"><div class="pstep-head"><div class="pstep-num" style="background:linear-gradient(135deg,#dc2626,#f87171)">5</div><div><div class="pstep-title">Rules Engine + Conflict Detection</div><div class="pstep-sub">27 rules across 6 categories + cross-document validation</div></div></div>
-    <div class="pstep-grid"><div class="pstep-item"><div class="nm">🏢 Eligibility</div><div class="ds">4 rules</div></div><div class="pstep-item"><div class="nm">👤 Driver</div><div class="ds">7 rules</div></div><div class="pstep-item"><div class="nm">⚠️ Exposure</div><div class="ds">4 rules</div></div><div class="pstep-item"><div class="nm">📋 Submission</div><div class="ds">4 rules</div></div><div class="pstep-item"><div class="nm">⛽ IFTA</div><div class="ds">4 rules</div></div><div class="pstep-item"><div class="nm">🔀 Conflict</div><div class="ds">6 rules</div></div></div>
-  </div>
-  <div class="arrow-wrap"><svg width="3" height="52"><line x1="1.5" y1="0" x2="1.5" y2="42" stroke="#475569" stroke-width="2.5" class="flow-line"/><polygon points="-2,42 5,42 1.5,52" fill="#475569"/></svg></div>
+  <div class="d-step" style="border-left-color:#b91c1c"><div class="d-step-head"><div class="d-step-num" style="background:#b91c1c">5</div><div><div class="d-step-title">Rules Engine + Conflict Detection</div><div class="d-step-sub">27 rules across 6 categories + cross-document validation</div></div></div>
+    <div class="d-step-grid"><div class="d-step-item"><div class="nm">🏢 Eligibility</div><div class="ds">4 rules</div></div><div class="d-step-item"><div class="nm">👤 Driver</div><div class="ds">7 rules</div></div><div class="d-step-item"><div class="nm">⚠️ Exposure</div><div class="ds">4 rules</div></div><div class="d-step-item"><div class="nm">📋 Submission</div><div class="ds">4 rules</div></div><div class="d-step-item"><div class="nm">⛽ IFTA</div><div class="ds">4 rules</div></div><div class="d-step-item"><div class="nm">🔀 Conflict</div><div class="ds">6 rules</div></div></div></div>
+  <div class="d-arrow"><svg width="2" height="40"><line x1="1" y1="0" x2="1" y2="32" stroke="#475569" stroke-width="2" class="d-arrow-line"/><polygon points="-2,32 4,32 1,40" fill="#475569"/></svg></div>
 
-  <div class="pstep" style="border-left-color:#475569"><div class="pstep-head"><div class="pstep-num" style="background:linear-gradient(135deg,#475569,#94a3b8)">6</div><div><div class="pstep-title">Decision + Team Routing</div><div class="pstep-sub">Underwriter: Approve ✅ · Reject ❌ · Override ⚡</div></div></div>
-    <div class="outcomes" style="margin-top:14px">
-      <div class="ocard oc-green"><div class="o-ico">✅</div><div class="o-name">Accept</div><div class="o-desc">→ Standard Review</div></div>
-      <div class="ocard oc-amber"><div class="o-ico">⚠️</div><div class="o-name">Refer</div><div class="o-desc">→ Specialty / Driver / Ops</div></div>
-      <div class="ocard oc-red"><div class="o-ico">❌</div><div class="o-name">Decline</div><div class="o-desc">→ Senior Underwriting</div></div>
-    </div>
-  </div>
+  <div class="d-step" style="border-left-color:#475569"><div class="d-step-head"><div class="d-step-num" style="background:#475569">6</div><div><div class="d-step-title">Decision + Team Routing</div><div class="d-step-sub">Underwriter: Approve ✅ · Reject ❌ · Override ⚡</div></div></div>
+    <div class="d-decisions">
+      <div class="d-decision d-accept"><div class="d-ico">✅</div><div class="d-name">Accept</div><div class="d-desc">→ Standard Review</div></div>
+      <div class="d-decision d-refer"><div class="d-ico">⚠️</div><div class="d-name">Refer</div><div class="d-desc">→ Specialty / Driver / Ops</div></div>
+      <div class="d-decision d-decline"><div class="d-ico">❌</div><div class="d-name">Decline</div><div class="d-desc">→ Senior Underwriting</div></div>
+    </div></div>
 </div></div>
 
-<!-- ═══════════════════════════════════════
-     RULES ENGINE
-═══════════════════════════════════════ -->
+<!-- ═══ RULES ENGINE ═══ -->
 <div class="V" id="rules"><div class="canvas">
-  <div class="vtitle">
-    <div class="badge" style="background:rgba(239,68,68,.08);color:#dc2626">⚖️ Rules</div>
-    <h2>27 Business Rules · 6 Categories</h2>
-    <p>Configurable severity · Enable/disable per rule · Cross-document conflict detection</p>
+  <div class="vh"><div class="vh-icon" style="background:#b91c1c">⚖️</div><div><h2>27 Business Rules · 6 Categories</h2><p>Configurable severity · Enable/disable per rule · Cross-document conflict detection</p></div></div>
+
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px">
+    <div class="d-rcard"><div class="d-rcard-head"><span style="font-size:16px">🏢</span><span class="d-rcard-title">Eligibility</span><span class="d-rcard-count">4</span></div><div class="ri"><span class="rid">ELIG-001</span><span class="rd">Years in business ≥ 2</span></div><div class="ri"><span class="rid">ELIG-002</span><span class="rd">Covered vehicle types</span></div><div class="ri"><span class="rid">ELIG-003</span><span class="rd">Non-covered states</span></div><div class="ri"><span class="rid">ELIG-004</span><span class="rd">Operating radius</span></div></div>
+    <div class="d-rcard"><div class="d-rcard-head"><span style="font-size:16px">👤</span><span class="d-rcard-title">Driver</span><span class="d-rcard-count">7</span></div><div class="ri"><span class="rid">DRV-001</span><span class="rd">Valid CDL required</span></div><div class="ri"><span class="rid">DRV-002</span><span class="rd">Age 23–70</span></div><div class="ri"><span class="rid">DRV-003</span><span class="rd">Min 2yr experience</span></div><div class="ri"><span class="rid">DRV-004</span><span class="rd">Max 3 violations/3yr</span></div><div class="ri"><span class="rid">DRV-005</span><span class="rd">No major violations</span></div><div class="ri"><span class="rid">DRV-006</span><span class="rd">Max 2 at-fault</span></div><div class="ri"><span class="rid">DRV-007</span><span class="rd">MVR check</span></div></div>
+    <div class="d-rcard"><div class="d-rcard-head"><span style="font-size:16px">⚠️</span><span class="d-rcard-title">Exposure</span><span class="d-rcard-count">4</span></div><div class="ri"><span class="rid">EXP-001</span><span class="rd">Hazmat prohibited</span></div><div class="ri"><span class="rid">EXP-002</span><span class="rd">Prohibited commodities</span></div><div class="ri"><span class="rid">EXP-003</span><span class="rd">Max units ≤ 26</span></div><div class="ri"><span class="rid">EXP-004</span><span class="rd">Mexico border 50mi</span></div></div>
+    <div class="d-rcard"><div class="d-rcard-head"><span style="font-size:16px">📋</span><span class="d-rcard-title">Submission</span><span class="d-rcard-count">4</span></div><div class="ri"><span class="rid">SEL-001</span><span class="rd">FEIN/DOT required</span></div><div class="ri"><span class="rid">SEL-002</span><span class="rd">Tow trucks excluded</span></div><div class="ri"><span class="rid">SEL-003</span><span class="rd">$13K/unit minimum</span></div><div class="ri"><span class="rid">SEL-004</span><span class="rd">Sole proprietor</span></div></div>
+    <div class="d-rcard"><div class="d-rcard-head"><span style="font-size:16px">⛽</span><span class="d-rcard-title">IFTA</span><span class="d-rcard-count">4</span></div><div class="ri"><span class="rid">IFTA-001</span><span class="rd">IFTA filings required</span></div><div class="ri"><span class="rid">IFTA-002</span><span class="rd">Min annual mileage</span></div><div class="ri"><span class="rid">IFTA-003</span><span class="rd">Multi-state eligible</span></div><div class="ri"><span class="rid">IFTA-004</span><span class="rd">Border state check</span></div></div>
+    <div class="d-rcard" style="border-color:#fecaca"><div class="d-rcard-head"><span style="font-size:16px">🔀</span><span class="d-rcard-title">Conflict Detection</span><span class="d-rcard-count">6</span></div><div class="ri"><span class="rid">CON-001</span><span class="rd">Vehicle count mismatch</span></div><div class="ri"><span class="rid">CON-002</span><span class="rd">Driver count mismatch</span></div><div class="ri"><span class="rid">CON-003</span><span class="rd">Company name inconsistency</span></div><div class="ri"><span class="rid">CON-004</span><span class="rd">FEIN/DOT conflict</span></div><div class="ri"><span class="rid">CON-005</span><span class="rd">Duplicate CDLs</span></div><div class="ri"><span class="rid">CON-006</span><span class="rd">Duplicate VINs</span></div></div>
   </div>
 
-  <div class="rcards">
-    <div class="rcard"><div class="rcard-head"><span style="font-size:18px">🏢</span><span class="rcard-title">Eligibility</span><span class="rcard-count">4</span></div><div class="ri"><span class="rid">ELIG-001</span><span class="rd">Years in business ≥ 2</span></div><div class="ri"><span class="rid">ELIG-002</span><span class="rd">Covered vehicle types</span></div><div class="ri"><span class="rid">ELIG-003</span><span class="rd">Non-covered states</span></div><div class="ri"><span class="rid">ELIG-004</span><span class="rd">Operating radius check</span></div></div>
-    <div class="rcard"><div class="rcard-head"><span style="font-size:18px">👤</span><span class="rcard-title">Driver</span><span class="rcard-count">7</span></div><div class="ri"><span class="rid">DRV-001</span><span class="rd">Valid CDL required</span></div><div class="ri"><span class="rid">DRV-002</span><span class="rd">Age range 23–70</span></div><div class="ri"><span class="rid">DRV-003</span><span class="rd">Min 2yr experience</span></div><div class="ri"><span class="rid">DRV-004</span><span class="rd">Max 3 violations/3yr</span></div><div class="ri"><span class="rid">DRV-005</span><span class="rd">No major violations</span></div><div class="ri"><span class="rid">DRV-006</span><span class="rd">Max 2 at-fault accidents</span></div><div class="ri"><span class="rid">DRV-007</span><span class="rd">MVR check required</span></div></div>
-    <div class="rcard"><div class="rcard-head"><span style="font-size:18px">⚠️</span><span class="rcard-title">Exposure</span><span class="rcard-count">4</span></div><div class="ri"><span class="rid">EXP-001</span><span class="rd">Hazmat restrictions</span></div><div class="ri"><span class="rid">EXP-002</span><span class="rd">Prohibited commodities</span></div><div class="ri"><span class="rid">EXP-003</span><span class="rd">Max units ≤ 26</span></div><div class="ri"><span class="rid">EXP-004</span><span class="rd">Mexico border ops</span></div></div>
-    <div class="rcard"><div class="rcard-head"><span style="font-size:18px">📋</span><span class="rcard-title">Submission</span><span class="rcard-count">4</span></div><div class="ri"><span class="rid">SEL-001</span><span class="rd">FEIN/DOT required</span></div><div class="ri"><span class="rid">SEL-002</span><span class="rd">Tow trucks excluded</span></div><div class="ri"><span class="rid">SEL-003</span><span class="rd">Premium/unit min</span></div><div class="ri"><span class="rid">SEL-004</span><span class="rd">Sole proprietor check</span></div></div>
-    <div class="rcard"><div class="rcard-head"><span style="font-size:18px">⛽</span><span class="rcard-title">IFTA</span><span class="rcard-count">4</span></div><div class="ri"><span class="rid">IFTA-001</span><span class="rd">IFTA filings required</span></div><div class="ri"><span class="rid">IFTA-002</span><span class="rd">Min annual mileage</span></div><div class="ri"><span class="rid">IFTA-003</span><span class="rd">Multi-state eligibility</span></div><div class="ri"><span class="rid">IFTA-004</span><span class="rd">Border state check</span></div></div>
-    <div class="rcard" style="border-color:rgba(239,68,68,.12)"><div class="rcard-head"><span style="font-size:18px">🔀</span><span class="rcard-title">Conflict Detection</span><span class="rcard-count">6</span></div><div class="ri"><span class="rid">CON-001</span><span class="rd">Vehicle count mismatch</span></div><div class="ri"><span class="rid">CON-002</span><span class="rd">Driver count mismatch</span></div><div class="ri"><span class="rid">CON-003</span><span class="rd">Company name inconsistency</span></div><div class="ri"><span class="rid">CON-004</span><span class="rd">FEIN/DOT conflict</span></div><div class="ri"><span class="rid">CON-005</span><span class="rd">Duplicate CDL numbers</span></div><div class="ri"><span class="rid">CON-006</span><span class="rd">Duplicate VINs</span></div></div>
-  </div>
+  <div class="d-arrow" style="margin-top:16px"><svg width="2" height="40"><line x1="1" y1="0" x2="1" y2="32" stroke="#1e3a8a" stroke-width="2" class="d-arrow-line"/><polygon points="-2,32 4,32 1,40" fill="#1e3a8a"/></svg><span class="d-arrow-label">Decision</span></div>
 
-  <div class="arrow-wrap" style="margin-top:20px"><svg width="3" height="52"><line x1="1.5" y1="0" x2="1.5" y2="42" stroke="#8b5cf6" stroke-width="2.5" class="flow-line"/><polygon points="-2,42 5,42 1.5,52" fill="#8b5cf6"/></svg><span class="arrow-label">Decision output</span></div>
+  <div class="d-decisions"><div class="d-decision d-accept"><div class="d-ico">✅</div><div class="d-name">Accept</div><div class="d-desc">0 failures, 0 warnings</div></div><div class="d-decision d-refer"><div class="d-ico">⚠️</div><div class="d-name">Refer</div><div class="d-desc">0 failures, ≥1 warning</div></div><div class="d-decision d-decline"><div class="d-ico">❌</div><div class="d-name">Decline</div><div class="d-desc">≥1 failure</div></div></div>
 
-  <div class="outcomes"><div class="ocard oc-green"><div class="o-ico">✅</div><div class="o-name">Accept</div><div class="o-desc">0 failures, 0 warnings</div></div><div class="ocard oc-amber"><div class="o-ico">⚠️</div><div class="o-name">Refer</div><div class="o-desc">0 failures, ≥1 warning</div></div><div class="ocard oc-red"><div class="o-ico">❌</div><div class="o-name">Decline</div><div class="o-desc">≥1 failure</div></div></div>
-
-  <div style="margin-top:28px"><h3 style="font-size:15px;font-weight:700;margin-bottom:12px">🚦 Team Routing</h3>
-    <div class="route-row">
-      <div class="route-card" style="border-top:3px solid #10b981"><div class="rn">Standard Review</div><div class="rd">Clean submissions</div></div>
-      <div class="route-card" style="border-top:3px solid #f59e0b"><div class="rn">Specialty Risk</div><div class="rd">Hazmat, border, excess</div></div>
-      <div class="route-card" style="border-top:3px solid #8b5cf6"><div class="rn">Driver Review</div><div class="rd">Violations, age, CDL</div></div>
-      <div class="route-card" style="border-top:3px solid #14b8a6"><div class="rn">Operations</div><div class="rd">Missing docs, conflicts</div></div>
-      <div class="route-card" style="border-top:3px solid #ef4444"><div class="rn">Senior UW</div><div class="rd">Declined submissions</div></div>
-    </div>
+  <h3 style="font-size:14px;font-weight:700;margin-top:24px;margin-bottom:8px">🚦 Team Routing</h3>
+  <div class="d-teams">
+    <div class="d-team" style="border-top:3px solid #15803d"><div class="rn">Standard Review</div><div class="rd">Clean submissions</div></div>
+    <div class="d-team" style="border-top:3px solid #d97706"><div class="rn">Specialty Risk</div><div class="rd">Hazmat, border, excess</div></div>
+    <div class="d-team" style="border-top:3px solid #7c3aed"><div class="rn">Driver Review</div><div class="rd">Violations, age, CDL</div></div>
+    <div class="d-team" style="border-top:3px solid #0d9488"><div class="rn">Operations</div><div class="rd">Missing docs, conflicts</div></div>
+    <div class="d-team" style="border-top:3px solid #b91c1c"><div class="rn">Senior UW</div><div class="rd">Declined submissions</div></div>
   </div>
 </div></div>
 
-<!-- ═══════════════════════════════════════
-     DATA FLOW
-═══════════════════════════════════════ -->
+<!-- ═══ DATA FLOW ═══ -->
 <div class="V" id="data"><div class="canvas">
-  <div class="vtitle">
-    <div class="badge" style="background:rgba(245,158,11,.08);color:#d97706">📊 Data Flow</div>
-    <h2>Documents In → Analysis → Decision Out</h2>
-    <p>Six document types enter, one structured decision exits</p>
-  </div>
+  <div class="vh"><div class="vh-icon" style="background:#d97706">📊</div><div><h2>Documents In → Analysis → Decision Out</h2><p>Six document types enter, one structured decision exits</p></div></div>
 
-  <div class="df-grid">
-    <div class="lane lane-blue" style="margin:0">
-      <div class="lane-head"><div class="lane-ico">📥</div><div class="lane-title">Input</div></div>
-      <div style="display:flex;flex-direction:column;gap:8px">
-        <div class="nd"><div class="ic">📄</div><div class="nm">Insurance App</div><div class="ds">PDF — company, coverage</div></div>
-        <div class="nd"><div class="ic">👤</div><div class="nm">Driver Roster</div><div class="ds">Excel — CDL, DOB</div></div>
-        <div class="nd"><div class="ic">🚛</div><div class="nm">Equipment</div><div class="ds">Excel — VINs, values</div></div>
-        <div class="nd"><div class="ic">📊</div><div class="nm">Loss Runs</div><div class="ds">PDF — claims history</div></div>
-        <div class="nd"><div class="ic">⛽</div><div class="nm">IFTA</div><div class="ds">PDF — miles by state</div></div>
-        <div class="nd"><div class="ic">🪪</div><div class="nm">CDL Images</div><div class="ds">JPG/PNG — license photos</div></div>
-      </div>
-    </div>
-    <div class="df-arrow"><svg width="60" height="3"><line x1="0" y1="1.5" x2="50" y2="1.5" stroke="#3b82f6" stroke-width="2.5" class="flow-line-h"/><polygon points="50,-1 60,1.5 50,4" fill="#3b82f6"/></svg></div>
-    <div class="lane lane-green" style="margin:0">
-      <div class="lane-head"><div class="lane-ico">🔍</div><div class="lane-title">Extracted</div></div>
-      <div style="display:flex;flex-direction:column;gap:8px">
-        <div class="nd"><div class="ic">🏢</div><div class="nm">Company</div><div class="ds">DOT#, MC#, years, radius</div></div>
-        <div class="nd"><div class="ic">👤</div><div class="nm">Drivers</div><div class="ds">CDL, violations, experience</div></div>
-        <div class="nd"><div class="ic">🚛</div><div class="nm">Fleet</div><div class="ds">VIN, year, make, value</div></div>
-        <div class="nd"><div class="ic">📊</div><div class="nm">Claims</div><div class="ds">Loss ratio, total incurred</div></div>
-        <div class="nd"><div class="ic">⛽</div><div class="nm">Mileage</div><div class="ds">States, annual miles</div></div>
-      </div>
-    </div>
-    <div class="df-arrow"><svg width="60" height="3"><line x1="0" y1="1.5" x2="50" y2="1.5" stroke="#10b981" stroke-width="2.5" class="flow-line-h"/><polygon points="50,-1 60,1.5 50,4" fill="#10b981"/></svg></div>
-    <div class="lane lane-amber" style="margin:0">
-      <div class="lane-head"><div class="lane-ico">🧠</div><div class="lane-title">Output</div></div>
-      <div style="display:flex;flex-direction:column;gap:8px">
-        <div class="nd"><div class="ic">📋</div><div class="nm">Risk Score</div><div class="ds">Per-domain confidence</div></div>
-        <div class="nd"><div class="ic">⚠️</div><div class="nm">Conflicts</div><div class="ds">Cross-doc issues</div></div>
-        <div class="nd"><div class="ic">📝</div><div class="nm">Recommendations</div><div class="ds">Premium, exclusions</div></div>
-        <div class="nd"><div class="ic">⚖️</div><div class="nm">Rules</div><div class="ds">27 pass/fail/warn</div></div>
-        <div class="nd" style="border:2px solid #8b5cf6"><div class="ic">✅</div><div class="nm">Decision</div><div class="ds">Accept · Refer · Decline</div></div>
-      </div>
-    </div>
+  <div class="d-flow3">
+    <div class="d-container blue" style="margin:0"><div class="d-container-head">📥 INPUT DOCUMENTS</div><div class="d-container-body" style="flex-direction:column"><div class="d-node"><div class="nm">📄 Insurance Application</div><div class="ds">PDF — company, coverage</div></div><div class="d-node"><div class="nm">👤 Driver Roster</div><div class="ds">Excel — CDL, DOB</div></div><div class="d-node"><div class="nm">🚛 Equipment Schedule</div><div class="ds">Excel — VINs, values</div></div><div class="d-node"><div class="nm">📊 Loss Runs</div><div class="ds">PDF — claims history</div></div><div class="d-node"><div class="nm">⛽ IFTA Reports</div><div class="ds">PDF — miles by state</div></div><div class="d-node"><div class="nm">🪪 CDL Images</div><div class="ds">JPG/PNG — license photos</div></div></div></div>
+    <div class="d-arrow-h" style="display:flex;align-items:center;justify-content:center"><svg width="48" height="2"><line x1="0" y1="1" x2="40" y2="1" stroke="#3b82f6" stroke-width="2" class="d-arrow-h-line"/><polygon points="40,-1 48,1 40,3" fill="#3b82f6"/></svg></div>
+    <div class="d-container green" style="margin:0"><div class="d-container-head">🔍 EXTRACTED DATA</div><div class="d-container-body" style="flex-direction:column"><div class="d-node"><div class="nm">🏢 Company Profile</div><div class="ds">DOT#, MC#, years, radius</div></div><div class="d-node"><div class="nm">👤 Driver Records</div><div class="ds">CDL, violations, experience</div></div><div class="d-node"><div class="nm">🚛 Vehicle Fleet</div><div class="ds">VIN, year, make, value</div></div><div class="d-node"><div class="nm">📊 Claims History</div><div class="ds">Loss ratio, incurred</div></div><div class="d-node"><div class="nm">⛽ Mileage Data</div><div class="ds">States, annual miles</div></div></div></div>
+    <div class="d-arrow-h" style="display:flex;align-items:center;justify-content:center"><svg width="48" height="2"><line x1="0" y1="1" x2="40" y2="1" stroke="#15803d" stroke-width="2" class="d-arrow-h-line"/><polygon points="40,-1 48,1 40,3" fill="#15803d"/></svg></div>
+    <div class="d-container amber" style="margin:0"><div class="d-container-head">🧠 AI OUTPUT</div><div class="d-container-body" style="flex-direction:column"><div class="d-node"><div class="nm">📋 Risk Assessment</div><div class="ds">Per-domain confidence</div></div><div class="d-node"><div class="nm">⚠️ Data Conflicts</div><div class="ds">Cross-doc issues</div></div><div class="d-node"><div class="nm">📝 Recommendations</div><div class="ds">Premium, exclusions</div></div><div class="d-node"><div class="nm">⚖️ Rules Results</div><div class="ds">27 pass/fail/warn</div></div><div class="d-node" style="border-color:#1e3a8a;border-width:2px"><div class="nm">✅ Decision + Routing</div><div class="ds">Accept · Refer · Decline</div></div></div></div>
   </div>
 </div></div>
 
-<!-- ═══════════════════════════════════════
-     INFRASTRUCTURE
-═══════════════════════════════════════ -->
+<!-- ═══ INFRASTRUCTURE ═══ -->
 <div class="V" id="infra"><div class="canvas">
-  <div class="vtitle">
-    <div class="badge" style="background:rgba(100,116,139,.08);color:#475569">🚀 Infrastructure</div>
-    <h2>Deployment Architecture</h2>
-    <p>AWS EC2 · Docker · S3 · IMAP email integration</p>
-  </div>
-  <div class="dgrid">
-    <div class="dbox"><h4>💻 Compute</h4><p>EC2 t2.micro · 1 vCPU, 1GB RAM<br>Ubuntu 22.04 LTS · Docker Compose</p><div class="dtag">Free Tier</div></div>
-    <div class="dbox"><h4>🐳 Frontend</h4><p>Next.js 14 · Node 18 Alpine<br>Port 3000 · Multi-stage build</p><div class="dtag">app_frontend</div></div>
-    <div class="dbox"><h4>⚙️ Backend</h4><p>FastAPI · Uvicorn ASGI<br>Port 8000 · Swagger at /docs</p><div class="dtag">app_backend</div></div>
-    <div class="dbox"><h4>📧 Email</h4><p>IMAP daemon thread<br>Polls every 30s · Auto-extract</p><div class="dtag">Integrated</div></div>
-    <div class="dbox"><h4>☁️ S3</h4><p>knight-insurance-docs<br>AES-256 · Versioned</p><div class="dtag">IAM Role</div></div>
-    <div class="dbox"><h4>🗃️ SQLite</h4><p>SQLAlchemy ORM · 6 tables<br>Bind mount persistence</p><div class="dtag">Postgres-Ready</div></div>
-    <div class="dbox"><h4>🔒 Security</h4><p>Ports 22, 3000, 8000<br>SSH key auth · .env creds</p><div class="dtag">Security Group</div></div>
-    <div class="dbox"><h4>🧠 Gemini API</h4><p>gemini-2.5-flash · REST<br>~$0.05–0.09/submission</p><div class="dtag" style="background:rgba(245,158,11,.08);color:#d97706">Pay Per Use</div></div>
-    <div class="dbox"><h4>🐙 GitHub</h4><p>knight-case-study repo<br>Main branch · SSH deploy key</p><div class="dtag">Git Deploy</div></div>
+  <div class="vh"><div class="vh-icon" style="background:#475569">🚀</div><div><h2>Deployment Architecture</h2><p>AWS EC2 · Docker · S3 · IMAP email integration</p></div></div>
+  <div class="d-grid">
+    <div class="d-box"><h4>💻 Compute</h4><p>EC2 t2.micro · 1 vCPU, 1GB RAM · Ubuntu 22.04 · Docker Compose</p><div class="d-tag">Free Tier</div></div>
+    <div class="d-box"><h4>🐳 Frontend</h4><p>Next.js 14 · Node 18 Alpine · Port 3000 · Multi-stage build</p><div class="d-tag">app_frontend</div></div>
+    <div class="d-box"><h4>⚙️ Backend</h4><p>FastAPI · Uvicorn ASGI · Port 8000 · Swagger at /docs</p><div class="d-tag">app_backend</div></div>
+    <div class="d-box"><h4>📧 Email</h4><p>IMAP daemon thread · Polls every 30s · Auto-extract attachments</p><div class="d-tag">Integrated</div></div>
+    <div class="d-box"><h4>☁️ S3</h4><p>knight-insurance-docs · AES-256 · Versioned storage</p><div class="d-tag">IAM Role</div></div>
+    <div class="d-box"><h4>🗃️ SQLite</h4><p>SQLAlchemy ORM · 6 tables · Bind mount persistence</p><div class="d-tag">Postgres-Ready</div></div>
+    <div class="d-box"><h4>🔒 Security</h4><p>Ports 22, 3000, 8000 · SSH key auth · .env credentials</p><div class="d-tag">Security Group</div></div>
+    <div class="d-box"><h4>🧠 Gemini API</h4><p>gemini-2.5-flash · REST · ~$0.05–0.09/submission</p><div class="d-tag" style="background:#fefce8;color:#854d0e">Pay Per Use</div></div>
+    <div class="d-box"><h4>🐙 GitHub</h4><p>knight-case-study repo · Main branch · SSH deploy</p><div class="d-tag">Git Deploy</div></div>
   </div>
 </div></div>
 
-<!-- ═══════════════════════════════════════
-     DESIGN DECISIONS
-═══════════════════════════════════════ -->
-<div class="V" id="why"><div class="canvas">
-  <div class="vtitle">
-    <div class="badge" style="background:rgba(139,92,246,.08);color:#7c3aed">🎯 Decisions</div>
-    <h2>Why We Built It This Way</h2>
-    <p>Key architectural choices and rationale</p>
-  </div>
-  <div class="nlist">
-    <div class="ni"><h3>Content-Based Classification</h3><p>Never uses filenames — only content. Handles "scan001.pdf" correctly every time.</p></div>
-    <div class="ni"><h3>Hybrid Extraction</h3><p>Excel/CSV use <strong>Python regex at $0</strong>. Only CDL images use Gemini Vision. Saves ~70% on API costs.</p></div>
-    <div class="ni"><h3>Parallel Processing</h3><p><code>ThreadPoolExecutor</code> with 4 workers. Pipeline: <strong>~45s</strong> vs ~3min sequential.</p></div>
-    <div class="ni"><h3>Configurable Rules</h3><p>All 27 rules in DB with severity + enable/disable. Underwriters tune without code changes.</p></div>
-    <div class="ni"><h3>Cross-Document Conflicts</h3><p>Validates vehicle/driver counts, company names, FEIN/DOT, duplicate CDLs and VINs across docs.</p></div>
-    <div class="ni"><h3>Team Routing</h3><p>Auto-routes to Standard, Specialty, Driver, Ops, or Senior UW based on triggered rules.</p></div>
-    <div class="ni"><h3>Dual Intake</h3><p>Web form + IMAP email. Agents email submissions without logging into any portal.</p></div>
-    <div class="ni"><h3>Database Portability</h3><p>SQLAlchemy ORM. Switch SQLite → PostgreSQL with <strong>one connection string</strong>.</p></div>
+<!-- ═══ DECISIONS ═══ -->
+<div class="V" id="decisions"><div class="canvas">
+  <div class="vh"><div class="vh-icon" style="background:#7c3aed">🎯</div><div><h2>Why We Built It This Way</h2><p>Key architectural choices and rationale</p></div></div>
+  <div class="d-nlist">
+    <div class="d-ni"><h3>Content-Based Classification</h3><p>Never uses filenames — only content. Handles "scan001.pdf" correctly every time.</p></div>
+    <div class="d-ni"><h3>Hybrid Extraction</h3><p>Excel/CSV use <strong>Python regex at $0</strong>. Only CDL images use Gemini Vision. Saves ~70% on API costs.</p></div>
+    <div class="d-ni"><h3>Parallel Processing</h3><p><code>ThreadPoolExecutor</code> with 4 workers. Pipeline: <strong>~45s</strong> vs ~3min sequential.</p></div>
+    <div class="d-ni"><h3>Configurable Rules</h3><p>All 27 rules in DB with severity + enable/disable. Underwriters tune without code changes.</p></div>
+    <div class="d-ni"><h3>Cross-Document Conflicts</h3><p>Validates vehicle/driver counts, company names, FEIN/DOT, duplicate CDLs and VINs across docs.</p></div>
+    <div class="d-ni"><h3>Team Routing</h3><p>Auto-routes to Standard, Specialty, Driver, Ops, or Senior UW based on triggered rules.</p></div>
+    <div class="d-ni"><h3>Dual Intake</h3><p>Web form + IMAP email. Agents email submissions without logging into any portal.</p></div>
+    <div class="d-ni"><h3>Database Portability</h3><p>SQLAlchemy ORM. Switch SQLite → PostgreSQL with <strong>one connection string</strong>.</p></div>
   </div>
 </div></div>
 
-<!-- ═══════════════════════════════════════
-     SECURITY
-═══════════════════════════════════════ -->
+<!-- ═══ SECURITY ═══ -->
 <div class="V" id="sec"><div class="canvas">
-  <div class="vtitle">
-    <div class="badge" style="background:rgba(16,185,129,.08);color:#059669">🔒 Security</div>
-    <h2>Security & Governance</h2>
-    <p>Audit trail, encryption, human-in-the-loop</p>
-  </div>
-  <div class="nlist">
-    <div class="ni"><h3>Complete Audit Trail</h3><p>Every action logged to <code>audit_logs</code>: uploads, classification, extraction, AI, rules, decisions, reviews.</p></div>
-    <div class="ni"><h3>Data Encryption</h3><ul><li><strong>At rest:</strong> S3 AES-256</li><li><strong>In transit:</strong> IMAP TLS, Gemini HTTPS</li><li><strong>Credentials:</strong> Env vars, never in git</li></ul></div>
-    <div class="ni"><h3>Human-in-the-Loop</h3><p>No auto-approval. Must <strong>Approve</strong>, <strong>Reject</strong>, or <strong>Override</strong> with notes + timestamp.</p></div>
-    <div class="ni"><h3>AI Transparency</h3><p>Tracks <strong>input/output tokens, cost, call count</strong> per submission.</p></div>
-    <div class="ni"><h3>Scalability</h3><ul><li><strong>DB:</strong> SQLite → PostgreSQL</li><li><strong>Compute:</strong> EC2 vertical or ECS horizontal</li><li><strong>AI:</strong> Gemini auto-scales + rate limiting</li><li><strong>Queue:</strong> SQS/Redis for async at scale</li></ul></div>
+  <div class="vh"><div class="vh-icon" style="background:#15803d">🔒</div><div><h2>Security & Governance</h2><p>Audit trail, encryption, human-in-the-loop</p></div></div>
+  <div class="d-nlist">
+    <div class="d-ni"><h3>Complete Audit Trail</h3><p>Every action logged to <code>audit_logs</code>: uploads, classification, extraction, AI, rules, decisions, reviews.</p></div>
+    <div class="d-ni"><h3>Data Encryption</h3><ul><li><strong>At rest:</strong> S3 AES-256</li><li><strong>In transit:</strong> IMAP TLS, Gemini HTTPS</li><li><strong>Credentials:</strong> Env vars, never in git</li></ul></div>
+    <div class="d-ni"><h3>Human-in-the-Loop</h3><p>No auto-approval. Must <strong>Approve</strong>, <strong>Reject</strong>, or <strong>Override</strong> with notes + timestamp.</p></div>
+    <div class="d-ni"><h3>AI Transparency</h3><p>Tracks <strong>input/output tokens, cost, call count</strong> per submission.</p></div>
+    <div class="d-ni"><h3>Scalability</h3><ul><li><strong>DB:</strong> SQLite → PostgreSQL</li><li><strong>Compute:</strong> EC2 vertical or ECS horizontal</li><li><strong>AI:</strong> Gemini auto-scales + rate limiting</li><li><strong>Queue:</strong> SQS/Redis for async at scale</li></ul></div>
   </div>
 </div></div>
 
 <script>
-document.querySelectorAll('.topnav a').forEach(a=>{
+document.querySelectorAll('.nav a').forEach(a=>{
   a.addEventListener('click',()=>{
-    document.querySelectorAll('.topnav a').forEach(x=>x.classList.remove('on'));
+    document.querySelectorAll('.nav a').forEach(x=>x.classList.remove('on'));
     document.querySelectorAll('.V').forEach(x=>x.classList.remove('on'));
     a.classList.add('on');
     document.getElementById(a.dataset.v).classList.add('on');
