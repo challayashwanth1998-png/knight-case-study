@@ -83,11 +83,11 @@ export default function ExtractedDataTab({ analysis }: Props) {
       )}
 
       {/* ─── Completeness Report ─── */}
-      {completeness && (completeness as Record<string, unknown>).checklist && (
+      {completeness && completeness.checklist && (
         <div className="card">
           <h3 style={{ fontSize: 14, fontWeight: 600, marginBottom: 10 }}>📋 Submission Completeness</h3>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: 8 }}>
-            {Object.entries((completeness as Record<string, unknown>).checklist as Record<string, Record<string, unknown>>).map(([k, v]) => (
+            {Object.entries(completeness.checklist).map(([k, v]: [string, any]) => (
               <div key={k} style={{
                 padding: "8px 12px", borderRadius: 8,
                 background: v.present ? "#ECFDF5" : "#FEF2F2",
@@ -97,14 +97,14 @@ export default function ExtractedDataTab({ analysis }: Props) {
                 <span style={{ fontSize: 16 }}>{v.present ? "✅" : "❌"}</span>
                 <div>
                   <div style={{ fontSize: 12, fontWeight: 600, color: "#1F2937" }}>{String(v.label || k.replace(/_/g, " "))}</div>
-                  {v.required && <div style={{ fontSize: 9, color: "#6B7280" }}>Required</div>}
+                  {Boolean(v.required) && <div style={{ fontSize: 9, color: "#6B7280" }}>Required</div>}
                 </div>
               </div>
             ))}
           </div>
-          {(completeness as Record<string, unknown>).missing_items && Array.isArray((completeness as Record<string, unknown>).missing_items) && ((completeness as Record<string, unknown>).missing_items as string[]).length > 0 && (
+          {completeness.missing_items && Array.isArray(completeness.missing_items) && completeness.missing_items.length > 0 && (
             <div style={{ marginTop: 10, padding: "8px 12px", background: "#FEF2F2", borderRadius: 8, fontSize: 12, color: "#DC2626" }}>
-              <strong>Missing:</strong> {((completeness as Record<string, unknown>).missing_items as string[]).join(", ")}
+              <strong>Missing:</strong> {completeness.missing_items.join(", ")}
             </div>
           )}
         </div>
