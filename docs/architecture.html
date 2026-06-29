@@ -4,1015 +4,915 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Knight Insurance — System Architecture</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
   :root {
-    --blue-50: #EFF6FF; --blue-100: #DBEAFE; --blue-200: #BFDBFE; --blue-500: #3B82F6; --blue-600: #2563EB; --blue-700: #1D4ED8; --blue-900: #1E3A8A;
-    --green-50: #F0FDF4; --green-100: #DCFCE7; --green-200: #BBF7D0; --green-500: #22C55E; --green-600: #16A34A; --green-700: #15803D;
-    --amber-50: #FFFBEB; --amber-100: #FEF3C7; --amber-200: #FDE68A; --amber-500: #F59E0B; --amber-600: #D97706;
-    --purple-50: #F5F3FF; --purple-100: #EDE9FE; --purple-200: #DDD6FE; --purple-500: #8B5CF6; --purple-600: #7C3AED;
-    --teal-50: #F0FDFA; --teal-100: #CCFBF1; --teal-200: #99F6E4; --teal-500: #14B8A6; --teal-600: #0D9488;
-    --red-50: #FEF2F2; --red-200: #FECACA; --red-500: #EF4444; --red-600: #DC2626;
-    --slate-50: #F8FAFC; --slate-100: #F1F5F9; --slate-200: #E2E8F0; --slate-300: #CBD5E1;
-    --slate-400: #94A3B8; --slate-500: #64748B; --slate-600: #475569; --slate-700: #334155; --slate-800: #1E293B; --slate-900: #0F172A;
+    --bg: #f8fafc; --surface: #ffffff; --surface2: #f1f5f9;
+    --ink: #0f172a; --text: #334155; --text2: #64748b; --text3: #94a3b8;
+    --border: #e2e8f0; --border2: #cbd5e1;
+    --blue: #3b82f6; --blue-d: #2563eb; --blue-l: #eff6ff; --blue-ll: #dbeafe;
+    --green: #10b981; --green-d: #059669; --green-l: #ecfdf5;
+    --amber: #f59e0b; --amber-d: #d97706; --amber-l: #fffbeb;
+    --purple: #8b5cf6; --purple-d: #7c3aed; --purple-l: #f5f3ff;
+    --teal: #14b8a6; --teal-d: #0d9488; --teal-l: #f0fdfa;
+    --red: #ef4444; --red-d: #dc2626; --red-l: #fef2f2;
+    --rose: #f43f5e; --indigo: #6366f1;
+    --radius: 12px; --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-lg: 0 10px 30px rgba(0,0,0,0.08), 0 4px 12px rgba(0,0,0,0.04);
+    --shadow-xl: 0 20px 50px rgba(0,0,0,0.1), 0 8px 20px rgba(0,0,0,0.06);
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { font-family: 'Inter', system-ui, sans-serif; background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%); color: var(--slate-200); -webkit-font-smoothing: antialiased; min-height: 100vh; }
+  body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); -webkit-font-smoothing: antialiased; }
 
-  /* ─── Header ─── */
-  .header {
-    padding: 20px 40px 16px;
-    border-bottom: 1px solid rgba(255,255,255,0.08);
-    display: flex; justify-content: space-between; align-items: flex-end;
-    background: rgba(15,23,42,0.6); backdrop-filter: blur(12px);
+  /* ─── Hero Header ─── */
+  .hero {
+    background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 50%, #6366f1 100%);
+    padding: 32px 48px 28px; position: relative; overflow: hidden;
   }
-  .header-title { font-size: 20px; font-weight: 700; color: #f1f5f9; letter-spacing: -0.5px; }
-  .header-title span { color: var(--blue-500); }
-  .header-meta { font-size: 11px; color: var(--slate-400); margin-top: 3px; }
+  .hero::before {
+    content: ''; position: absolute; inset: 0;
+    background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  }
+  .hero-content { position: relative; z-index: 1; max-width: 1200px; margin: 0 auto; }
+  .hero h1 { font-size: 26px; font-weight: 800; color: white; letter-spacing: -0.8px; }
+  .hero h1 span { opacity: 0.7; font-weight: 400; }
+  .hero-sub { font-size: 13px; color: rgba(255,255,255,0.7); margin-top: 4px; }
+  .hero-badges { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+  .hero-badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 4px 12px; border-radius: 20px;
+    background: rgba(255,255,255,0.15); backdrop-filter: blur(8px);
+    color: white; font-size: 11px; font-weight: 500;
+    border: 1px solid rgba(255,255,255,0.2);
+  }
 
-  /* ─── Tabs ─── */
-  .tabs {
-    display: flex; gap: 1px; padding: 0 40px;
-    background: rgba(30,41,59,0.5); border-bottom: 1px solid rgba(255,255,255,0.06);
-    backdrop-filter: blur(8px);
+  /* ─── Tab Bar ─── */
+  .tab-bar {
+    background: var(--surface); border-bottom: 1px solid var(--border);
+    padding: 0 48px; display: flex; gap: 0; max-width: 100%;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    overflow-x: auto;
   }
   .tab {
-    padding: 10px 20px; font-size: 12px; font-weight: 500;
-    border: none; background: transparent; color: var(--slate-400);
-    cursor: pointer; transition: all 0.15s; position: relative;
-    border-bottom: 2px solid transparent;
+    padding: 14px 20px; font-size: 13px; font-weight: 500; color: var(--text2);
+    border: none; background: none; cursor: pointer; white-space: nowrap;
+    border-bottom: 2px solid transparent; transition: all 0.2s;
   }
-  .tab:hover { color: #e2e8f0; background: rgba(255,255,255,0.04); }
-  .tab.active {
-    color: var(--blue-500); background: rgba(255,255,255,0.06);
-    border-bottom: 2px solid var(--blue-500); font-weight: 600;
-  }
+  .tab:hover { color: var(--blue-d); }
+  .tab.active { color: var(--blue-d); border-bottom-color: var(--blue); font-weight: 600; }
 
-  /* ─── Page ─── */
-  .page { padding: 36px 40px 60px; max-width: 1160px; margin: 0 auto; }
-  .view { display: none; animation: fadeUp 0.25s ease; }
+  /* ─── Page Container ─── */
+  .page { max-width: 1200px; margin: 0 auto; padding: 32px 48px 80px; }
+  .view { display: none; animation: slideIn 0.3s ease; }
   .view.active { display: block; }
-  @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes slideIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
 
-  /* ─── Diagram Canvas (relative for SVG overlay) ─── */
-  .diagram { position: relative; }
+  /* ─── Animated Flow Arrows ─── */
+  @keyframes flowDown {
+    0% { background-position: 0 0; }
+    100% { background-position: 0 20px; }
+  }
+  @keyframes flowRight {
+    0% { background-position: 0 0; }
+    100% { background-position: 20px 0; }
+  }
+  @keyframes pulse { 0%,100% { opacity: 0.6; } 50% { opacity: 1; } }
+  @keyframes pulseScale { 0%,100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+  @keyframes shimmer {
+    0% { background-position: -200px 0; }
+    100% { background-position: 200px 0; }
+  }
+  @keyframes dash { to { stroke-dashoffset: -20; } }
+
+  .flow-arrow {
+    display: flex; align-items: center; justify-content: center;
+    padding: 8px 0; position: relative;
+  }
+  .flow-arrow .line {
+    width: 3px; height: 40px;
+    background: repeating-linear-gradient(to bottom, var(--blue) 0, var(--blue) 6px, transparent 6px, transparent 12px);
+    background-size: 3px 20px;
+    animation: flowDown 0.6s linear infinite;
+    border-radius: 2px;
+  }
+  .flow-arrow .arrow-head {
+    position: absolute; bottom: 2px;
+    width: 0; height: 0;
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-top: 8px solid var(--blue);
+  }
+  .flow-arrow.green .line { background: repeating-linear-gradient(to bottom, var(--green) 0, var(--green) 6px, transparent 6px, transparent 12px); background-size: 3px 20px; animation: flowDown 0.6s linear infinite; }
+  .flow-arrow.green .arrow-head { border-top-color: var(--green); }
+  .flow-arrow.purple .line { background: repeating-linear-gradient(to bottom, var(--purple) 0, var(--purple) 6px, transparent 6px, transparent 12px); background-size: 3px 20px; animation: flowDown 0.6s linear infinite; }
+  .flow-arrow.purple .arrow-head { border-top-color: var(--purple); }
+  .flow-arrow.amber .line { background: repeating-linear-gradient(to bottom, var(--amber) 0, var(--amber) 6px, transparent 6px, transparent 12px); background-size: 3px 20px; animation: flowDown 0.6s linear infinite; }
+  .flow-arrow.amber .arrow-head { border-top-color: var(--amber); }
+  .flow-arrow.red .line { background: repeating-linear-gradient(to bottom, var(--red) 0, var(--red) 6px, transparent 6px, transparent 12px); background-size: 3px 20px; animation: flowDown 0.6s linear infinite; }
+  .flow-arrow.red .arrow-head { border-top-color: var(--red); }
+
+  .flow-label {
+    font-size: 10px; font-weight: 600; color: var(--text3);
+    text-transform: uppercase; letter-spacing: 0.8px; text-align: center;
+    margin: -4px 0 4px;
+  }
+
+  /* ─── Cards ─── */
+  .card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 20px 24px;
+    box-shadow: var(--shadow); transition: all 0.25s;
+  }
+  .card:hover { box-shadow: var(--shadow-lg); transform: translateY(-2px); }
+  .card-header { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+  .card-icon {
+    width: 36px; height: 36px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; flex-shrink: 0;
+  }
+  .card-title { font-size: 14px; font-weight: 700; color: var(--ink); }
+  .card-subtitle { font-size: 11px; color: var(--text2); margin-top: 1px; }
+
+  /* ─── Step Cards (Pipeline) ─── */
+  .step-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 24px; position: relative;
+    box-shadow: var(--shadow); transition: all 0.25s;
+    border-left: 4px solid var(--blue);
+  }
+  .step-card:hover { box-shadow: var(--shadow-lg); }
+  .step-num-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    margin-bottom: 12px;
+  }
+  .step-num {
+    width: 28px; height: 28px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 800; color: white;
+    flex-shrink: 0;
+  }
+  .step-title { font-size: 15px; font-weight: 700; color: var(--ink); letter-spacing: -0.3px; }
+  .step-desc { font-size: 12px; color: var(--text2); margin-top: 2px; }
+
+  .step-items { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
+  .step-item {
+    flex: 1; min-width: 120px;
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 12px; text-align: center;
+    transition: all 0.2s;
+  }
+  .step-item:hover { background: white; border-color: var(--blue); box-shadow: 0 0 0 2px rgba(59,130,246,0.1); }
+  .step-item-icon { font-size: 22px; margin-bottom: 6px; }
+  .step-item-label { font-size: 11px; font-weight: 600; color: var(--ink); }
+  .step-item-desc { font-size: 9px; color: var(--text2); margin-top: 2px; line-height: 1.3; }
 
   /* ─── Layer Bands ─── */
   .layer {
-    border: 1.5px solid; border-radius: 8px;
-    padding: 18px 20px 20px; margin-bottom: 20px;
-    position: relative;
+    border-radius: var(--radius); padding: 20px 24px;
+    margin-bottom: 0; position: relative;
+    border: 1px solid;
   }
-  .layer-header {
-    display: flex; align-items: center; gap: 8px;
-    margin-bottom: 14px;
-  }
+  .layer-head { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
   .layer-icon {
-    width: 28px; height: 28px; border-radius: 6px;
+    width: 32px; height: 32px; border-radius: 8px;
     display: flex; align-items: center; justify-content: center;
-    font-size: 14px; flex-shrink: 0;
+    font-size: 15px; flex-shrink: 0; color: white;
   }
-  .layer-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; }
-  .layer-subtitle { font-size: 10px; font-weight: 400; opacity: 0.6; margin-left: 4px; }
+  .layer-label { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+  .layer-meta { font-size: 10px; font-weight: 400; opacity: 0.7; margin-left: 4px; }
 
-  /* Layer color themes */
-  .layer-blue { border-color: rgba(59,130,246,0.3); background: rgba(59,130,246,0.08); }
-  .layer-blue .layer-icon { background: var(--blue-600); color: white; }
-  .layer-blue .layer-title { color: var(--blue-500); }
+  .layer-blue { border-color: var(--blue-ll); background: var(--blue-l); }
+  .layer-blue .layer-icon { background: var(--blue); }
+  .layer-blue .layer-label { color: var(--blue-d); }
 
-  .layer-green { border-color: rgba(34,197,94,0.3); background: rgba(34,197,94,0.08); }
-  .layer-green .layer-icon { background: var(--green-600); color: white; }
-  .layer-green .layer-title { color: var(--green-500); }
+  .layer-green { border-color: #bbf7d0; background: var(--green-l); }
+  .layer-green .layer-icon { background: var(--green); }
+  .layer-green .layer-label { color: var(--green-d); }
 
-  .layer-amber { border-color: rgba(245,158,11,0.3); background: rgba(245,158,11,0.08); }
-  .layer-amber .layer-icon { background: var(--amber-600); color: white; }
-  .layer-amber .layer-title { color: var(--amber-500); }
+  .layer-amber { border-color: #fde68a; background: var(--amber-l); }
+  .layer-amber .layer-icon { background: var(--amber); }
+  .layer-amber .layer-label { color: var(--amber-d); }
 
-  .layer-purple { border-color: rgba(139,92,246,0.3); background: rgba(139,92,246,0.08); }
-  .layer-purple .layer-icon { background: var(--purple-600); color: white; }
-  .layer-purple .layer-title { color: var(--purple-500); }
+  .layer-purple { border-color: #ddd6fe; background: var(--purple-l); }
+  .layer-purple .layer-icon { background: var(--purple); }
+  .layer-purple .layer-label { color: var(--purple-d); }
 
-  .layer-teal { border-color: rgba(20,184,166,0.3); background: rgba(20,184,166,0.08); }
-  .layer-teal .layer-icon { background: var(--teal-600); color: white; }
-  .layer-teal .layer-title { color: var(--teal-500); }
+  .layer-teal { border-color: #99f6e4; background: var(--teal-l); }
+  .layer-teal .layer-icon { background: var(--teal); }
+  .layer-teal .layer-label { color: var(--teal-d); }
 
-  .layer-red { border-color: rgba(239,68,68,0.3); background: rgba(239,68,68,0.08); }
-  .layer-red .layer-icon { background: var(--red-600); color: white; }
-  .layer-red .layer-title { color: var(--red-500); }
+  .layer-red { border-color: #fecaca; background: var(--red-l); }
+  .layer-red .layer-icon { background: var(--red); }
+  .layer-red .layer-label { color: var(--red-d); }
 
-  .layer-slate { border-color: rgba(148,163,184,0.2); background: rgba(148,163,184,0.06); }
-  .layer-slate .layer-icon { background: var(--slate-600); color: white; }
-  .layer-slate .layer-title { color: var(--slate-400); }
+  .layer-slate { border-color: var(--border); background: var(--surface2); }
+  .layer-slate .layer-icon { background: #475569; }
+  .layer-slate .layer-label { color: #475569; }
 
   /* ─── Node boxes ─── */
   .nodes { display: flex; gap: 10px; flex-wrap: wrap; }
   .node {
-    background: rgba(30,41,59,0.6); border: 1px solid rgba(255,255,255,0.1);
-    border-radius: 6px; padding: 12px 14px;
+    background: white; border: 1px solid var(--border);
+    border-radius: 8px; padding: 12px 14px;
     min-width: 120px; text-align: center;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-    transition: box-shadow 0.15s, border-color 0.15s;
-    position: relative; backdrop-filter: blur(6px);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+    transition: all 0.2s; cursor: default;
   }
-  .node:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.3); border-color: rgba(255,255,255,0.2); }
+  .node:hover { box-shadow: var(--shadow); transform: translateY(-1px); border-color: var(--border2); }
   .node-icon { font-size: 20px; margin-bottom: 6px; display: block; }
-  .node-label { font-size: 11px; font-weight: 600; color: #e2e8f0; line-height: 1.3; }
-  .node-desc { font-size: 9px; color: var(--slate-400); margin-top: 3px; line-height: 1.3; font-weight: 400; }
+  .node-name { font-size: 11px; font-weight: 600; color: var(--ink); line-height: 1.3; }
+  .node-info { font-size: 9px; color: var(--text2); margin-top: 3px; line-height: 1.4; }
+  .node-sm { padding: 8px 10px; min-width: 100px; }
+  .node-sm .node-icon { font-size: 16px; margin-bottom: 3px; }
+  .node-sm .node-name { font-size: 10px; }
 
-  /* Node variants */
-  .node-sm { min-width: 100px; padding: 8px 10px; }
-  .node-sm .node-icon { font-size: 16px; margin-bottom: 4px; }
-  .node-sm .node-label { font-size: 10px; }
-  .node-wide { flex: 1; min-width: 140px; }
+  /* Decision nodes */
+  .decision-row { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+  .decision-node {
+    min-width: 160px; padding: 16px 20px; border-radius: var(--radius);
+    text-align: center; color: white; transition: all 0.25s; cursor: default;
+    box-shadow: var(--shadow);
+  }
+  .decision-node:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); }
+  .decision-node .d-icon { font-size: 24px; margin-bottom: 6px; }
+  .decision-node .d-label { font-size: 14px; font-weight: 800; letter-spacing: 0.5px; }
+  .decision-node .d-desc { font-size: 10px; opacity: 0.85; margin-top: 4px; }
+  .dn-green { background: linear-gradient(135deg, #059669, #10b981); }
+  .dn-amber { background: linear-gradient(135deg, #d97706, #f59e0b); }
+  .dn-red { background: linear-gradient(135deg, #dc2626, #ef4444); }
 
-  .node-filled-green { background: var(--green-600); border-color: var(--green-700); }
-  .node-filled-green .node-label { color: white; }
-  .node-filled-green .node-desc { color: var(--green-200); }
+  /* ─── Rule Category Cards ─── */
+  .rule-card {
+    flex: 1; min-width: 170px; background: white; border-radius: var(--radius);
+    border: 1px solid var(--border); padding: 16px; box-shadow: var(--shadow);
+    transition: all 0.25s;
+  }
+  .rule-card:hover { box-shadow: var(--shadow-lg); transform: translateY(-2px); }
+  .rule-card-head { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+  .rule-card-icon { font-size: 20px; }
+  .rule-card-title { font-size: 12px; font-weight: 700; color: var(--ink); }
+  .rule-card-count { font-size: 10px; color: var(--text3); margin-left: auto; }
+  .rule-item {
+    padding: 6px 0; font-size: 11px; display: flex; gap: 8px; align-items: baseline;
+    border-bottom: 1px solid #f1f5f9;
+  }
+  .rule-item:last-child { border-bottom: none; }
+  .rule-id { font-weight: 700; color: var(--blue-d); font-size: 10px; min-width: 60px; font-family: 'SF Mono', monospace; }
+  .rule-desc { color: var(--text); }
 
-  .node-filled-amber { background: var(--amber-600); border-color: var(--amber-600); }
-  .node-filled-amber .node-label { color: white; }
-  .node-filled-amber .node-desc { color: var(--amber-200); }
-
-  .node-filled-red { background: var(--red-600); border-color: var(--red-600); }
-  .node-filled-red .node-label { color: white; }
-  .node-filled-red .node-desc { color: var(--red-200); }
-
-  .node-filled-dark { background: var(--slate-800); border-color: var(--slate-900); }
-  .node-filled-dark .node-label { color: white; }
-  .node-filled-dark .node-desc { color: var(--slate-400); }
-
-  .node-filled-blue { background: var(--blue-600); border-color: var(--blue-700); }
-  .node-filled-blue .node-label { color: white; }
-  .node-filled-blue .node-desc { color: var(--blue-200); }
-
-  /* ─── SVG Connectors ─── */
-  .connector {
+  /* ─── Section Headers ─── */
+  .section-head {
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 24px; padding-bottom: 14px;
+    border-bottom: 2px solid var(--border);
+  }
+  .section-icon {
+    width: 40px; height: 40px; border-radius: 10px;
     display: flex; align-items: center; justify-content: center;
-    padding: 4px 0; color: var(--slate-300);
+    font-size: 20px; color: white;
   }
-  .connector svg { display: block; }
-  .connector-h { padding: 0 4px; }
-  .connector-label {
-    font-size: 9px; color: var(--slate-400); font-weight: 500;
-    text-align: center; margin-top: -2px; letter-spacing: 0.2px;
+  .section-title { font-size: 20px; font-weight: 800; color: var(--ink); letter-spacing: -0.5px; }
+  .section-sub { font-size: 12px; color: var(--text2); margin-top: 2px; }
+
+  /* ─── Routing section ─── */
+  .routing-row { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 16px; }
+  .routing-card {
+    flex: 1; min-width: 180px; padding: 14px 16px; border-radius: 10px;
+    border: 1px solid var(--border); background: white;
+    box-shadow: var(--shadow); text-align: center; transition: all 0.2s;
+  }
+  .routing-card:hover { box-shadow: var(--shadow-lg); transform: translateY(-2px); }
+  .routing-card .r-team { font-size: 12px; font-weight: 700; color: var(--ink); }
+  .routing-card .r-desc { font-size: 10px; color: var(--text2); margin-top: 4px; }
+
+  /* ─── Text content ─── */
+  .content-section { margin-bottom: 32px; }
+  .content-section h3 {
+    font-size: 15px; font-weight: 700; color: var(--ink);
+    margin-bottom: 10px; display: flex; align-items: center; gap: 8px;
+  }
+  .content-section h3 .cnt {
+    width: 22px; height: 22px; border-radius: 6px;
+    background: var(--blue); color: white;
+    font-size: 11px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .content-section p, .content-section li {
+    font-size: 13px; color: var(--text); line-height: 1.7;
+  }
+  .content-section ul { padding-left: 20px; margin: 8px 0; }
+  .content-section li { margin-bottom: 4px; }
+  .content-section strong { color: var(--ink); }
+  .content-section code {
+    background: var(--surface2); padding: 2px 6px; border-radius: 4px;
+    font-size: 12px; font-family: 'SF Mono', 'Fira Code', monospace;
+    color: var(--blue-d); border: 1px solid var(--border);
   }
 
-  /* ─── Flex helpers ─── */
+  /* ─── Grid helpers ─── */
   .flex { display: flex; }
   .flex-col { display: flex; flex-direction: column; }
-  .gap-8 { gap: 8px; } .gap-10 { gap: 10px; } .gap-12 { gap: 12px; } .gap-14 { gap: 14px; } .gap-16 { gap: 16px; } .gap-20 { gap: 20px; }
+  .flex-wrap { flex-wrap: wrap; }
+  .gap-8 { gap: 8px; } .gap-10 { gap: 10px; } .gap-12 { gap: 12px; }
+  .gap-14 { gap: 14px; } .gap-16 { gap: 16px; } .gap-20 { gap: 20px; }
+  .flex-1 { flex: 1; } .w-full { width: 100%; }
   .items-center { align-items: center; }
   .items-start { align-items: flex-start; }
   .justify-center { justify-content: center; }
-  .flex-1 { flex: 1; }
-  .w-full { width: 100%; }
-  .text-center { text-align: center; }
 
-  /* ─── Legend ─── */
-  .legend {
-    display: flex; gap: 20px; margin-top: 28px; padding: 12px 16px;
-    border: 1px solid rgba(255,255,255,0.08); border-radius: 6px;
-    background: rgba(30,41,59,0.5); font-size: 10px; color: var(--slate-400);
-  }
-  .legend-title { font-weight: 600; color: #e2e8f0; margin-right: 4px; }
-  .legend-item { display: flex; align-items: center; gap: 5px; }
-  .legend-swatch { width: 24px; height: 10px; border-radius: 2px; border: 1px solid rgba(255,255,255,0.15); }
-
-  /* ─── Step indicator ─── */
-  .step-num {
-    width: 22px; height: 22px; border-radius: 50%;
-    background: var(--blue-600); color: white;
-    font-size: 10px; font-weight: 700;
-    display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0;
-  }
-  .step-badge {
-    display: inline-flex; align-items: center; gap: 6px;
-    padding: 4px 10px 4px 4px; border-radius: 20px;
-    background: var(--blue-50); border: 1px solid var(--blue-200);
-    font-size: 10px; font-weight: 600; color: var(--blue-700);
+  /* ─── Pulsing indicator ─── */
+  .pulse-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--green); animation: pulse 2s infinite;
+    display: inline-block;
   }
 
-  /* ─── Text Content Sections ─── */
-  .section-title {
-    font-size: 14px; font-weight: 700; color: #e2e8f0;
-    margin-bottom: 12px; display: flex; align-items: center; gap: 8px;
-    letter-spacing: -0.3px;
+  /* ─── Deploy card ─── */
+  .deploy-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
+  .deploy-card {
+    background: white; border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 20px; box-shadow: var(--shadow); transition: all 0.2s;
   }
-  .section-title .num {
-    width: 24px; height: 24px; border-radius: 50%;
-    background: var(--blue-600); color: white;
-    font-size: 11px; font-weight: 700;
-    display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0;
+  .deploy-card:hover { box-shadow: var(--shadow-lg); transform: translateY(-2px); }
+  .deploy-card h4 { font-size: 13px; font-weight: 700; color: var(--ink); margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+  .deploy-card p { font-size: 11px; color: var(--text); line-height: 1.6; }
+  .deploy-card .tag {
+    display: inline-block; padding: 2px 8px; border-radius: 4px;
+    font-size: 10px; font-weight: 600; margin-top: 8px;
+    background: var(--blue-l); color: var(--blue-d); border: 1px solid var(--blue-ll);
   }
-  .section-body {
-    font-size: 12px; color: var(--slate-400); line-height: 1.7;
-    padding-left: 32px;
-  }
-  .section-body strong { color: #e2e8f0; font-weight: 600; }
-  .section-body ul { margin: 6px 0; padding-left: 18px; }
-  .section-body li { margin-bottom: 4px; }
-  .section-body code {
-    background: rgba(30,41,59,0.8); padding: 1px 5px; border-radius: 3px;
-    font-size: 11px; font-family: 'SF Mono', 'Fira Code', monospace;
-    color: var(--blue-500); border: 1px solid rgba(255,255,255,0.1);
-  }
-  .assumption-box {
-    background: var(--amber-50); border: 1px solid var(--amber-200);
-    border-radius: 6px; padding: 10px 14px; margin-top: 8px;
-    font-size: 11px; color: var(--amber-600); line-height: 1.5;
-  }
-  .assumption-box strong { color: var(--amber-700); }
-  .divider { border: none; border-top: 1px solid var(--slate-200); margin: 20px 0; }
 </style>
 </head>
 <body>
 
-<div class="header">
-  <div>
-    <div class="header-title"><span>Knight Insurance</span> — System Architecture</div>
-    <div class="header-meta">AI-Powered Commercial Trucking Underwriting Platform • v1.0</div>
+<!-- ═══════ HERO ═══════ -->
+<div class="hero">
+  <div class="hero-content">
+    <h1>Knight Insurance <span>— System Architecture</span></h1>
+    <div class="hero-sub">AI-Powered Commercial Auto Insurance Intake System</div>
+    <div class="hero-badges">
+      <span class="hero-badge"><span class="pulse-dot"></span> Production</span>
+      <span class="hero-badge">⚡ FastAPI + Next.js</span>
+      <span class="hero-badge">🧠 Gemini 2.5 Flash</span>
+      <span class="hero-badge">☁️ AWS EC2 + S3</span>
+      <span class="hero-badge">📧 IMAP Email Intake</span>
+      <span class="hero-badge">⚖️ 27 Business Rules</span>
+    </div>
   </div>
-  <div class="header-meta">docs/architecture.html</div>
 </div>
 
-<div class="tabs">
-  <button class="tab active" data-view="overview">System Overview</button>
+<!-- ═══════ TABS ═══════ -->
+<div class="tab-bar">
+  <button class="tab active" data-view="hld">High-Level Design</button>
   <button class="tab" data-view="pipeline">Processing Pipeline</button>
-  <button class="tab" data-view="dataflow">Data Flow</button>
   <button class="tab" data-view="rules">Rules Engine</button>
+  <button class="tab" data-view="dataflow">Data Flow</button>
+  <button class="tab" data-view="deploy">Deployment</button>
   <button class="tab" data-view="decisions">Design Decisions</button>
   <button class="tab" data-view="security">Security & Governance</button>
-  <button class="tab" data-view="deploy">Deployment</button>
 </div>
 
 <div class="page">
 
-<!-- ══════════════════════════════════════════════════════════
-     VIEW 1: SYSTEM OVERVIEW
-══════════════════════════════════════════════════════════ -->
-<div class="view active" id="view-overview">
-  <div class="diagram">
+<!-- ═══════════════════════════════════════════
+     VIEW 1: HIGH-LEVEL DESIGN
+═══════════════════════════════════════════ -->
+<div class="view active" id="view-hld">
 
-    <!-- LAYER 1: Presentation -->
-    <div class="layer layer-green">
-      <div class="layer-header">
-        <div class="layer-icon">🖥️</div>
-        <div class="layer-title">Presentation Layer <span class="layer-subtitle">— Next.js 14 • Port 3000</span></div>
-      </div>
-      <div class="nodes">
-        <div class="node node-wide"><span class="node-icon">📊</span><div class="node-label">Dashboard</div><div class="node-desc">KPIs, decision distribution chart, AI cost tracking, recent submissions feed</div></div>
-        <div class="node node-wide"><span class="node-icon">📤</span><div class="node-label">Submission Form</div><div class="node-desc">Multi-file drag & drop upload, supports PDF, Excel, CSV, images</div></div>
-        <div class="node node-wide"><span class="node-icon">📋</span><div class="node-label">Underwriter View</div><div class="node-desc">6-step pipeline, team routing, approve/reject/override workflow, rules tab with pass/fail</div></div>
-        <div class="node node-wide"><span class="node-icon">📈</span><div class="node-label">Analytics</div><div class="node-desc">Gemini token usage, processing time trends, rule pass rates</div></div>
-        <div class="node node-wide"><span class="node-icon">🔀</span><div class="node-label">Compare</div><div class="node-desc">Side-by-side submission diff with rules & metrics comparison</div></div>
-        <div class="node node-wide"><span class="node-icon">🏥</span><div class="node-label">Health Monitor</div><div class="node-desc">DB latency, AI status, disk usage, cumulative API costs</div></div>
-      </div>
+  <div class="section-head">
+    <div class="section-icon" style="background:linear-gradient(135deg,var(--blue),var(--indigo));">🏗️</div>
+    <div>
+      <div class="section-title">High-Level Architecture</div>
+      <div class="section-sub">4-tier architecture with AI-powered processing pipeline</div>
     </div>
+  </div>
 
-    <!-- Connector -->
-    <div class="connector">
-      <svg width="2" height="20"><line x1="1" y1="0" x2="1" y2="20" stroke="#94A3B8" stroke-width="1.5" stroke-dasharray="4,3"/></svg>
+  <!-- Tier 1: Presentation -->
+  <div class="layer layer-green" style="margin-bottom:0;">
+    <div class="layer-head">
+      <div class="layer-icon" style="background:var(--green);">🖥️</div>
+      <div class="layer-label">Presentation Layer <span class="layer-meta">— Next.js 14 • Port 3000</span></div>
     </div>
-    <div class="connector-label">HTTP / REST</div>
-    <div class="connector">
-      <svg width="2" height="10"><line x1="1" y1="0" x2="1" y2="10" stroke="#94A3B8" stroke-width="1.5" stroke-dasharray="4,3"/></svg>
+    <div class="nodes">
+      <div class="node flex-1"><span class="node-icon">📊</span><div class="node-name">Dashboard</div><div class="node-info">KPIs, decision charts, AI cost tracking</div></div>
+      <div class="node flex-1"><span class="node-icon">📤</span><div class="node-name">Submission Form</div><div class="node-info">Drag & drop upload (PDF, Excel, Images)</div></div>
+      <div class="node flex-1"><span class="node-icon">📋</span><div class="node-name">Underwriter View</div><div class="node-info">Pipeline progress, review workflow, team routing</div></div>
+      <div class="node flex-1"><span class="node-icon">📈</span><div class="node-name">Analytics</div><div class="node-info">Token usage, processing trends, rule pass rates</div></div>
+      <div class="node flex-1"><span class="node-icon">🔀</span><div class="node-name">Compare</div><div class="node-info">Side-by-side submission diff</div></div>
+      <div class="node flex-1"><span class="node-icon">🏥</span><div class="node-name">Health Monitor</div><div class="node-info">DB latency, AI status, disk usage</div></div>
     </div>
+  </div>
 
-    <!-- LAYER 2: API -->
-    <div class="layer layer-blue">
-      <div class="layer-header">
-        <div class="layer-icon">⚙️</div>
-        <div class="layer-title">API & Orchestration Layer <span class="layer-subtitle">— FastAPI • Port 8000</span></div>
-      </div>
-      <div class="flex gap-10">
-        <div class="node flex-1"><span class="node-icon">🌐</span><div class="node-label">REST API Router</div><div class="node-desc">CRUD submissions, file downloads, analytics aggregation, health checks, Swagger docs at /docs</div></div>
-        <div class="node flex-1"><span class="node-icon">🎯</span><div class="node-label">Pipeline Orchestrator</div><div class="node-desc">6-step workflow with ThreadPoolExecutor for parallel image, extraction & AI calls. Uploads all files to S3. ~45s end-to-end</div></div>
-        <div class="node flex-1"><span class="node-icon">📧</span><div class="node-label">Email Watcher</div><div class="node-desc">IMAP polling every 30s, auto-extracts attachments (PDF, Excel, images), uploads to S3, creates submissions</div></div>
-      </div>
-    </div>
+  <div class="flow-arrow green"><div class="line"></div><div class="arrow-head"></div></div>
+  <div class="flow-label">HTTP / REST API</div>
 
-    <!-- Connector -->
-    <div class="connector">
-      <svg width="2" height="20"><line x1="1" y1="0" x2="1" y2="20" stroke="#94A3B8" stroke-width="1.5" stroke-dasharray="4,3"/></svg>
+  <!-- Tier 2: API -->
+  <div class="layer layer-blue" style="margin-bottom:0;">
+    <div class="layer-head">
+      <div class="layer-icon" style="background:var(--blue);">⚙️</div>
+      <div class="layer-label">API & Orchestration Layer <span class="layer-meta">— FastAPI • Port 8000</span></div>
     </div>
-    <div class="connector-label">Pipeline invocation</div>
-    <div class="connector">
-      <svg width="2" height="10"><line x1="1" y1="0" x2="1" y2="10" stroke="#94A3B8" stroke-width="1.5" stroke-dasharray="4,3"/></svg>
+    <div class="nodes">
+      <div class="node flex-1"><span class="node-icon">🌐</span><div class="node-name">REST API Router</div><div class="node-info">CRUD submissions, file downloads, analytics, Swagger docs</div></div>
+      <div class="node flex-1"><span class="node-icon">🎯</span><div class="node-name">Pipeline Orchestrator</div><div class="node-info">6-step workflow, ThreadPoolExecutor, ~45s end-to-end</div></div>
+      <div class="node flex-1"><span class="node-icon">📧</span><div class="node-name">Email Watcher</div><div class="node-info">IMAP polling every 30s, auto-extract attachments</div></div>
+      <div class="node flex-1"><span class="node-icon">🔍</span><div class="node-name">Review API</div><div class="node-info">Approve / Reject / Override with audit trail</div></div>
     </div>
+  </div>
 
-    <!-- LAYER 3: Processing -->
-    <div class="layer layer-teal">
-      <div class="layer-header">
-        <div class="layer-icon">🧠</div>
-        <div class="layer-title">Processing Layer <span class="layer-subtitle">— Core business logic</span></div>
-      </div>
-      <div class="nodes">
-        <div class="node flex-1"><span class="node-icon">📄</span><div class="node-label">Document Processor</div><div class="node-desc">PyMuPDF for PDF, openpyxl for Excel, pandas for CSV, batch Gemini Vision OCR for CDL images (all in 1 call)</div></div>
-        <div class="node flex-1"><span class="node-icon">🏷️</span><div class="node-label">Document Classifier</div><div class="node-desc">Single batched Gemini call, content-based only (never uses filenames per guidelines)</div></div>
-        <div class="node flex-1"><span class="node-icon">🔍</span><div class="node-label">Data Extractor</div><div class="node-desc">Python regex for structured docs (zero AI cost). AI extraction runs in parallel via ThreadPoolExecutor (4 workers)</div></div>
-        <div class="node flex-1"><span class="node-icon">🧠</span><div class="node-label">AI Analyzer</div><div class="node-desc">4 parallel Gemini calls: company risk, driver risk, fleet, financial/loss analysis</div></div>
-        <div class="node flex-1"><span class="node-icon">⚖️</span><div class="node-label">Rules Engine</div><div class="node-desc">27 rules across 6 categories (eligibility, driver, exposure, submission, IFTA, conflict), team routing</div></div>
-      </div>
-    </div>
+  <div class="flow-arrow"><div class="line"></div><div class="arrow-head"></div></div>
+  <div class="flow-label">Pipeline Invocation</div>
 
-    <!-- Connector -->
-    <div class="connector">
-      <svg width="2" height="20"><line x1="1" y1="0" x2="1" y2="20" stroke="#94A3B8" stroke-width="1.5" stroke-dasharray="4,3"/></svg>
+  <!-- Tier 3: Processing -->
+  <div class="layer layer-teal" style="margin-bottom:0;">
+    <div class="layer-head">
+      <div class="layer-icon" style="background:var(--teal);">🧠</div>
+      <div class="layer-label">Processing Layer <span class="layer-meta">— Core business logic</span></div>
     </div>
+    <div class="nodes">
+      <div class="node flex-1"><span class="node-icon">📄</span><div class="node-name">Document Processor</div><div class="node-info">PyMuPDF, openpyxl, pandas, Gemini Vision OCR</div></div>
+      <div class="node flex-1"><span class="node-icon">🏷️</span><div class="node-name">Document Classifier</div><div class="node-info">Content-based only (never uses filenames)</div></div>
+      <div class="node flex-1"><span class="node-icon">🔍</span><div class="node-name">Data Extractor</div><div class="node-info">Python regex (zero AI cost) + Vision for images</div></div>
+      <div class="node flex-1"><span class="node-icon">🧠</span><div class="node-name">AI Analyzer</div><div class="node-info">4 parallel Gemini calls: company, driver, fleet, financial</div></div>
+      <div class="node flex-1"><span class="node-icon">⚖️</span><div class="node-name">Rules Engine</div><div class="node-info">27 rules across 6 categories, conflict detection, team routing</div></div>
+    </div>
+  </div>
 
-    <!-- LAYER 4: External + Storage (side by side) -->
-    <div class="flex gap-16">
-      <div class="layer layer-purple flex-1">
-        <div class="layer-header">
-          <div class="layer-icon">☁️</div>
-          <div class="layer-title">External Services</div>
-        </div>
-        <div class="flex-col gap-8">
-          <div class="node w-full"><span class="node-icon">🧠</span><div class="node-label">Google Gemini 2.5 Flash</div><div class="node-desc">Vision + text generation via REST API • Batch CDL OCR, classification, and 4 parallel risk analyses • ~$0.05–0.09/submission</div></div>
-          <div class="node w-full"><span class="node-icon">📬</span><div class="node-label">IMAP Server</div><div class="node-desc">IMAPS port 993 encrypted • Polls inbox every 30s • Extracts all attachments from new emails automatically</div></div>
-        </div>
+  <div class="flow-arrow purple"><div class="line"></div><div class="arrow-head"></div></div>
+
+  <!-- Tier 4: External + Storage -->
+  <div class="flex gap-16">
+    <div class="layer layer-purple flex-1">
+      <div class="layer-head">
+        <div class="layer-icon" style="background:var(--purple);">☁️</div>
+        <div class="layer-label">External Services</div>
       </div>
-      <div class="layer layer-slate flex-1">
-        <div class="layer-header">
-          <div class="layer-icon">💾</div>
-          <div class="layer-title">Data Layer</div>
-        </div>
-        <div class="flex-col gap-8">
-          <div class="node w-full"><span class="node-icon">🗃️</span><div class="node-label">SQLite Database</div><div class="node-desc">SQLAlchemy ORM • 6 tables: submissions, documents, analysis_results, rule_results, audit_logs, rule_configs</div></div>
-          <div class="node w-full"><span class="node-icon">☁️</span><div class="node-label">AWS S3 Storage</div><div class="node-desc">knight-insurance-docs bucket • All uploaded documents stored in S3 under submissions/{id}/ • Versioned, durable, encrypted at rest</div></div>
-        </div>
+      <div class="flex-col gap-8">
+        <div class="node w-full"><span class="node-icon">🧠</span><div class="node-name">Google Gemini 2.5 Flash</div><div class="node-info">Vision + text generation • Batch CDL OCR • 4 parallel analyses • ~$0.05–0.09/submission</div></div>
+        <div class="node w-full"><span class="node-icon">📬</span><div class="node-name">IMAP Server</div><div class="node-info">IMAPS port 993 encrypted • Polls inbox every 30s</div></div>
       </div>
     </div>
-
-    <!-- Legend -->
-    <div class="legend">
-      <span class="legend-title">Legend:</span>
-      <div class="legend-item"><div class="legend-swatch" style="background:var(--green-100);border-color:var(--green-300);"></div> Frontend</div>
-      <div class="legend-item"><div class="legend-swatch" style="background:var(--blue-100);border-color:var(--blue-300);"></div> API Layer</div>
-      <div class="legend-item"><div class="legend-swatch" style="background:var(--teal-100);border-color:var(--teal-300);"></div> Processing</div>
-      <div class="legend-item"><div class="legend-swatch" style="background:var(--purple-100);border-color:var(--purple-300);"></div> External</div>
-      <div class="legend-item"><div class="legend-swatch" style="background:var(--slate-100);border-color:var(--slate-300);"></div> Storage</div>
-      <div class="legend-item" style="margin-left:auto;">
-        <svg width="20" height="2"><line x1="0" y1="1" x2="20" y2="1" stroke="#94A3B8" stroke-width="1.5" stroke-dasharray="4,3"/></svg> Data flow
+    <div class="layer layer-slate flex-1">
+      <div class="layer-head">
+        <div class="layer-icon">💾</div>
+        <div class="layer-label">Data Layer</div>
+      </div>
+      <div class="flex-col gap-8">
+        <div class="node w-full"><span class="node-icon">🗃️</span><div class="node-name">SQLite Database</div><div class="node-info">SQLAlchemy ORM • 6 tables: submissions, documents, analysis, rules, audit, configs</div></div>
+        <div class="node w-full"><span class="node-icon">☁️</span><div class="node-name">AWS S3 Storage</div><div class="node-info">knight-insurance-docs bucket • Versioned • Encrypted at rest</div></div>
       </div>
     </div>
   </div>
+
 </div>
 
-<!-- ══════════════════════════════════════════════════════════
+<!-- ═══════════════════════════════════════════
      VIEW 2: PROCESSING PIPELINE
-══════════════════════════════════════════════════════════ -->
+═══════════════════════════════════════════ -->
 <div class="view" id="view-pipeline">
-  <div class="diagram">
 
-    <!-- Step 1 -->
-    <div class="layer layer-blue">
-      <div class="layer-header">
-        <div class="step-badge"><div class="step-num">1</div> Text Extraction</div>
-        <span class="layer-subtitle" style="margin-left:auto;">Parallel processing for images</span>
-      </div>
-      <div class="nodes">
-        <div class="node flex-1"><span class="node-icon">📕</span><div class="node-label">PDF</div><div class="node-desc">PyMuPDF (fitz)<br/>Text + table extraction</div></div>
-        <div class="node flex-1"><span class="node-icon">📗</span><div class="node-label">Excel</div><div class="node-desc">openpyxl<br/>Row-by-row parsing</div></div>
-        <div class="node flex-1"><span class="node-icon">📊</span><div class="node-label">CSV</div><div class="node-desc">pandas<br/>Structured reader</div></div>
-        <div class="node flex-1" style="border-color:var(--purple-200);"><span class="node-icon">🖼️</span><div class="node-label">Images</div><div class="node-desc">Gemini Vision OCR<br/>ThreadPoolExecutor (parallel)</div></div>
-      </div>
-    </div>
-
-    <div class="connector"><svg width="2" height="16"><line x1="1" y1="0" x2="1" y2="16" stroke="var(--blue-500)" stroke-width="2"/></svg></div>
-
-    <!-- Step 2 -->
-    <div class="layer layer-purple">
-      <div class="layer-header">
-        <div class="step-badge" style="background:var(--purple-50);border-color:var(--purple-200);color:var(--purple-700);"><div class="step-num" style="background:var(--purple-600);">2</div> Document Classification</div>
-        <span class="layer-subtitle" style="margin-left:auto;">Single batched Gemini API call</span>
-      </div>
-      <div class="flex gap-14 items-start">
-        <div class="node" style="flex:2;"><span class="node-icon">🏷️</span><div class="node-label">Content-Based Classifier</div><div class="node-desc">All documents batched in one API call<br/><strong style="color:var(--red-500);">⚠ Never uses filenames</strong> (per guidelines)</div></div>
-        <div class="flex-col gap-8" style="flex:1;">
-          <div class="node node-sm w-full" style="border-left:3px solid var(--blue-500);"><div class="node-label">insurance_application</div></div>
-          <div class="node node-sm w-full" style="border-left:3px solid var(--green-500);"><div class="node-label">driver_list</div></div>
-          <div class="node node-sm w-full" style="border-left:3px solid var(--teal-500);"><div class="node-label">equipment_list</div></div>
-        </div>
-        <div class="flex-col gap-8" style="flex:1;">
-          <div class="node node-sm w-full" style="border-left:3px solid var(--amber-500);"><div class="node-label">loss_run</div></div>
-          <div class="node node-sm w-full" style="border-left:3px solid var(--red-500);"><div class="node-label">ifta_report</div></div>
-          <div class="node node-sm w-full" style="border-left:3px solid var(--purple-500);"><div class="node-label">drivers_license</div></div>
-        </div>
-      </div>
-    </div>
-
-    <div class="connector"><svg width="2" height="16"><line x1="1" y1="0" x2="1" y2="16" stroke="var(--purple-500)" stroke-width="2"/></svg></div>
-
-    <!-- Step 3 -->
-    <div class="layer layer-green">
-      <div class="layer-header">
-        <div class="step-badge" style="background:var(--green-50);border-color:var(--green-200);color:var(--green-700);"><div class="step-num" style="background:var(--green-600);">3</div> Data Extraction</div>
-        <span class="layer-subtitle" style="margin-left:auto;">Hybrid: Python regex (free) + Gemini Vision (images only)</span>
-      </div>
-      <div class="flex gap-10">
-        <div class="node flex-1"><span class="node-icon">📗</span><div class="node-label">Excel / CSV</div><div class="node-desc">Regex + openpyxl<br/><strong style="color:var(--green-600);">Zero AI cost</strong></div></div>
-        <div class="node flex-1"><span class="node-icon">📕</span><div class="node-label">PDF Text</div><div class="node-desc">Regex patterns<br/><strong style="color:var(--green-600);">Zero AI cost</strong></div></div>
-        <div class="node flex-1" style="border-color:var(--purple-200);"><span class="node-icon">🪪</span><div class="node-label">CDL Images</div><div class="node-desc">Gemini Vision<br/>Only for license photos</div></div>
-        <div class="node flex-1" style="border-color:var(--teal-200);"><span class="node-icon">🔄</span><div class="node-label">Deduplication</div><div class="node-desc">Cross-source name matching<br/>Driver record merging</div></div>
-      </div>
-    </div>
-
-    <div class="connector"><svg width="2" height="16"><line x1="1" y1="0" x2="1" y2="16" stroke="var(--green-500)" stroke-width="2"/></svg></div>
-
-    <!-- Step 4 -->
-    <div class="layer layer-amber">
-      <div class="layer-header">
-        <div class="step-badge" style="background:var(--amber-50);border-color:var(--amber-200);color:var(--amber-600);"><div class="step-num" style="background:var(--amber-600);">4</div> AI Risk Analysis</div>
-        <span class="layer-subtitle" style="margin-left:auto;">4 parallel Gemini API calls</span>
-      </div>
-      <div class="nodes">
-        <div class="node flex-1"><span class="node-icon">🏢</span><div class="node-label">Company Risk</div><div class="node-desc">Business profile, DOT/MC validation, years in operation</div></div>
-        <div class="node flex-1"><span class="node-icon">👤</span><div class="node-label">Driver Risk</div><div class="node-desc">CDL status, violations, age, experience analysis</div></div>
-        <div class="node flex-1"><span class="node-icon">🚛</span><div class="node-label">Fleet Analysis</div><div class="node-desc">Vehicle age, VIN validation, fleet composition</div></div>
-        <div class="node flex-1"><span class="node-icon">📊</span><div class="node-label">Financial & Loss</div><div class="node-desc">Claims history, loss ratios, mileage patterns</div></div>
-      </div>
-    </div>
-
-    <div class="connector"><svg width="2" height="16"><line x1="1" y1="0" x2="1" y2="16" stroke="var(--amber-500)" stroke-width="2"/></svg></div>
-
-    <!-- Step 5 -->
-    <div class="layer layer-red">
-      <div class="layer-header">
-        <div class="step-badge" style="background:var(--red-50);border-color:var(--red-200);color:var(--red-600);"><div class="step-num" style="background:var(--red-600);">5</div> Rules Engine</div>
-        <span class="layer-subtitle" style="margin-left:auto;">27 configurable business rules + cross-document conflict detection</span>
-      </div>
-      <div class="nodes">
-        <div class="node flex-1 node-sm"><span class="node-icon">🏢</span><div class="node-label">Eligibility</div><div class="node-desc">4 rules</div></div>
-        <div class="node flex-1 node-sm"><span class="node-icon">👤</span><div class="node-label">Driver</div><div class="node-desc">7 rules</div></div>
-        <div class="node flex-1 node-sm"><span class="node-icon">⚠️</span><div class="node-label">Exposure</div><div class="node-desc">4 rules</div></div>
-        <div class="node flex-1 node-sm"><span class="node-icon">📋</span><div class="node-label">Submission</div><div class="node-desc">4 rules</div></div>
-        <div class="node flex-1 node-sm"><span class="node-icon">⛽</span><div class="node-label">IFTA</div><div class="node-desc">4 rules</div></div>
-        <div class="node flex-1 node-sm"><span class="node-icon">🔀</span><div class="node-label">Conflict</div><div class="node-desc">6 rules</div></div>
-      </div>
-    </div>
-
-    <div class="connector"><svg width="2" height="16"><line x1="1" y1="0" x2="1" y2="16" stroke="var(--red-500)" stroke-width="2"/></svg></div>
-
-    <!-- Step 6: Decision -->
-    <div class="layer layer-slate">
-      <div class="layer-header">
-        <div class="step-badge" style="background:var(--slate-100);border-color:var(--slate-300);color:var(--slate-700);"><div class="step-num" style="background:var(--slate-700);">6</div> Decision + Team Routing</div>
-      </div>
-      <div class="flex gap-14 justify-center">
-        <div class="node node-filled-green" style="min-width:140px;"><span class="node-icon">✅</span><div class="node-label">ACCEPT</div><div class="node-desc">→ Standard Review</div></div>
-        <div class="node node-filled-amber" style="min-width:140px;"><span class="node-icon">⚠️</span><div class="node-label">REFER</div><div class="node-desc">→ Specialty Risk / Driver Review / Operations</div></div>
-        <div class="node node-filled-red" style="min-width:140px;"><span class="node-icon">❌</span><div class="node-label">DECLINE</div><div class="node-desc">→ Senior Underwriting</div></div>
-      </div>
-      <div style="margin-top:12px;text-align:center;font-size:11px;color:var(--slate-500);">
-        <strong>Underwriter Review:</strong> Approve ✅ · Reject ❌ · Override ⚡ (with audit trail)
-      </div>
-    </div>
-
-  </div>
-</div>
-
-<!-- ══════════════════════════════════════════════════════════
-     VIEW 3: DATA FLOW
-══════════════════════════════════════════════════════════ -->
-<div class="view" id="view-dataflow">
-  <div class="diagram">
-    <div class="flex gap-16 items-start">
-
-      <!-- Column 1 -->
-      <div class="flex-col gap-10 flex-1">
-        <div class="layer layer-blue" style="margin-bottom:0;">
-          <div class="layer-header"><div class="layer-icon">📥</div><div class="layer-title">Input Documents</div></div>
-          <div class="flex-col gap-6">
-            <div class="node w-full"><span class="node-icon">📄</span><div class="node-label">Insurance Application</div><div class="node-desc">PDF — Company info, coverage requests, operation details</div></div>
-            <div class="node w-full"><span class="node-icon">👤</span><div class="node-label">Driver List / Roster</div><div class="node-desc">Excel/PDF — Names, DOB, license numbers, hire dates</div></div>
-            <div class="node w-full"><span class="node-icon">🚛</span><div class="node-label">Equipment Schedule</div><div class="node-desc">Excel — VINs, year, make, model, stated value</div></div>
-            <div class="node w-full"><span class="node-icon">📊</span><div class="node-label">Loss Run Reports</div><div class="node-desc">PDF — Claims history, open/closed, total incurred</div></div>
-            <div class="node w-full"><span class="node-icon">⛽</span><div class="node-label">IFTA Reports</div><div class="node-desc">PDF/Excel — Miles by state, fuel tax records</div></div>
-            <div class="node w-full"><span class="node-icon">🪪</span><div class="node-label">Driver Licenses (CDL)</div><div class="node-desc">Images — CDL class, endorsements, restrictions</div></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Connector column -->
-      <div class="flex-col justify-center items-center" style="padding-top:180px;gap:4px;">
-        <svg width="40" height="2"><line x1="0" y1="1" x2="40" y2="1" stroke="var(--slate-300)" stroke-width="1.5"/></svg>
-        <svg width="12" height="12" viewBox="0 0 12 12"><polygon points="0,0 12,6 0,12" fill="var(--slate-300)"/></svg>
-        <div class="connector-label" style="margin-top:4px;">extract</div>
-      </div>
-
-      <!-- Column 2 -->
-      <div class="flex-col gap-10 flex-1">
-        <div class="layer layer-green" style="margin-bottom:0;">
-          <div class="layer-header"><div class="layer-icon">🔍</div><div class="layer-title">Extracted Data</div></div>
-          <div class="flex-col gap-6">
-            <div class="node w-full"><span class="node-icon">🏢</span><div class="node-label">Company Profile</div><div class="node-desc">Name, DOT#, MC#, years in business, operation type, radius</div></div>
-            <div class="node w-full"><span class="node-icon">👤</span><div class="node-label">Driver Records</div><div class="node-desc">10 drivers — CDL class, experience, violations, age</div></div>
-            <div class="node w-full"><span class="node-icon">🚛</span><div class="node-label">Vehicle Fleet</div><div class="node-desc">9 vehicles — VIN, year, make, type, stated value</div></div>
-            <div class="node w-full"><span class="node-icon">📊</span><div class="node-label">Claims History</div><div class="node-desc">Open/closed claims, total incurred, loss ratio</div></div>
-            <div class="node w-full"><span class="node-icon">⛽</span><div class="node-label">Mileage Data</div><div class="node-desc">States of operation, total annual miles</div></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Connector column -->
-      <div class="flex-col justify-center items-center" style="padding-top:180px;gap:4px;">
-        <svg width="40" height="2"><line x1="0" y1="1" x2="40" y2="1" stroke="var(--slate-300)" stroke-width="1.5"/></svg>
-        <svg width="12" height="12" viewBox="0 0 12 12"><polygon points="0,0 12,6 0,12" fill="var(--slate-300)"/></svg>
-        <div class="connector-label" style="margin-top:4px;">analyze</div>
-      </div>
-
-      <!-- Column 3 -->
-      <div class="flex-col gap-10 flex-1">
-        <div class="layer layer-amber" style="margin-bottom:0;">
-          <div class="layer-header"><div class="layer-icon">🧠</div><div class="layer-title">AI Output</div></div>
-          <div class="flex-col gap-6">
-            <div class="node w-full"><span class="node-icon">📋</span><div class="node-label">Risk Assessment</div><div class="node-desc">Overall risk score, confidence level per analysis domain</div></div>
-            <div class="node w-full"><span class="node-icon">⚠️</span><div class="node-label">Data Conflicts</div><div class="node-desc">11 conflicts detected across document sources</div></div>
-            <div class="node w-full"><span class="node-icon">📝</span><div class="node-label">Recommendations</div><div class="node-desc">Premium suggestions, coverage conditions, exclusions</div></div>
-            <div class="node w-full"><span class="node-icon">⚖️</span><div class="node-label">Rules Results</div><div class="node-desc">27 rules — PASS / FAIL / WARNING / INFO + conflict detection</div></div>
-            <div class="node node-filled-blue w-full"><span class="node-icon">✅</span><div class="node-label">Decision</div><div class="node-desc">ACCEPT • DECLINE • REFER</div></div>
-          </div>
-        </div>
-      </div>
-
+  <div class="section-head">
+    <div class="section-icon" style="background:linear-gradient(135deg,var(--teal),var(--green));">⚡</div>
+    <div>
+      <div class="section-title">6-Step Processing Pipeline</div>
+      <div class="section-sub">End-to-end submission processing in ~45 seconds</div>
     </div>
   </div>
+
+  <!-- Step 1 -->
+  <div class="step-card" style="border-left-color:var(--blue);">
+    <div class="step-num-badge">
+      <div class="step-num" style="background:var(--blue);">1</div>
+      <div><div class="step-title">Text Extraction</div><div class="step-desc">Parallel processing for images via ThreadPoolExecutor</div></div>
+    </div>
+    <div class="step-items">
+      <div class="step-item"><div class="step-item-icon">📕</div><div class="step-item-label">PDF</div><div class="step-item-desc">PyMuPDF (fitz)<br/>Text + table extraction</div></div>
+      <div class="step-item"><div class="step-item-icon">📗</div><div class="step-item-label">Excel</div><div class="step-item-desc">openpyxl<br/>Row-by-row parsing</div></div>
+      <div class="step-item"><div class="step-item-icon">📊</div><div class="step-item-label">CSV</div><div class="step-item-desc">pandas<br/>Structured reader</div></div>
+      <div class="step-item" style="border-color:var(--purple);"><div class="step-item-icon">🖼️</div><div class="step-item-label">Images</div><div class="step-item-desc">Gemini Vision OCR<br/>Parallel batch processing</div></div>
+    </div>
+  </div>
+
+  <div class="flow-arrow"><div class="line"></div><div class="arrow-head"></div></div>
+
+  <!-- Step 2 -->
+  <div class="step-card" style="border-left-color:var(--purple);">
+    <div class="step-num-badge">
+      <div class="step-num" style="background:var(--purple);">2</div>
+      <div><div class="step-title">Document Classification</div><div class="step-desc">Single batched Gemini API call — content-based only (⚠ never uses filenames)</div></div>
+    </div>
+    <div class="step-items">
+      <div class="step-item" style="border-color:var(--blue);"><div class="step-item-label">insurance_application</div></div>
+      <div class="step-item" style="border-color:var(--green);"><div class="step-item-label">driver_list</div></div>
+      <div class="step-item" style="border-color:var(--teal);"><div class="step-item-label">equipment_list</div></div>
+      <div class="step-item" style="border-color:var(--amber);"><div class="step-item-label">loss_run</div></div>
+      <div class="step-item" style="border-color:var(--red);"><div class="step-item-label">ifta_report</div></div>
+      <div class="step-item" style="border-color:var(--purple);"><div class="step-item-label">drivers_license</div></div>
+    </div>
+  </div>
+
+  <div class="flow-arrow purple"><div class="line"></div><div class="arrow-head"></div></div>
+
+  <!-- Step 3 -->
+  <div class="step-card" style="border-left-color:var(--green);">
+    <div class="step-num-badge">
+      <div class="step-num" style="background:var(--green);">3</div>
+      <div><div class="step-title">Data Extraction</div><div class="step-desc">Hybrid: Python regex (free) + Gemini Vision (images only)</div></div>
+    </div>
+    <div class="step-items">
+      <div class="step-item"><div class="step-item-icon">📗</div><div class="step-item-label">Excel / CSV</div><div class="step-item-desc">Regex + openpyxl<br/><strong style="color:var(--green);">Zero AI cost</strong></div></div>
+      <div class="step-item"><div class="step-item-icon">📕</div><div class="step-item-label">PDF Text</div><div class="step-item-desc">Regex patterns<br/><strong style="color:var(--green);">Zero AI cost</strong></div></div>
+      <div class="step-item"><div class="step-item-icon">🪪</div><div class="step-item-label">CDL Images</div><div class="step-item-desc">Gemini Vision<br/>License photo OCR</div></div>
+      <div class="step-item"><div class="step-item-icon">🔄</div><div class="step-item-label">Deduplication</div><div class="step-item-desc">Cross-source name matching<br/>Driver record merging</div></div>
+    </div>
+  </div>
+
+  <div class="flow-arrow green"><div class="line"></div><div class="arrow-head"></div></div>
+
+  <!-- Step 4 -->
+  <div class="step-card" style="border-left-color:var(--amber);">
+    <div class="step-num-badge">
+      <div class="step-num" style="background:var(--amber);">4</div>
+      <div><div class="step-title">AI Risk Analysis</div><div class="step-desc">4 parallel Gemini API calls for comprehensive risk assessment</div></div>
+    </div>
+    <div class="step-items">
+      <div class="step-item"><div class="step-item-icon">🏢</div><div class="step-item-label">Company Risk</div><div class="step-item-desc">Business profile, DOT/MC validation, years in operation</div></div>
+      <div class="step-item"><div class="step-item-icon">👤</div><div class="step-item-label">Driver Risk</div><div class="step-item-desc">CDL status, violations, age, experience</div></div>
+      <div class="step-item"><div class="step-item-icon">🚛</div><div class="step-item-label">Fleet Analysis</div><div class="step-item-desc">Vehicle age, VIN validation, fleet composition</div></div>
+      <div class="step-item"><div class="step-item-icon">📊</div><div class="step-item-label">Financial & Loss</div><div class="step-item-desc">Claims history, loss ratios, mileage patterns</div></div>
+    </div>
+  </div>
+
+  <div class="flow-arrow amber"><div class="line"></div><div class="arrow-head"></div></div>
+
+  <!-- Step 5 -->
+  <div class="step-card" style="border-left-color:var(--red);">
+    <div class="step-num-badge">
+      <div class="step-num" style="background:var(--red);">5</div>
+      <div><div class="step-title">Rules Engine</div><div class="step-desc">27 configurable business rules + cross-document conflict detection</div></div>
+    </div>
+    <div class="step-items">
+      <div class="step-item"><div class="step-item-icon">🏢</div><div class="step-item-label">Eligibility</div><div class="step-item-desc">4 rules</div></div>
+      <div class="step-item"><div class="step-item-icon">👤</div><div class="step-item-label">Driver</div><div class="step-item-desc">7 rules</div></div>
+      <div class="step-item"><div class="step-item-icon">⚠️</div><div class="step-item-label">Exposure</div><div class="step-item-desc">4 rules</div></div>
+      <div class="step-item"><div class="step-item-icon">📋</div><div class="step-item-label">Submission</div><div class="step-item-desc">4 rules</div></div>
+      <div class="step-item"><div class="step-item-icon">⛽</div><div class="step-item-label">IFTA</div><div class="step-item-desc">4 rules</div></div>
+      <div class="step-item"><div class="step-item-icon">🔀</div><div class="step-item-label">Conflict</div><div class="step-item-desc">6 rules</div></div>
+    </div>
+  </div>
+
+  <div class="flow-arrow red"><div class="line"></div><div class="arrow-head"></div></div>
+
+  <!-- Step 6 -->
+  <div class="step-card" style="border-left-color:#475569;">
+    <div class="step-num-badge">
+      <div class="step-num" style="background:#475569;">6</div>
+      <div><div class="step-title">Decision + Team Routing</div><div class="step-desc">Auto-routes to appropriate underwriting team with review workflow</div></div>
+    </div>
+    <div class="decision-row" style="margin-top:16px;">
+      <div class="decision-node dn-green"><div class="d-icon">✅</div><div class="d-label">ACCEPT</div><div class="d-desc">→ Standard Review</div></div>
+      <div class="decision-node dn-amber"><div class="d-icon">⚠️</div><div class="d-label">REFER</div><div class="d-desc">→ Specialty Risk / Driver Review / Operations</div></div>
+      <div class="decision-node dn-red"><div class="d-icon">❌</div><div class="d-label">DECLINE</div><div class="d-desc">→ Senior Underwriting</div></div>
+    </div>
+    <div style="margin-top:14px;text-align:center;font-size:11px;color:var(--text2);">
+      <strong>Underwriter Review:</strong> Approve ✅ · Reject ❌ · Override ⚡ (with full audit trail)
+    </div>
+  </div>
+
 </div>
 
-<!-- ══════════════════════════════════════════════════════════
-     VIEW 4: RULES ENGINE
-══════════════════════════════════════════════════════════ -->
+<!-- ═══════════════════════════════════════════
+     VIEW 3: RULES ENGINE
+═══════════════════════════════════════════ -->
 <div class="view" id="view-rules">
-  <div class="diagram">
 
-    <div class="layer layer-slate" style="text-align:center;">
-      <div class="node node-filled-dark" style="display:inline-flex; min-width:300px;"><span class="node-icon">📦</span><div class="node-label">Extracted Data + AI Analysis Results</div></div>
+  <div class="section-head">
+    <div class="section-icon" style="background:linear-gradient(135deg,var(--red),var(--rose));">⚖️</div>
+    <div>
+      <div class="section-title">Rules Engine — 27 Business Rules</div>
+      <div class="section-sub">Configurable severity • Enable/disable per rule • Cross-document conflict detection</div>
+    </div>
+  </div>
+
+  <div class="flex gap-14 flex-wrap">
+
+    <div class="rule-card">
+      <div class="rule-card-head"><span class="rule-card-icon">🏢</span><span class="rule-card-title">Eligibility</span><span class="rule-card-count">4 rules</span></div>
+      <div class="rule-item"><span class="rule-id">ELIG-001</span><span class="rule-desc">Years in business ≥ 2</span></div>
+      <div class="rule-item"><span class="rule-id">ELIG-002</span><span class="rule-desc">Covered vehicle types</span></div>
+      <div class="rule-item"><span class="rule-id">ELIG-003</span><span class="rule-desc">Non-covered states</span></div>
+      <div class="rule-item"><span class="rule-id">ELIG-004</span><span class="rule-desc">Operating radius check</span></div>
     </div>
 
-    <div class="connector"><svg width="2" height="16"><line x1="1" y1="0" x2="1" y2="16" stroke="var(--slate-400)" stroke-width="2"/></svg></div>
-
-    <div class="layer layer-purple" style="text-align:center;padding-bottom:14px;">
-      <div class="node node-filled-blue" style="display:inline-flex; min-width:320px;"><span class="node-icon">⚖️</span><div class="node-label">Rules Engine — 27 Business Rules</div><div class="node-desc">Configurable severity • Enable/disable per rule • Cross-document conflict detection</div></div>
+    <div class="rule-card">
+      <div class="rule-card-head"><span class="rule-card-icon">👤</span><span class="rule-card-title">Driver</span><span class="rule-card-count">7 rules</span></div>
+      <div class="rule-item"><span class="rule-id">DRV-001</span><span class="rule-desc">Valid CDL required</span></div>
+      <div class="rule-item"><span class="rule-id">DRV-002</span><span class="rule-desc">Age range 23–70</span></div>
+      <div class="rule-item"><span class="rule-id">DRV-003</span><span class="rule-desc">Min 2yr experience</span></div>
+      <div class="rule-item"><span class="rule-id">DRV-004</span><span class="rule-desc">Max 3 violations/3yr</span></div>
+      <div class="rule-item"><span class="rule-id">DRV-005</span><span class="rule-desc">No major violations (DUI/reckless)</span></div>
+      <div class="rule-item"><span class="rule-id">DRV-006</span><span class="rule-desc">Max 2 at-fault accidents</span></div>
+      <div class="rule-item"><span class="rule-id">DRV-007</span><span class="rule-desc">MVR check required</span></div>
     </div>
 
-    <div class="connector"><svg width="2" height="12"><line x1="1" y1="0" x2="1" y2="12" stroke="var(--slate-400)" stroke-width="2"/></svg></div>
-
-    <!-- 5 rule categories -->
-    <div class="flex gap-10" style="flex-wrap:wrap;">
-      <div class="layer layer-blue flex-1" style="margin-bottom:0;min-width:160px;">
-        <div class="layer-header"><div class="layer-icon">🏢</div><div class="layer-title" style="font-size:10px;">Eligibility</div></div>
-        <div class="flex-col gap-4">
-          <div class="node node-sm w-full"><div class="node-label">ELIG-001</div><div class="node-desc">Years in business ≥ 2</div></div>
-          <div class="node node-sm w-full"><div class="node-label">ELIG-002</div><div class="node-desc">Covered vehicle types</div></div>
-          <div class="node node-sm w-full"><div class="node-label">ELIG-003</div><div class="node-desc">Non-covered states</div></div>
-          <div class="node node-sm w-full"><div class="node-label">ELIG-004</div><div class="node-desc">Operating radius check</div></div>
-        </div>
-      </div>
-
-      <div class="layer layer-purple flex-1" style="margin-bottom:0;min-width:160px;">
-        <div class="layer-header"><div class="layer-icon">👤</div><div class="layer-title" style="font-size:10px;">Driver</div></div>
-        <div class="flex-col gap-4">
-          <div class="node node-sm w-full"><div class="node-label">DRV-001</div><div class="node-desc">Valid CDL required</div></div>
-          <div class="node node-sm w-full"><div class="node-label">DRV-002</div><div class="node-desc">Age range 23–70</div></div>
-          <div class="node node-sm w-full"><div class="node-label">DRV-003</div><div class="node-desc">Min 2yr experience</div></div>
-          <div class="node node-sm w-full"><div class="node-label">DRV-004</div><div class="node-desc">Max 3 violations/3yr</div></div>
-          <div class="node node-sm w-full"><div class="node-label">DRV-005</div><div class="node-desc">No major violations</div></div>
-          <div class="node node-sm w-full"><div class="node-label">DRV-006</div><div class="node-desc">Max 2 at-fault accidents</div></div>
-          <div class="node node-sm w-full"><div class="node-label">DRV-007</div><div class="node-desc">MVR check required</div></div>
-        </div>
-      </div>
-
-      <div class="layer layer-teal flex-1" style="margin-bottom:0;min-width:160px;">
-        <div class="layer-header"><div class="layer-icon">⚠️</div><div class="layer-title" style="font-size:10px;">Exposure</div></div>
-        <div class="flex-col gap-4">
-          <div class="node node-sm w-full"><div class="node-label">EXP-001</div><div class="node-desc">Hazmat restrictions</div></div>
-          <div class="node node-sm w-full"><div class="node-label">EXP-002</div><div class="node-desc">Prohibited commodities</div></div>
-          <div class="node node-sm w-full"><div class="node-label">EXP-003</div><div class="node-desc">Max power units ≤ 26</div></div>
-          <div class="node node-sm w-full"><div class="node-label">EXP-004</div><div class="node-desc">Mexico border ops</div></div>
-        </div>
-      </div>
-
-      <div class="layer layer-amber flex-1" style="margin-bottom:0;min-width:160px;">
-        <div class="layer-header"><div class="layer-icon">📋</div><div class="layer-title" style="font-size:10px;">Submission</div></div>
-        <div class="flex-col gap-4">
-          <div class="node node-sm w-full"><div class="node-label">SEL-001</div><div class="node-desc">FEIN/DOT required</div></div>
-          <div class="node node-sm w-full"><div class="node-label">SEL-002</div><div class="node-desc">Tow trucks excluded</div></div>
-          <div class="node node-sm w-full"><div class="node-label">SEL-003</div><div class="node-desc">Premium per unit min</div></div>
-          <div class="node node-sm w-full"><div class="node-label">SEL-004</div><div class="node-desc">Sole proprietor check</div></div>
-        </div>
-      </div>
-
-      <div class="layer layer-green flex-1" style="margin-bottom:0;min-width:160px;">
-        <div class="layer-header"><div class="layer-icon">⛽</div><div class="layer-title" style="font-size:10px;">IFTA</div></div>
-        <div class="flex-col gap-4">
-          <div class="node node-sm w-full"><div class="node-label">IFTA-001</div><div class="node-desc">IFTA filings required</div></div>
-          <div class="node node-sm w-full"><div class="node-label">IFTA-002</div><div class="node-desc">Min annual mileage</div></div>
-          <div class="node node-sm w-full"><div class="node-label">IFTA-003</div><div class="node-desc">Multi-state eligibility</div></div>
-          <div class="node node-sm w-full"><div class="node-label">IFTA-004</div><div class="node-desc">Border state check</div></div>
-        </div>
-      </div>
-
-      <div class="layer layer-red flex-1" style="margin-bottom:0;min-width:160px;">
-        <div class="layer-header"><div class="layer-icon">🔀</div><div class="layer-title" style="font-size:10px;">Conflict Detection</div></div>
-        <div class="flex-col gap-4">
-          <div class="node node-sm w-full"><div class="node-label">CON-001</div><div class="node-desc">Vehicle count mismatch</div></div>
-          <div class="node node-sm w-full"><div class="node-label">CON-002</div><div class="node-desc">Driver count mismatch</div></div>
-          <div class="node node-sm w-full"><div class="node-label">CON-003</div><div class="node-desc">Company name inconsistency</div></div>
-          <div class="node node-sm w-full"><div class="node-label">CON-004</div><div class="node-desc">FEIN/DOT conflict</div></div>
-          <div class="node node-sm w-full"><div class="node-label">CON-005</div><div class="node-desc">Duplicate CDL numbers</div></div>
-          <div class="node node-sm w-full"><div class="node-label">CON-006</div><div class="node-desc">Duplicate VINs</div></div>
-        </div>
-      </div>
+    <div class="rule-card">
+      <div class="rule-card-head"><span class="rule-card-icon">⚠️</span><span class="rule-card-title">Exposure</span><span class="rule-card-count">4 rules</span></div>
+      <div class="rule-item"><span class="rule-id">EXP-001</span><span class="rule-desc">Hazmat restrictions</span></div>
+      <div class="rule-item"><span class="rule-id">EXP-002</span><span class="rule-desc">Prohibited commodities</span></div>
+      <div class="rule-item"><span class="rule-id">EXP-003</span><span class="rule-desc">Max power units ≤ 26</span></div>
+      <div class="rule-item"><span class="rule-id">EXP-004</span><span class="rule-desc">Mexico border operations</span></div>
     </div>
 
-    <div class="connector"><svg width="2" height="16"><line x1="1" y1="0" x2="1" y2="16" stroke="var(--slate-400)" stroke-width="2"/></svg></div>
+    <div class="rule-card">
+      <div class="rule-card-head"><span class="rule-card-icon">📋</span><span class="rule-card-title">Submission</span><span class="rule-card-count">4 rules</span></div>
+      <div class="rule-item"><span class="rule-id">SEL-001</span><span class="rule-desc">FEIN/DOT required</span></div>
+      <div class="rule-item"><span class="rule-id">SEL-002</span><span class="rule-desc">Tow trucks excluded</span></div>
+      <div class="rule-item"><span class="rule-id">SEL-003</span><span class="rule-desc">Premium per unit minimum</span></div>
+      <div class="rule-item"><span class="rule-id">SEL-004</span><span class="rule-desc">Sole proprietor check</span></div>
+    </div>
 
-    <div class="flex gap-10 justify-center">
-      <div class="node node-filled-green" style="min-width:160px;"><span class="node-icon">✅</span><div class="node-label">ACCEPT</div><div class="node-desc">0 failures, 0 warnings<br/>→ Standard Review</div></div>
-      <div class="node node-filled-amber" style="min-width:160px;"><span class="node-icon">⚠️</span><div class="node-label">REFER</div><div class="node-desc">0 failures, ≥1 warning<br/>→ Specialty / Driver / Ops</div></div>
-      <div class="node node-filled-red" style="min-width:160px;"><span class="node-icon">❌</span><div class="node-label">DECLINE</div><div class="node-desc">≥1 failure<br/>→ Senior Underwriting</div></div>
+    <div class="rule-card">
+      <div class="rule-card-head"><span class="rule-card-icon">⛽</span><span class="rule-card-title">IFTA</span><span class="rule-card-count">4 rules</span></div>
+      <div class="rule-item"><span class="rule-id">IFTA-001</span><span class="rule-desc">IFTA filings required</span></div>
+      <div class="rule-item"><span class="rule-id">IFTA-002</span><span class="rule-desc">Min annual mileage</span></div>
+      <div class="rule-item"><span class="rule-id">IFTA-003</span><span class="rule-desc">Multi-state eligibility</span></div>
+      <div class="rule-item"><span class="rule-id">IFTA-004</span><span class="rule-desc">Border state check</span></div>
+    </div>
+
+    <div class="rule-card" style="border-color:#fecaca;">
+      <div class="rule-card-head"><span class="rule-card-icon">🔀</span><span class="rule-card-title">Conflict Detection</span><span class="rule-card-count">6 rules</span></div>
+      <div class="rule-item"><span class="rule-id">CON-001</span><span class="rule-desc">Vehicle count mismatch</span></div>
+      <div class="rule-item"><span class="rule-id">CON-002</span><span class="rule-desc">Driver count mismatch</span></div>
+      <div class="rule-item"><span class="rule-id">CON-003</span><span class="rule-desc">Company name inconsistency</span></div>
+      <div class="rule-item"><span class="rule-id">CON-004</span><span class="rule-desc">FEIN/DOT conflict</span></div>
+      <div class="rule-item"><span class="rule-id">CON-005</span><span class="rule-desc">Duplicate CDL numbers</span></div>
+      <div class="rule-item"><span class="rule-id">CON-006</span><span class="rule-desc">Duplicate VINs</span></div>
     </div>
 
   </div>
+
+  <div class="flow-arrow" style="margin-top:20px;"><div class="line"></div><div class="arrow-head"></div></div>
+
+  <!-- Decision + Routing -->
+  <div class="decision-row" style="margin-top:8px;">
+    <div class="decision-node dn-green"><div class="d-icon">✅</div><div class="d-label">ACCEPT</div><div class="d-desc">0 failures, 0 warnings</div></div>
+    <div class="decision-node dn-amber"><div class="d-icon">⚠️</div><div class="d-label">REFER</div><div class="d-desc">0 failures, ≥1 warning</div></div>
+    <div class="decision-node dn-red"><div class="d-icon">❌</div><div class="d-label">DECLINE</div><div class="d-desc">≥1 failure</div></div>
+  </div>
+
+  <div style="margin-top:24px;">
+    <h3 style="font-size:14px;font-weight:700;color:var(--ink);margin-bottom:12px;">🚦 Team Routing</h3>
+    <div class="routing-row">
+      <div class="routing-card" style="border-top:3px solid var(--green);"><div class="r-team">Standard Review</div><div class="r-desc">Clean submissions, all rules pass</div></div>
+      <div class="routing-card" style="border-top:3px solid var(--amber);"><div class="r-team">Specialty Risk</div><div class="r-desc">Hazmat, border ops, excess units</div></div>
+      <div class="routing-card" style="border-top:3px solid var(--purple);"><div class="r-team">Driver Review</div><div class="r-desc">Violations, age, CDL issues</div></div>
+      <div class="routing-card" style="border-top:3px solid var(--teal);"><div class="r-team">Operations</div><div class="r-desc">Missing docs, data conflicts</div></div>
+      <div class="routing-card" style="border-top:3px solid var(--red);"><div class="r-team">Senior Underwriting</div><div class="r-desc">Declined submissions requiring review</div></div>
+    </div>
+  </div>
+
 </div>
 
-<!-- ══════════════════════════════════════════════════════════
+<!-- ═══════════════════════════════════════════
+     VIEW 4: DATA FLOW
+═══════════════════════════════════════════ -->
+<div class="view" id="view-dataflow">
+
+  <div class="section-head">
+    <div class="section-icon" style="background:linear-gradient(135deg,var(--amber),var(--amber-d));">📊</div>
+    <div>
+      <div class="section-title">Data Flow</div>
+      <div class="section-sub">Document intake → extraction → analysis → decision</div>
+    </div>
+  </div>
+
+  <div class="flex gap-16 items-start" style="flex-wrap:wrap;">
+    <!-- Input -->
+    <div class="flex-1" style="min-width:280px;">
+      <div class="layer layer-blue">
+        <div class="layer-head"><div class="layer-icon">📥</div><div class="layer-label">Input Documents</div></div>
+        <div class="flex-col gap-8">
+          <div class="node w-full"><span class="node-icon">📄</span><div class="node-name">Insurance Application</div><div class="node-info">PDF — Company info, coverage, operations</div></div>
+          <div class="node w-full"><span class="node-icon">👤</span><div class="node-name">Driver List / Roster</div><div class="node-info">Excel/PDF — Names, DOB, license #, hire dates</div></div>
+          <div class="node w-full"><span class="node-icon">🚛</span><div class="node-name">Equipment Schedule</div><div class="node-info">Excel — VINs, year, make, model, value</div></div>
+          <div class="node w-full"><span class="node-icon">📊</span><div class="node-name">Loss Run Reports</div><div class="node-info">PDF — Claims history, total incurred</div></div>
+          <div class="node w-full"><span class="node-icon">⛽</span><div class="node-name">IFTA Reports</div><div class="node-info">PDF — Miles by state, fuel tax records</div></div>
+          <div class="node w-full"><span class="node-icon">🪪</span><div class="node-name">Driver Licenses (CDL)</div><div class="node-info">Images — CDL class, endorsements, restrictions</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Extracted -->
+    <div class="flex-1" style="min-width:280px;">
+      <div class="layer layer-green">
+        <div class="layer-head"><div class="layer-icon">🔍</div><div class="layer-label">Extracted Data</div></div>
+        <div class="flex-col gap-8">
+          <div class="node w-full"><span class="node-icon">🏢</span><div class="node-name">Company Profile</div><div class="node-info">Name, DOT#, MC#, years, operation type, radius</div></div>
+          <div class="node w-full"><span class="node-icon">👤</span><div class="node-name">Driver Records</div><div class="node-info">CDL class, experience, violations, age per driver</div></div>
+          <div class="node w-full"><span class="node-icon">🚛</span><div class="node-name">Vehicle Fleet</div><div class="node-info">VIN, year, make, type, stated value per vehicle</div></div>
+          <div class="node w-full"><span class="node-icon">📊</span><div class="node-name">Claims History</div><div class="node-info">Open/closed claims, total incurred, loss ratio</div></div>
+          <div class="node w-full"><span class="node-icon">⛽</span><div class="node-name">Mileage Data</div><div class="node-info">States of operation, total annual miles</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Output -->
+    <div class="flex-1" style="min-width:280px;">
+      <div class="layer layer-amber">
+        <div class="layer-head"><div class="layer-icon">🧠</div><div class="layer-label">AI Output</div></div>
+        <div class="flex-col gap-8">
+          <div class="node w-full"><span class="node-icon">📋</span><div class="node-name">Risk Assessment</div><div class="node-info">Overall risk score, confidence per domain</div></div>
+          <div class="node w-full"><span class="node-icon">⚠️</span><div class="node-name">Data Conflicts</div><div class="node-info">Cross-document validation issues</div></div>
+          <div class="node w-full"><span class="node-icon">📝</span><div class="node-name">Recommendations</div><div class="node-info">Premium suggestions, conditions, exclusions</div></div>
+          <div class="node w-full"><span class="node-icon">⚖️</span><div class="node-name">Rules Results</div><div class="node-info">27 rules — PASS / FAIL / WARNING / INFO</div></div>
+          <div class="node w-full" style="border:2px solid var(--blue);"><span class="node-icon">✅</span><div class="node-name">Decision + Routing</div><div class="node-info">ACCEPT • DECLINE • REFER → Team assignment</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══════════════════════════════════════════
      VIEW 5: DEPLOYMENT
-══════════════════════════════════════════════════════════ -->
+═══════════════════════════════════════════ -->
 <div class="view" id="view-deploy">
-  <div class="diagram">
 
-    <!-- Client tier -->
-    <div class="layer layer-slate" style="text-align:center;">
-      <div class="layer-header">
-        <div class="layer-icon">🌐</div>
-        <div class="layer-title">Client Tier</div>
-      </div>
-      <div class="flex gap-10 justify-center">
-        <div class="node" style="min-width:200px;"><span class="node-icon">💻</span><div class="node-label">User Browser</div><div class="node-desc">Any modern browser (Chrome, Firefox, Safari)<br/>Connects via HTTP to public IP on port 3000</div></div>
-        <div class="node" style="min-width:200px;"><span class="node-icon">📧</span><div class="node-label">Email Client</div><div class="node-desc">Underwriters send submissions as email<br/>with document attachments to monitored inbox</div></div>
-      </div>
+  <div class="section-head">
+    <div class="section-icon" style="background:linear-gradient(135deg,#475569,#1e293b);">🚀</div>
+    <div>
+      <div class="section-title">Deployment Architecture</div>
+      <div class="section-sub">AWS EC2 with Docker containers, S3 document storage</div>
     </div>
-
-    <div class="connector"><svg width="2" height="12"><line x1="1" y1="0" x2="1" y2="12" stroke="var(--slate-400)" stroke-width="2"/></svg></div>
-    <div class="connector-label">HTTP :3000 / IMAPS :993</div>
-    <div class="connector"><svg width="2" height="8"><line x1="1" y1="0" x2="1" y2="8" stroke="var(--slate-400)" stroke-width="2"/></svg></div>
-
-    <!-- AWS Compute -->
-    <div class="layer layer-amber">
-      <div class="layer-header">
-        <div class="layer-icon">☁️</div>
-        <div class="layer-title">AWS EC2 <span class="layer-subtitle">— Compute instance</span></div>
-      </div>
-
-      <!-- Instance details row -->
-      <div class="flex gap-10" style="margin-bottom:14px;">
-        <div class="node flex-1 node-sm"><div class="node-label">Instance Type</div><div class="node-desc">t2.micro (1 vCPU, 1GB RAM)<br/>Free tier eligible</div></div>
-        <div class="node flex-1 node-sm"><div class="node-label">Operating System</div><div class="node-desc">Ubuntu 22.04 LTS<br/>Docker Engine + Compose</div></div>
-        <div class="node flex-1 node-sm"><div class="node-label">Security Group</div><div class="node-desc">Inbound: 22 (SSH), 3000 (HTTP), 8000 (API)<br/>Outbound: All traffic</div></div>
-        <div class="node flex-1 node-sm"><div class="node-label">Key Pair</div><div class="node-desc">SSH key-based auth<br/>knight-key.pem</div></div>
-      </div>
-
-      <div class="flex gap-14">
-        <!-- Docker containers -->
-        <div class="layer layer-blue flex-1" style="margin-bottom:0;">
-          <div class="layer-header"><div class="layer-icon">🐳</div><div class="layer-title" style="font-size:10px;">Docker Containers <span class="layer-subtitle">— docker-compose.yml</span></div></div>
-          <div class="flex-col gap-8">
-            <div class="node w-full" style="border-left:3px solid var(--green-500);"><span class="node-icon">🖥️</span><div class="node-label">Next.js Frontend</div><div class="node-desc">Port 3000 • Server-side rendered React<br/>Proxies /api/* requests to backend container<br/>Built with multi-stage Dockerfile (node:18-alpine)</div></div>
-            <div class="node w-full" style="border-left:3px solid var(--blue-500);"><span class="node-icon">⚙️</span><div class="node-label">FastAPI Backend</div><div class="node-desc">Port 8000 • Uvicorn ASGI server<br/>Swagger UI at /docs, ReDoc at /redoc<br/>Background thread pool for pipeline processing</div></div>
-            <div class="node w-full" style="border-left:3px solid var(--purple-500);"><span class="node-icon">📧</span><div class="node-label">Email Watcher</div><div class="node-desc">Runs inside backend container as daemon thread<br/>IMAP polling every 30s, auto-creates submissions<br/>Extracts PDF, Excel, image attachments</div></div>
-          </div>
-        </div>
-
-        <!-- Volumes + Cloud Storage -->
-        <div class="layer layer-slate flex-1" style="margin-bottom:0;">
-          <div class="layer-header"><div class="layer-icon">📦</div><div class="layer-title" style="font-size:10px;">Persistent Storage <span class="layer-subtitle">— Docker volumes + AWS S3</span></div></div>
-          <div class="flex-col gap-8">
-            <div class="node w-full"><span class="node-icon">🗃️</span><div class="node-label">SQLite Database</div><div class="node-desc">./data/submissions.db → /app/data/<br/>SQLAlchemy ORM • 6 tables<br/>Mounted as Docker bind mount</div></div>
-            <div class="node w-full" style="border-left:3px solid var(--amber-500);"><span class="node-icon">☁️</span><div class="node-label">AWS S3 — Document Storage</div><div class="node-desc">knight-insurance-docs bucket<br/>All files uploaded to s3://submissions/{id}/<br/>Server-side encryption (AES-256) • Versioned<br/>IAM role-based access from EC2 instance</div></div>
-            <div class="node w-full"><span class="node-icon">🔧</span><div class="node-label">Configuration</div><div class="node-desc">.env file with GEMINI_API_KEY,<br/>IMAP_HOST, AWS credentials, S3 bucket<br/>Not committed to git (in .gitignore)</div></div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="connector"><svg width="2" height="12"><line x1="1" y1="0" x2="1" y2="12" stroke="var(--slate-400)" stroke-width="2" stroke-dasharray="4,3"/></svg></div>
-    <div class="connector-label">Outbound HTTPS / IMAPS connections</div>
-    <div class="connector"><svg width="2" height="8"><line x1="1" y1="0" x2="1" y2="8" stroke="var(--slate-400)" stroke-width="2" stroke-dasharray="4,3"/></svg></div>
-
-    <!-- External Services -->
-    <div class="layer layer-purple">
-      <div class="layer-header">
-        <div class="layer-icon">☁️</div>
-        <div class="layer-title">External Services <span class="layer-subtitle">— AWS + Third-party APIs</span></div>
-      </div>
-      <div class="flex gap-10">
-        <div class="node flex-1"><span class="node-icon">🧠</span><div class="node-label">Google Gemini API</div><div class="node-desc">generativelanguage.googleapis.com<br/>Model: gemini-2.5-flash<br/>REST API with API key auth<br/>~$0.05–0.09 per submission</div></div>
-        <div class="node flex-1"><span class="node-icon">☁️</span><div class="node-label">AWS S3</div><div class="node-desc">knight-insurance-docs bucket<br/>Server-side encryption (AES-256)<br/>IAM role access from EC2<br/>All documents stored durably</div></div>
-        <div class="node flex-1"><span class="node-icon">📬</span><div class="node-label">IMAP Email Server</div><div class="node-desc">Outreach Benefits mail server<br/>IMAPS port 993 (TLS encrypted)<br/>Polls INBOX for new submissions<br/>Marks processed emails as read</div></div>
-        <div class="node flex-1"><span class="node-icon">🐙</span><div class="node-label">GitHub Repository</div><div class="node-desc">challayashwanth1998-png/knight-case-study<br/>Main branch • SSH deploy key<br/>Source code, Dockerfile, docker-compose.yml</div></div>
-      </div>
-    </div>
-
-    <!-- Legend -->
-    <div class="legend">
-      <span class="legend-title">Key:</span>
-      <div class="legend-item"><svg width="20" height="2"><line x1="0" y1="1" x2="20" y2="1" stroke="var(--slate-400)" stroke-width="2"/></svg> Direct connection</div>
-      <div class="legend-item"><svg width="20" height="2"><line x1="0" y1="1" x2="20" y2="1" stroke="var(--slate-400)" stroke-width="1.5" stroke-dasharray="4,3"/></svg> External API call</div>
-      <div class="legend-item" style="margin-left:auto;">Est. cost: ~$5/month (t2.micro) + ~$0.005/submission (Gemini)</div>
-    </div>
-
   </div>
+
+  <div class="deploy-grid">
+    <div class="deploy-card">
+      <h4>💻 Compute</h4>
+      <p>AWS EC2 t2.micro (1 vCPU, 1GB RAM)<br/>Ubuntu 22.04 LTS<br/>Docker Engine + Compose</p>
+      <div class="tag">Free Tier Eligible</div>
+    </div>
+    <div class="deploy-card">
+      <h4>🐳 Frontend Container</h4>
+      <p>Next.js 14 on Node 18 Alpine<br/>Port 3000 • Server-side rendered React<br/>Multi-stage Dockerfile build</p>
+      <div class="tag">app_frontend:latest</div>
+    </div>
+    <div class="deploy-card">
+      <h4>⚙️ Backend Container</h4>
+      <p>FastAPI + Uvicorn ASGI<br/>Port 8000 • Swagger at /docs<br/>Background thread pool for pipelines</p>
+      <div class="tag">app_backend:latest</div>
+    </div>
+    <div class="deploy-card">
+      <h4>📧 Email Watcher</h4>
+      <p>Runs inside backend container as daemon thread<br/>IMAP polling every 30s<br/>Extracts PDF, Excel, image attachments</p>
+      <div class="tag">Integrated Service</div>
+    </div>
+    <div class="deploy-card">
+      <h4>☁️ AWS S3</h4>
+      <p>knight-insurance-docs bucket<br/>AES-256 server-side encryption<br/>All uploads under submissions/{id}/</p>
+      <div class="tag">IAM Role Access</div>
+    </div>
+    <div class="deploy-card">
+      <h4>🗃️ SQLite Database</h4>
+      <p>SQLAlchemy ORM • 6 tables<br/>Docker bind mount for persistence<br/>./data/knight_insurance.db</p>
+      <div class="tag">Bind Mount Volume</div>
+    </div>
+    <div class="deploy-card">
+      <h4>🔒 Security Group</h4>
+      <p>Inbound: 22 (SSH), 3000 (HTTP), 8000 (API)<br/>Outbound: All traffic<br/>SSH key-pair authentication</p>
+      <div class="tag">knight-key.pem</div>
+    </div>
+    <div class="deploy-card">
+      <h4>🐙 GitHub Repository</h4>
+      <p>challayashwanth1998-png/knight-case-study<br/>Main branch • SSH deploy key<br/>Source code + Docker configs</p>
+      <div class="tag">Git-Based Deploy</div>
+    </div>
+    <div class="deploy-card">
+      <h4>🧠 Google Gemini API</h4>
+      <p>Model: gemini-2.5-flash<br/>REST API with API key auth<br/>~$0.05–0.09 per submission</p>
+      <div class="tag" style="background:var(--amber-l);color:var(--amber-d);border-color:#fde68a;">Pay Per Use</div>
+    </div>
+  </div>
+
 </div>
 
-<!-- ════════════════════════════════════════════════════════
-     VIEW 6: SECURITY & GOVERNANCE
-════════════════════════════════════════════════════════ -->
-<div class="view" id="view-security">
-  <div class="diagram">
-
-    <!-- Middleware Stack -->
-    <div class="layer layer-red">
-      <div class="layer-header">
-        <div class="layer-icon">🛡️</div>
-        <div class="layer-title">Security Middleware Stack <span class="layer-subtitle">— 7 layers, every request passes through</span></div>
-      </div>
-      <div class="flex gap-10">
-        <div class="node flex-1"><span class="node-icon">🔒</span><div class="node-label">Security Headers</div><div class="node-desc">X-Content-Type-Options, X-Frame-Options,<br/>CSP, X-XSS-Protection, Referrer-Policy,<br/>Permissions-Policy (OWASP compliant)</div></div>
-        <div class="node flex-1"><span class="node-icon">⏱️</span><div class="node-label">Rate Limiting</div><div class="node-desc">Sliding window per client IP<br/>120 req/min general, 10/min uploads<br/>429 Too Many Requests on breach</div></div>
-        <div class="node flex-1"><span class="node-icon">🔑</span><div class="node-label">API Key Auth</div><div class="node-desc">X-API-Key header validation<br/>Constant-time comparison (timing-safe)<br/>Public vs protected endpoint routing</div></div>
-        <div class="node flex-1"><span class="node-icon">🌐</span><div class="node-label">CORS Hardening</div><div class="node-desc">Whitelisted origins only<br/>No more allow_origins=["*"]<br/>Restricted HTTP methods</div></div>
-      </div>
-      <div class="flex gap-10" style="margin-top:10px;">
-        <div class="node flex-1"><span class="node-icon">🆔</span><div class="node-label">Request ID</div><div class="node-desc">Unique X-Request-ID on every response<br/>Correlates logs across services<br/>Enables distributed tracing</div></div>
-        <div class="node flex-1"><span class="node-icon">📝</span><div class="node-label">Request Logging</div><div class="node-desc">Method, path, status, duration, client IP<br/>X-Response-Time header on every response<br/>Structured format for log aggregation</div></div>
-        <div class="node flex-1"><span class="node-icon">📦</span><div class="node-label">GZip Compression</div><div class="node-desc">Compresses responses > 500 bytes<br/>~60% smaller payloads<br/>Faster page loads over network</div></div>
-        <div class="node flex-1"><span class="node-icon">✅</span><div class="node-label">Input Validation</div><div class="node-desc">File type allowlist (14 types)<br/>25MB size limit, 20 files max<br/>Path traversal & filename sanitization</div></div>
-      </div>
-    </div>
-
-    <div class="connector"><svg width="2" height="12"><line x1="1" y1="0" x2="1" y2="12" stroke="var(--red-500)" stroke-width="2"/></svg></div>
-
-    <!-- Data Protection -->
-    <div class="layer layer-purple">
-      <div class="layer-header">
-        <div class="layer-icon">🔐</div>
-        <div class="layer-title">Data Protection & Privacy <span class="layer-subtitle">— PII handling & data governance</span></div>
-      </div>
-      <div class="flex gap-10">
-        <div class="node flex-1"><span class="node-icon">😷</span><div class="node-label">PII Masking</div><div class="node-desc">Auto-masks SSN, DOB, license numbers,<br/>phone, email in all log output<br/>Regex-based pattern detection</div></div>
-        <div class="node flex-1"><span class="node-icon">📊</span><div class="node-label">Data Classification</div><div class="node-desc">X-Data-Classification: CONFIDENTIAL<br/>X-PII-Present: true<br/>X-Data-Retention: 7-years</div></div>
-        <div class="node flex-1"><span class="node-icon">🧹</span><div class="node-label">Log Sanitization</div><div class="node-desc">PIILoggingFilter on root logger<br/>Strips PII before CloudWatch<br/>Name masking (first initial only)</div></div>
-        <div class="node flex-1"><span class="node-icon">📁</span><div class="node-label">File Security</div><div class="node-desc">SHA-256 hash deduplication<br/>Safe filename sanitization<br/>Isolated storage per submission</div></div>
-      </div>
-    </div>
-
-    <div class="connector"><svg width="2" height="12"><line x1="1" y1="0" x2="1" y2="12" stroke="var(--purple-500)" stroke-width="2"/></svg></div>
-
-    <!-- Audit & Monitoring -->
-    <div class="layer layer-blue">
-      <div class="layer-header">
-        <div class="layer-icon">📝</div>
-        <div class="layer-title">Audit Trail & Monitoring <span class="layer-subtitle">— Complete traceability</span></div>
-      </div>
-      <div class="flex gap-10">
-        <div class="node flex-1"><span class="node-icon">🗃️</span><div class="node-label">Audit Log DB</div><div class="node-desc">Every action tracked in audit_logs table<br/>Timestamp, action, entity, details<br/>Immutable append-only records</div></div>
-        <div class="node flex-1"><span class="node-icon">☁️</span><div class="node-label">AWS CloudWatch</div><div class="node-desc">Centralized log aggregation<br/>Buffered batch upload (10s intervals)<br/>Log group: /knight-insurance/backend</div></div>
-        <div class="node flex-1"><span class="node-icon">📡</span><div class="node-label">Health Monitoring</div><div class="node-desc">/api/health endpoint<br/>DB latency, AI status, disk usage<br/>Container health checks</div></div>
-        <div class="node flex-1"><span class="node-icon">📈</span><div class="node-label">Analytics Dashboard</div><div class="node-desc">AI cost tracking per submission<br/>Token usage, processing times<br/>Rule pass/fail trend analysis</div></div>
-      </div>
-    </div>
-
-    <div class="connector"><svg width="2" height="12"><line x1="1" y1="0" x2="1" y2="12" stroke="var(--blue-500)" stroke-width="2"/></svg></div>
-
-    <!-- AWS Services -->
-    <div class="layer layer-amber">
-      <div class="layer-header">
-        <div class="layer-icon">☁️</div>
-        <div class="layer-title">AWS Security Services <span class="layer-subtitle">— Cloud infrastructure security</span></div>
-      </div>
-      <div class="flex gap-10">
-        <div class="node flex-1"><span class="node-icon">🛡️</span><div class="node-label">EC2 Security Group</div><div class="node-desc">Inbound: SSH (22), HTTP (3000), API (8000)<br/>Outbound: HTTPS + IMAPS only<br/>No public DB or storage access</div></div>
-        <div class="node flex-1"><span class="node-icon">🔑</span><div class="node-label">IAM Roles</div><div class="node-desc">Least-privilege access policies<br/>S3: PutObject/GetObject only<br/>CloudWatch: PutLogEvents only</div></div>
-        <div class="node flex-1"><span class="node-icon">📦</span><div class="node-label">S3 Encryption</div><div class="node-desc">Server-side encryption (SSE-S3)<br/>Versioning enabled for audit<br/>Lifecycle rules for retention</div></div>
-        <div class="node flex-1"><span class="node-icon">🔒</span><div class="node-label">Secrets Management</div><div class="node-desc">.env with GEMINI_API_KEY, IMAP creds<br/>Not committed to git (.gitignore)<br/>Docker env_file injection</div></div>
-      </div>
-    </div>
-
-    <div class="connector"><svg width="2" height="12"><line x1="1" y1="0" x2="1" y2="12" stroke="var(--amber-500)" stroke-width="2"/></svg></div>
-
-    <!-- Scalability -->
-    <div class="layer layer-green">
-      <div class="layer-header">
-        <div class="layer-icon">⚡</div>
-        <div class="layer-title">Scalability & Performance <span class="layer-subtitle">— Optimized for speed</span></div>
-      </div>
-      <div class="flex gap-10">
-        <div class="node flex-1"><span class="node-icon">⚡</span><div class="node-label">Batch CDL OCR</div><div class="node-desc">All 5 CDL images sent in a single Gemini Vision call<br/>Reduced from 73s (5 calls) → 8s (1 call)<br/>~9x speedup for Step 1</div></div>
-        <div class="node flex-1"><span class="node-icon">🧵</span><div class="node-label">Parallel Extraction</div><div class="node-desc">ThreadPoolExecutor (4 workers) for data extraction<br/>6 concurrent AI calls instead of sequential<br/>Step 3 reduced from 72s → 15s</div></div>
-        <div class="node flex-1"><span class="node-icon">🔄</span><div class="node-label">Parallel AI Analysis</div><div class="node-desc">4 simultaneous risk analyses run concurrently<br/>Company, Driver, Fleet, Financial in parallel<br/>Step 4: ~18s instead of ~60s sequential</div></div>
-        <div class="node flex-1"><span class="node-icon">💾</span><div class="node-label">Response Caching</div><div class="node-desc">In-memory TTL cache (30s) for stats<br/>GZip compression for all responses<br/>Total pipeline: ~45s end-to-end</div></div>
-      </div>
-    </div>
-
-    <!-- Legend -->
-    <div class="legend">
-      <span class="legend-title">Security Stack:</span>
-      <div class="legend-item"><div class="legend-swatch" style="background:var(--red-100);border-color:var(--red-300);"></div> Middleware</div>
-      <div class="legend-item"><div class="legend-swatch" style="background:var(--purple-100);border-color:var(--purple-300);"></div> Data Protection</div>
-      <div class="legend-item"><div class="legend-swatch" style="background:var(--blue-100);border-color:var(--blue-300);"></div> Audit</div>
-      <div class="legend-item"><div class="legend-swatch" style="background:var(--amber-100);border-color:var(--amber-300);"></div> AWS</div>
-      <div class="legend-item"><div class="legend-swatch" style="background:var(--green-100);border-color:var(--green-300);"></div> Performance</div>
-    </div>
-
-  </div>
-</div>
-
-<!-- ════════════════════════════════════════════════════════
-     VIEW 7: DESIGN DECISIONS & ASSUMPTIONS
-════════════════════════════════════════════════════════ -->
+<!-- ═══════════════════════════════════════════
+     VIEW 6: DESIGN DECISIONS
+═══════════════════════════════════════════ -->
 <div class="view" id="view-decisions">
-  <div class="diagram">
 
-    <!-- 1. Document Classification -->
-    <div class="layer layer-purple">
-      <div class="section-title"><span class="num">1</span> Document Classification</div>
-      <div class="section-body">
-        <strong>Approach:</strong> Content-based classification using Google Gemini AI. All documents in a submission are batched into a single API call for efficiency.
-        <ul>
-          <li><strong>Never uses filenames</strong> — filenames are often misleading (e.g., "Drivers.xlsx" might contain vehicle data). The classifier analyzes actual document content only.</li>
-          <li>Supports <strong>11 document types</strong>: insurance application, driver list, equipment list, IFTA report, loss run, MVR, driver’s license, certificate of insurance, financial document, DOT safety record, and “other.”</li>
-          <li>Each classification includes a <strong>confidence score</strong> (0–100) and <strong>reasoning</strong> so underwriters can verify why a document was categorized.</li>
-          <li>Batching all documents in one call reduces API costs and latency vs. classifying each individually.</li>
-        </ul>
-        <div class="assumption-box">
-          <strong>⚠ Assumption:</strong> Filenames are intentionally unreliable (per guidelines). The system treats filenames as opaque identifiers and never uses them for classification or routing decisions.
-        </div>
-      </div>
+  <div class="section-head">
+    <div class="section-icon" style="background:linear-gradient(135deg,var(--purple),var(--indigo));">🎯</div>
+    <div>
+      <div class="section-title">Design Decisions</div>
+      <div class="section-sub">Key architectural choices and their rationale</div>
     </div>
-
-    <hr class="divider"/>
-
-    <!-- 2. Data Extraction -->
-    <div class="layer layer-green">
-      <div class="section-title"><span class="num" style="background:var(--green-600);">2</span> Data Extraction Strategy</div>
-      <div class="section-body">
-        <strong>Approach:</strong> Hybrid extraction — Python regex + structured parsing for machine-readable docs, Gemini AI only where needed.
-        <ul>
-          <li><strong>Excel/CSV files</strong> → Parsed with <code>openpyxl</code> / <code>pandas</code> + regex patterns. <strong>Zero AI cost.</strong></li>
-          <li><strong>PDF text</strong> → Extracted with <code>PyMuPDF</code> (fitz), then structured with regex. Zero AI cost for text-based PDFs.</li>
-          <li><strong>CDL images</strong> → Gemini Vision OCR. Only images require AI calls for extraction.</li>
-          <li>Each document type has a <strong>specific extraction schema</strong> (e.g., insurance applications extract 50+ fields including business info, coverage, safety features).</li>
-          <li><strong>Deduplication:</strong> Cross-source name matching merges driver records from multiple documents (driver list + CDL photos + MVRs) into unified records.</li>
-        </ul>
-        <div class="assumption-box">
-          <strong>⚠ Assumption:</strong> Cost efficiency matters. We minimize AI API calls by using free local extraction (regex, openpyxl) for structured formats and reserving AI for unstructured content (images, ambiguous text).
-        </div>
-      </div>
-    </div>
-
-    <hr class="divider"/>
-
-    <!-- 3. Poor Quality Documents -->
-    <div class="layer layer-amber">
-      <div class="section-title"><span class="num" style="background:var(--amber-600);">3</span> Handling Poor-Quality Documents</div>
-      <div class="section-body">
-        <strong>Approach:</strong> Graceful degradation with fallback chains and explicit null handling.
-        <ul>
-          <li><strong>Missing text:</strong> If PyMuPDF extracts empty text from a PDF (scanned document), the system falls back to Gemini Vision OCR using the raw file bytes.</li>
-          <li><strong>Partial data:</strong> Extraction schemas use <code>null</code> for any missing values. The pipeline continues even if key fields are missing — the rules engine flags gaps as warnings.</li>
-          <li><strong>Corrupted files:</strong> Each file type processor wraps extraction in try/catch. A corrupt Excel file won’t crash the pipeline; the document is logged as “extraction_failed” and processing continues.</li>
-          <li><strong>Low confidence:</strong> If classification confidence is below threshold, the document is still processed but flagged in the underwriter view for manual review.</li>
-          <li><strong>Image quality:</strong> CDL images processed through ThreadPoolExecutor in parallel. If Gemini Vision can’t read a license, default fields are set to null and rules flag missing CDL data.</li>
-        </ul>
-        <div class="assumption-box">
-          <strong>⚠ Assumption:</strong> Real-world submissions will have incomplete data. The system is designed to produce the best possible assessment with whatever data is available, rather than rejecting submissions outright for missing documents.
-        </div>
-      </div>
-    </div>
-
-    <hr class="divider"/>
-
-    <!-- 4. Conflicting Information -->
-    <div class="layer layer-red">
-      <div class="section-title"><span class="num" style="background:var(--red-600);">4</span> Identifying Conflicting Information</div>
-      <div class="section-body">
-        <strong>Approach:</strong> AI-powered cross-document conflict detection as a dedicated pipeline step.
-        <ul>
-          <li>After data extraction, all unified data from every document is passed to a <strong>dedicated Gemini conflict analysis</strong> call.</li>
-          <li>The AI compares values across documents: driver counts on the application vs. actual driver list, vehicle counts vs. equipment schedule, stated addresses, etc.</li>
-          <li>Each conflict includes: <strong>severity</strong> (critical/high/medium/low), <strong>type</strong>, <strong>description</strong>, <strong>source documents</strong>, and <strong>conflicting values found</strong>.</li>
-          <li>Critical conflicts (e.g., 10 drivers listed but only 6 CDLs provided) directly impact the risk score and can trigger a <strong>REFER</strong> decision.</li>
-          <li>Conflicts are displayed prominently in the underwriter view with color-coded severity indicators.</li>
-        </ul>
-        <div class="assumption-box">
-          <strong>⚠ Assumption:</strong> Inconsistencies between documents are common and expected in insurance submissions. Some are benign (minor name spelling differences), others are critical (missing CDLs). The system surfaces all of them and lets the rules engine decide severity.
-        </div>
-      </div>
-    </div>
-
-    <hr class="divider"/>
-
-    <!-- 5. AI Recommendations -->
-    <div class="layer layer-blue">
-      <div class="section-title"><span class="num">5</span> How AI Recommendations Are Generated</div>
-      <div class="section-body">
-        <strong>Approach:</strong> 4 parallel Gemini API calls for comprehensive risk assessment, followed by a recommendation synthesis step.
-        <ul>
-          <li><strong>Company Risk:</strong> Evaluates business profile, DOT/MC number validity, years in operation, operation type, radius of operation.</li>
-          <li><strong>Driver Risk:</strong> CDL status, violation history, age analysis, experience years, driver-to-vehicle ratio.</li>
-          <li><strong>Fleet Analysis:</strong> Vehicle age distribution, VIN validation, fleet composition, stated values, maintenance indicators.</li>
-          <li><strong>Financial & Loss:</strong> Claims history, loss ratios, open vs. closed claims, mileage patterns, premium adequacy.</li>
-          <li>All 4 analyses run <strong>in parallel</strong> using <code>ThreadPoolExecutor</code> to minimize latency (~15s instead of ~60s sequential).</li>
-          <li>Results include a <strong>composite risk score</strong>, <strong>narrative summary</strong>, and <strong>specific recommendations</strong> (premium adjustments, coverage conditions, exclusions).</li>
-        </ul>
-        <div class="assumption-box">
-          <strong>⚠ Assumption:</strong> AI analysis is advisory only. The system generates recommendations but final underwriting decisions should always involve human review. The REFER decision exists specifically for edge cases where AI confidence is insufficient.
-        </div>
-      </div>
-    </div>
-
-    <hr class="divider"/>
-
-    <!-- 6. Business Rules -->
-    <div class="layer layer-teal">
-      <div class="section-title"><span class="num" style="background:var(--teal-600);">6</span> How Business Rules Are Applied</div>
-      <div class="section-body">
-        <strong>Approach:</strong> 21 configurable rules organized in 5 categories, evaluated against extracted + AI-analyzed data.
-        <ul>
-          <li><strong>Rule categories:</strong> Eligibility (4), Driver (5), Vehicle (4), Safety (4), Financial (4).</li>
-          <li>Each rule produces a result: <strong>PASS</strong>, <strong>FAIL</strong>, <strong>WARNING</strong>, or <strong>INFO</strong> with configurable severity.</li>
-          <li>Rules are <strong>pure Python functions</strong> — no AI calls, instant evaluation. A deterministic layer on top of probabilistic AI analysis.</li>
-          <li>Rules are <strong>configurable at runtime</strong>: enable/disable individual rules, change severity levels, adjust thresholds via API or settings UI.</li>
-          <li><strong>Decision logic:</strong> Any FAIL → DECLINE. Any WARNING (no FAILs) → REFER. All PASS → ACCEPT.</li>
-          <li>Rules with missing data default to WARNING (not FAIL) because the case study notes some documents are intentionally omitted.</li>
-        </ul>
-        <div class="assumption-box">
-          <strong>⚠ Assumption:</strong> Some required documents may not be provided in every submission (as stated in the guidelines). Rules handle missing data gracefully — absent driver licenses trigger a WARNING, not an automatic DECLINE, allowing underwriter discretion.
-        </div>
-      </div>
-    </div>
-
-    <hr class="divider"/>
-
-    <!-- 7. Results Presentation -->
-    <div class="layer layer-slate">
-      <div class="section-title"><span class="num" style="background:var(--slate-700);">7</span> How Results Are Presented to Users</div>
-      <div class="section-body">
-        <strong>Approach:</strong> Multi-view underwriter interface with progressive disclosure of details.
-        <ul>
-          <li><strong>Dashboard:</strong> KPIs at a glance — total submissions, decision distribution (accept/refer/decline), AI cost tracking, recent submission feed.</li>
-          <li><strong>Submission Detail:</strong> Tabbed view with Summary (decision + risk), Documents (classified files), Rules (21 rule results with pass/fail), Raw Analysis (AI output).</li>
-          <li><strong>Real-time Pipeline:</strong> 6-step progress indicator shows extraction → classification → extraction → analysis → rules → decision in real time.</li>
-          <li><strong>Compare View:</strong> Side-by-side comparison of two submissions with metrics diff — useful for renewal assessments.</li>
-          <li><strong>Analytics:</strong> Token usage trends, processing time charts, rule pass rates, cost per submission over time.</li>
-          <li><strong>Health Monitor:</strong> DB latency, AI API status, disk usage, cumulative costs — operational visibility.</li>
-        </ul>
-      </div>
-    </div>
-
-    <hr class="divider"/>
-
-    <!-- Key Assumptions Summary -->
-    <div class="layer layer-amber">
-      <div class="layer-header">
-        <div class="layer-icon">📌</div>
-        <div class="layer-title">Key Assumptions Summary</div>
-      </div>
-      <div class="section-body" style="padding-left:0;">
-        <ul>
-          <li><strong>Filenames are unreliable</strong> — Classification is content-based only (per case study guidelines).</li>
-          <li><strong>Documents may be missing</strong> — The system processes whatever is provided and flags gaps as warnings, not failures.</li>
-          <li><strong>Data inconsistencies are expected</strong> — Cross-document conflicts are detected and surfaced, not silently ignored.</li>
-          <li><strong>Cost efficiency is important</strong> — Regex/Python extraction for structured docs (free), AI only where needed (~$0.005/submission).</li>
-          <li><strong>AI is advisory</strong> — Risk analysis generates recommendations; final decisions involve human review via REFER pathway.</li>
-          <li><strong>Processing speed matters</strong> — Parallel AI calls + thread pooling bring pipeline time from ~4 min to ~53 seconds.</li>
-          <li><strong>Rules should be configurable</strong> — Business rules can be enabled/disabled and severity adjusted without code changes.</li>
-          <li><strong>Document types may expand</strong> — The classifier supports an “other” category for unrecognized document types.</li>
-          <li><strong>Audit trail is mandatory</strong> — Every action (upload, process, view, delete) is logged with timestamp and metadata for compliance.</li>
-          <li><strong>Scalability from day one</strong> — Dockerized, AWS-ready, with S3/CloudWatch integration ready for production scale.</li>
-        </ul>
-      </div>
-    </div>
-
   </div>
+
+  <div class="content-section">
+    <h3><span class="cnt">1</span> Content-Based Classification</h3>
+    <p>The system <strong>never uses filenames</strong> for document classification — only document content. This ensures correct classification even when agents submit files with random or incorrect names (e.g., "scan001.pdf" for an insurance application).</p>
+  </div>
+
+  <div class="content-section">
+    <h3><span class="cnt">2</span> Hybrid Extraction Strategy</h3>
+    <p>Structured documents (Excel, CSV) are parsed with <strong>Python regex at zero AI cost</strong>. Only unstructured content (CDL images) uses Gemini Vision. This reduces API costs by ~70% compared to full-AI extraction.</p>
+  </div>
+
+  <div class="content-section">
+    <h3><span class="cnt">3</span> Parallel Processing</h3>
+    <p>AI calls use <code>ThreadPoolExecutor</code> with 4 workers for parallel risk analysis. CDL images are also batch-processed in parallel. Total pipeline time: <strong>~45 seconds</strong> vs ~3 minutes sequential.</p>
+  </div>
+
+  <div class="content-section">
+    <h3><span class="cnt">4</span> Configurable Rules Engine</h3>
+    <p>All 27 business rules are stored in the database with configurable severity levels and enable/disable flags. This allows underwriters to tune rules without code changes — critical for real-world insurance operations.</p>
+  </div>
+
+  <div class="content-section">
+    <h3><span class="cnt">5</span> Cross-Document Conflict Detection</h3>
+    <p>The system validates data consistency across all uploaded documents — vehicle counts, driver counts, company names, FEIN/DOT numbers, duplicate CDLs, and duplicate VINs. Conflicts are flagged as warnings for manual review.</p>
+  </div>
+
+  <div class="content-section">
+    <h3><span class="cnt">6</span> Team-Based Routing</h3>
+    <p>Submissions are automatically routed to the appropriate team (Standard Review, Specialty Risk, Driver Review, Operations, Senior Underwriting) based on which rules triggered. This streamlines the review workflow.</p>
+  </div>
+
+  <div class="content-section">
+    <h3><span class="cnt">7</span> Email Intake Channel</h3>
+    <p>The IMAP watcher provides a second intake channel alongside the web form. Agents can email submissions with attachments, and the system processes them automatically — no portal login required.</p>
+  </div>
+
+  <div class="content-section">
+    <h3><span class="cnt">8</span> SQLite for MVP, Postgres-Ready</h3>
+    <p>SQLAlchemy ORM abstracts the database layer. The current SQLite deployment is sufficient for the demo, but switching to PostgreSQL requires only a connection string change — no code modifications.</p>
+  </div>
+
 </div>
 
-</div><!-- /page -->
+<!-- ═══════════════════════════════════════════
+     VIEW 7: SECURITY & GOVERNANCE
+═══════════════════════════════════════════ -->
+<div class="view" id="view-security">
 
+  <div class="section-head">
+    <div class="section-icon" style="background:linear-gradient(135deg,var(--green),var(--teal));">🔒</div>
+    <div>
+      <div class="section-title">Security & Governance</div>
+      <div class="section-sub">Audit trail, data protection, and compliance considerations</div>
+    </div>
+  </div>
+
+  <div class="content-section">
+    <h3><span class="cnt">1</span> Complete Audit Trail</h3>
+    <p>Every action in the system is logged to the <code>audit_logs</code> table with timestamps, including: file uploads, classification decisions, extraction results, AI analysis, rule evaluations, decisions, and underwriter reviews. This provides full traceability for compliance.</p>
+  </div>
+
+  <div class="content-section">
+    <h3><span class="cnt">2</span> Data Encryption</h3>
+    <ul>
+      <li><strong>At rest:</strong> S3 bucket uses AES-256 server-side encryption for all documents</li>
+      <li><strong>In transit:</strong> IMAP uses TLS (port 993), Gemini API uses HTTPS</li>
+      <li><strong>Credentials:</strong> API keys stored as environment variables, never in code or git</li>
+    </ul>
+  </div>
+
+  <div class="content-section">
+    <h3><span class="cnt">3</span> Human-in-the-Loop Review</h3>
+    <p>No submission is auto-approved without human oversight. The review workflow requires an underwriter to explicitly <strong>Approve</strong>, <strong>Reject</strong>, or <strong>Override</strong> each decision. All review actions include reviewer name, notes, and timestamp in the audit log.</p>
+  </div>
+
+  <div class="content-section">
+    <h3><span class="cnt">4</span> AI Transparency</h3>
+    <p>Every AI call tracks token usage and cost. The system displays <strong>input tokens, output tokens, total cost, and call count</strong> per submission. This ensures cost visibility and enables monitoring for anomalous AI behavior.</p>
+  </div>
+
+  <div class="content-section">
+    <h3><span class="cnt">5</span> Scalability Path</h3>
+    <ul>
+      <li><strong>Database:</strong> Swap SQLite → PostgreSQL via connection string change</li>
+      <li><strong>Compute:</strong> Scale EC2 instance vertically, or use ECS/Fargate for horizontal scaling</li>
+      <li><strong>AI:</strong> Gemini API scales automatically; add rate limiting for cost control</li>
+      <li><strong>Queue:</strong> Replace synchronous pipeline with SQS/Redis for async processing at scale</li>
+    </ul>
+  </div>
+
+</div>
+
+</div> <!-- end .page -->
+
+<!-- ═══════ JS ═══════ -->
 <script>
   document.querySelectorAll('.tab').forEach(tab => {
     tab.addEventListener('click', () => {
       document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-      tab.classList.add('active');
       document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+      tab.classList.add('active');
       document.getElementById('view-' + tab.dataset.view).classList.add('active');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
     });
   });
 </script>
+
 </body>
 </html>
