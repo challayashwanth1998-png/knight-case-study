@@ -4,88 +4,129 @@ An intelligent commercial auto insurance underwriting system that automates the 
 
 ## 🎯 What It Does
 
-Agents and brokers submit insurance applications via **email** with multiple attachments (PDFs, Excel spreadsheets, images of driver licenses, loss runs, IFTA reports). The system:
+Agents and brokers submit insurance applications via **email** or **web upload** with multiple attachments (PDFs, Excel spreadsheets, images of driver licenses, loss runs, IFTA reports). The system:
 
-1. **Receives** emails and stores all attachments
-2. **Classifies** documents by content (not filename) using AI
-3. **Extracts** structured data from every document type
-4. **Analyzes** the submission with AI-powered risk assessment
-5. **Applies** 19+ underwriting rules from Knight Guidelines
-6. **Presents** results in a real-time dashboard for underwriters
+1. **Receives** emails/uploads and stores all attachments in AWS S3
+2. **Classifies** documents by content (never filenames) using Gemini AI
+3. **Extracts** structured data — hybrid regex ($0 cost) + Vision (images only)
+4. **Analyzes** the submission with 4 parallel AI risk assessment calls
+5. **Detects** cross-document conflicts (counts, names, IDs, duplicates)
+6. **Applies** 27 configurable underwriting rules across 6 categories
+7. **Routes** to the appropriate team (Standard, Specialty, Driver, Ops, Senior UW)
+8. **Presents** results in a real-time dashboard with underwriter review workflow
 
 ### Key Design Decisions
 
 - **Content-based classification** — filenames are intentionally ignored per case study requirements
-- **Hybrid extraction** — Python regex for structured docs (Excel, PDF), AI vision for images (CDL photos)
-- **Parallel processing** — vision OCR, classification, and analysis run concurrently
-- **Cost-optimized** — ~$0.002 per submission via Google Gemini API
-- **Sub-60s processing** — full 13-document submission processed in ~53 seconds
+- **Hybrid extraction** — Python regex for structured docs ($0), AI vision only for CDL images
+- **Parallel processing** — 4 concurrent AI calls via ThreadPoolExecutor (~45s vs ~3min)
+- **Cross-document conflicts** — validates vehicle/driver counts, company names, FEIN/DOT, duplicate CDLs/VINs
+- **Team routing** — auto-routes to 5 specialized teams based on triggered rules
+- **Human-in-the-loop** — underwriters can Approve, Reject, or Override decisions with full audit trail
+- **Cost-optimized** — ~$0.05–$0.09 per submission via Google Gemini 2.5 Flash
 
 ## 🏗️ Architecture
 
 ```
-┌──────────────┐     ┌──────────────┐     ┌──────────────┐
-│  Email/IMAP  │────▶│   FastAPI     │────▶│   SQLite     │
-│  Intake      │     │   Backend     │     │   Database   │
-└──────────────┘     └──────┬───────┘     └──────────────┘
-                           │
-              ┌────────────┼────────────┐
-              ▼            ▼            ▼
-        ┌──────────┐ ┌──────────┐ ┌──────────┐
-        │ Document  │ │   AI     │ │  Rules   │
-        │ Processor │ │ Analyzer │ │  Engine  │
-        │ (Gemini)  │ │ (Gemini) │ │ (Python) │
-        └──────────┘ └──────────┘ └──────────┘
-              │            │            │
-              ▼            ▼            ▼
-        ┌──────────────────────────────────┐
-        │     Next.js Dashboard (UI)       │
-        └──────────────────────────────────┘
+                         ┌─────────────────────────────────────────┐
+                         │      Presentation Layer (Next.js 14)    │
+                         │  Dashboard · Upload · Review · Compare  │
+                         │  Analytics · Health · Architecture       │
+                         └────────────────┬────────────────────────┘
+                                          │ REST API
+                         ┌────────────────▼────────────────────────┐
+                         │    API & Orchestration (FastAPI 8000)    │
+                         │  REST Router · Pipeline · Email Watcher  │
+                         │  Review API (Approve/Reject/Override)    │
+                         └────────────────┬────────────────────────┘
+                                          │ Pipeline Invocation
+              ┌───────────────┬───────────┼──────────┬──────────────┐
+              ▼               ▼           ▼          ▼              ▼
+        ┌───────────┐  ┌───────────┐ ┌─────────┐ ┌────────┐ ┌───────────┐
+        │   Text    │  │ Classify  │ │ Extract │ │   AI   │ │   Rules   │
+        │ Extractor │  │ (Gemini)  │ │ (Regex  │ │Analyzer│ │  Engine   │
+        │ PyMuPDF   │  │ Content   │ │+Vision) │ │4 calls │ │ 27 rules  │
+        └───────────┘  └───────────┘ └─────────┘ └────────┘ └───────────┘
+              │               │           │          │              │
+              ▼               ▼           ▼          ▼              ▼
+        ┌──────────────────────────────────────────────────────────────┐
+        │  Decision + Team Routing → Accept / Refer / Decline          │
+        │  → Standard · Specialty Risk · Driver · Ops · Senior UW     │
+        └──────────────────────────────────────────────────────────────┘
+              │                                              │
+     ┌────────▼──────────┐                       ┌──────────▼──────────┐
+     │ SQLite + S3       │                       │ Gemini 2.5 Flash    │
+     │ SQLAlchemy ORM    │                       │ ~$0.05-0.09/sub     │
+     │ 6 tables          │                       │ IMAP Mail Server    │
+     └───────────────────┘                       └─────────────────────┘
 ```
 
 ### Tech Stack
 
 | Component | Technology |
 |-----------|-----------|
-| **Backend** | Python, FastAPI, SQLAlchemy |
-| **AI Engine** | Google Gemini 2.0 Flash (Vision + Text) |
-| **Frontend** | Next.js 15, TypeScript, React |
-| **Database** | SQLite (dev) / PostgreSQL (prod) |
-| **Storage** | AWS S3 + local filesystem |
-| **Deployment** | Docker, Docker Compose, AWS EC2 |
-| **Email** | IMAP integration (Namecheap Private Email) |
+| **Backend** | Python 3.11, FastAPI, SQLAlchemy, Uvicorn |
+| **AI Engine** | Google Gemini 2.5 Flash (Vision + Text) |
+| **Frontend** | Next.js 14, TypeScript, React |
+| **Database** | SQLite (Postgres-ready — one connection string change) |
+| **Storage** | AWS S3 (AES-256 encryption, versioned) |
+| **Deployment** | Docker, Docker Compose, AWS EC2 (t2.micro) |
+| **Email** | IMAP integration (polls every 30s) |
 
-## 📋 Underwriting Rules (from Knight Guidelines)
+## ⚖️ Business Rules — 27 Rules, 6 Categories
 
-### Eligibility Rules
-- **ELIG-001**: Target risk — semi-trucks only
-- **ELIG-002**: Ineligible vehicle types (dump trucks, tow trucks, cranes, etc.)
-- **ELIG-006**: Auto liability deductibles not allowed
-- **ELIG-007**: Physical damage not available
+### 🏢 Eligibility (4 rules)
+| Rule | Description |
+|------|------------|
+| ELIG-001 | Years in business ≥ 2 |
+| ELIG-002 | Covered vehicle types only (semi-trucks) |
+| ELIG-003 | Non-covered states exclusion |
+| ELIG-004 | Operating radius within limits |
 
-### Driver Rules
-- **DRV-001**: Valid CDL required
-- **DRV-002**: Minimum 2 years CDL experience
-- **DRV-003**: Minimum age 23
-- **DRV-004**: Age 65+ requires DOT medical exam
-- **DRV-005**: Max 6 points in 3 years
-- **DRV-006**: Max 4 points in 12 months
-- **DRV-100**: Unacceptable driver history check (DUI, reckless driving, etc.)
+### 👤 Driver (7 rules)
+| Rule | Description |
+|------|------------|
+| DRV-001 | Valid CDL required for all drivers |
+| DRV-002 | Driver age between 23–70 |
+| DRV-003 | Minimum 2 years driving experience |
+| DRV-004 | Maximum 3 violations in 3 years |
+| DRV-005 | No major violations (DUI/reckless driving) |
+| DRV-006 | Maximum 2 at-fault accidents |
+| DRV-007 | MVR check required |
 
-### Exposure Rules
-- **EXP-001**: Hazardous materials prohibited
+### ⚠️ Exposure (4 rules)
+| Rule | Description |
+|------|------------|
+| EXP-001 | Hazardous materials prohibited |
+| EXP-002 | Prohibited commodities check |
+| EXP-003 | Maximum power units ≤ 26 |
+| EXP-004 | Mexico border operations (50 miles) |
 
-### Submission Completeness
-- **SUB-001**: FEIN/SSN present
-- **SUB-002**: MC/DOT number present
-- **SUB-003**: Loss runs current (within 60 days)
-- **SUB-005**: Most recent 4 IFTA quarters
+### 📋 Submission (4 rules)
+| Rule | Description |
+|------|------------|
+| SEL-001 | FEIN and DOT number required |
+| SEL-002 | Tow trucks excluded |
+| SEL-003 | Minimum premium per power unit ($13,000) |
+| SEL-004 | Sole proprietor check |
 
-### IFTA Analysis
-- **IFTA-001**: Fleet MPG reasonableness per quarter
+### ⛽ IFTA (4 rules)
+| Rule | Description |
+|------|------------|
+| IFTA-001 | IFTA filings required |
+| IFTA-002 | Minimum annual mileage threshold |
+| IFTA-003 | Multi-state operation eligibility |
+| IFTA-004 | Border state check |
 
-### Selective Exposures
-- **SEL-003**: Premium per unit threshold
+### 🔀 Cross-Document Conflict Detection (6 rules)
+| Rule | Description |
+|------|------------|
+| CON-001 | Vehicle count mismatch across documents |
+| CON-002 | Driver count mismatch across documents |
+| CON-003 | Company name inconsistency |
+| CON-004 | FEIN/DOT number conflict |
+| CON-005 | Duplicate CDL numbers detected |
+| CON-006 | Duplicate VINs detected |
 
 ## 🚀 Quick Start
 
@@ -101,6 +142,8 @@ Copy `.env.example` to `.env` and fill in:
 ```bash
 cp .env.example .env
 ```
+
+Required variables: `GEMINI_API_KEY`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `S3_BUCKET_NAME`, `IMAP_SERVER`, `EMAIL_ADDRESS`, `EMAIL_PASSWORD`
 
 ### Local Development
 
@@ -126,48 +169,49 @@ npm run dev
 docker-compose up -d
 ```
 
+Access: Frontend at `:3000`, API at `:8000`, Swagger at `:8000/docs`
+
 ## 📁 Project Structure
 
 ```
 knight-insurance/
 ├── backend/
-│   ├── main.py                 # FastAPI application
-│   ├── config.py               # Configuration & env vars
+│   ├── main.py                    # FastAPI app + email watcher
+│   ├── config.py                  # Configuration & env vars
 │   ├── models/
-│   │   ├── database.py         # SQLAlchemy models
-│   │   └── schemas.py          # Pydantic schemas
+│   │   ├── database.py            # SQLAlchemy models (6 tables)
+│   │   └── schemas.py             # Pydantic schemas
 │   ├── routers/
-│   │   └── submissions.py      # API endpoints
+│   │   └── submissions.py         # API endpoints + review workflow
 │   ├── services/
-│   │   ├── pipeline.py         # 6-step processing pipeline
+│   │   ├── pipeline.py            # 6-step processing pipeline
 │   │   ├── document_processor.py  # Text/Vision extraction
-│   │   ├── document_classifier.py # AI batch classification
-│   │   ├── data_extractor.py   # Structured data extraction
-│   │   ├── ai_analyzer.py      # AI analysis (parallel)
-│   │   ├── email_intake.py     # Email processing
-│   │   └── email_watcher.py    # IMAP polling
+│   │   ├── document_classifier.py # AI content-based classification
+│   │   ├── data_extractor.py      # Hybrid regex + Vision extraction
+│   │   ├── ai_analyzer.py         # 4 parallel AI risk analysis calls
+│   │   ├── email_intake.py        # Email attachment processing
+│   │   └── email_watcher.py       # IMAP polling daemon (30s)
 │   ├── rules/
-│   │   ├── engine.py           # Rules orchestrator
-│   │   ├── base.py             # Base types & constants
-│   │   ├── eligibility.py      # Eligibility rules
-│   │   ├── driver.py           # Driver qualification rules
-│   │   ├── exposure.py         # Prohibited exposure rules
-│   │   ├── submission.py       # Submission completeness
-│   │   ├── ifta.py             # IFTA analysis rules
-│   │   └── selective.py        # Selective exposure rules
+│   │   ├── engine.py              # Rules orchestrator + conflict detection
+│   │   ├── base.py                # Base types & constants
+│   │   ├── eligibility.py         # ELIG-001 to ELIG-004
+│   │   ├── driver.py              # DRV-001 to DRV-007
+│   │   ├── exposure.py            # EXP-001 to EXP-004
+│   │   ├── submission.py          # SEL-001 to SEL-004
+│   │   ├── ifta.py                # IFTA-001 to IFTA-004
+│   │   └── conflicts.py           # CON-001 to CON-006
 │   └── utils/
-│       ├── gemini.py           # Google Gemini AI client
-│       ├── s3_storage.py       # AWS S3 integration
-│       └── validators.py       # Data validation
+│       ├── gemini.py              # Google Gemini AI client
+│       └── s3_storage.py          # AWS S3 integration
 ├── frontend/
 │   └── src/
-│       ├── app/                # Next.js pages
-│       ├── components/         # React components
-│       ├── lib/api.ts          # API client
-│       └── types/index.ts      # TypeScript types
-├── sample-data/                # Test submissions
+│       ├── app/                   # Next.js pages (dashboard, submissions, analytics, health, compare)
+│       ├── components/            # React components (layout, submission tabs, charts)
+│       ├── lib/api.ts             # API client
+│       └── types/index.ts         # TypeScript types
+├── sample-data/                   # Test submission generators
 ├── docs/
-│   └── architecture.html       # Interactive architecture diagram
+│   └── architecture.html          # Interactive architecture diagram (7 views)
 ├── docker-compose.yml
 └── deploy_aws.sh
 ```
@@ -176,29 +220,31 @@ knight-insurance/
 
 | Step | Name | Method | Time |
 |------|------|--------|------|
-| 1 | Text Extraction | Parallel Gemini Vision (images) + Python (PDF/Excel) | ~11s |
-| 2 | Document Classification | Single batch AI call (content-based) | ~11s |
-| 3 | Data Extraction | Python regex (Excel/PDF/DL) + AI (application) | ~15s |
-| 4 | AI Analysis | 4 parallel calls (summary, conflicts, risk, recs) | ~16s |
-| 5 | Rules Engine | 19 Python-based rule evaluations | <1s |
-| 6 | Decision | Automated accept/refer/decline | <1s |
-| **Total** | | | **~53s** |
+| 1 | Text Extraction | PyMuPDF (PDF), openpyxl (Excel), Gemini Vision (images) | ~5s |
+| 2 | Classification | Single batched Gemini call — content-based only | ~3s |
+| 3 | Data Extraction | Python regex ($0) + Gemini Vision (CDL images) | ~10s |
+| 4 | AI Risk Analysis | 4 parallel Gemini calls (company, driver, fleet, financial) | ~20s |
+| 5 | Rules Engine | 27 rule evaluations + 6 conflict detections | <1s |
+| 6 | Decision + Routing | Accept/Refer/Decline → team assignment | <1s |
+| **Total** | | | **~45s** |
 
 ## 💰 Cost Analysis
 
 | Resource | Cost |
 |----------|------|
-| AI per submission | ~$0.002 |
-| EC2 (t2.micro) | ~$8.50/mo |
+| AI per submission | ~$0.05–$0.09 |
+| EC2 (t2.micro) | Free tier / ~$8.50/mo |
 | S3 storage | ~$0.02/mo |
-| **Total monthly (100 submissions)** | **~$8.72/mo** |
+| **Total monthly (100 submissions)** | **~$14–17/mo** |
 
-## 🔒 Security
+## 🔒 Security & Governance
 
-- API keys stored in environment variables (never in code)
-- S3 storage with server-side encryption
-- Audit logging for all pipeline operations
-- CORS configuration for frontend origin only
+- **Audit trail** — every pipeline step logged with timestamps
+- **Data encryption** — S3 AES-256 at rest, IMAP TLS / HTTPS in transit
+- **Human-in-the-loop** — no auto-approval; underwriter must Approve/Reject/Override
+- **AI transparency** — input/output tokens, cost, and call count tracked per submission
+- **Credentials** — environment variables, never committed to git
+- **Scalability** — SQLite → PostgreSQL (one line), EC2 → ECS/Fargate, SQS for async
 
 ## 📄 License
 
