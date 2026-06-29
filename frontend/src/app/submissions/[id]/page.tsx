@@ -205,14 +205,40 @@ export default function SubmissionDetailPage() {
           </div>
         )}
 
-        {/* Underwriter Review Panel */}
-        {submission.status === "complete" && submission.review_status === "pending_review" && (
+        {/* Underwriter Review Panel — always visible for complete submissions */}
+        {submission.status === "complete" && (
           <div className="card" style={{
             marginTop: 12, padding: 16,
-            border: "1px solid var(--primary)", background: "var(--primary-lighter)",
+            border: `1px solid ${submission.review_status && submission.review_status !== "pending_review" ? "var(--success)" : "var(--primary)"}`,
+            background: submission.review_status && submission.review_status !== "pending_review" ? "var(--success-light)" : "var(--primary-lighter)",
           }}>
+            {/* Show previous review result if exists */}
+            {submission.reviewed_by && submission.review_status !== "pending_review" && (
+              <div style={{
+                marginBottom: 12, padding: "8px 12px", borderRadius: 6,
+                background: "rgba(255,255,255,0.7)", fontSize: 12,
+              }}>
+                <span style={{ fontWeight: 600 }}>
+                  Last action: {reviewBadge?.label || submission.review_status} by {submission.reviewed_by}
+                </span>
+                {submission.reviewed_at && (
+                  <span style={{ color: "var(--base)", marginLeft: 8 }}>
+                    {new Date(submission.reviewed_at).toLocaleString()}
+                  </span>
+                )}
+                {submission.review_notes && (
+                  <div style={{ marginTop: 4, color: "var(--text2)", fontStyle: "italic" }}>
+                    &ldquo;{submission.review_notes}&rdquo;
+                  </div>
+                )}
+              </div>
+            )}
+
             <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 10, color: "var(--ink)" }}>
-              🔍 Underwriter Review Required
+              {submission.review_status && submission.review_status !== "pending_review"
+                ? "🔄 Update Review Decision"
+                : "🔍 Underwriter Review Required"
+              }
             </div>
             <textarea
               placeholder="Review notes (optional)..."
@@ -262,25 +288,6 @@ export default function SubmissionDetailPage() {
               </div>
               {reviewLoading && <span className="spinner" style={{ width: 14, height: 14 }} />}
             </div>
-          </div>
-        )}
-
-        {/* Review Result */}
-        {submission.reviewed_by && submission.review_status !== "pending_review" && (
-          <div className="card" style={{ marginTop: 12, padding: 12, fontSize: 12 }}>
-            <span style={{ fontWeight: 600 }}>
-              Reviewed by {submission.reviewed_by}
-            </span>
-            {submission.reviewed_at && (
-              <span style={{ color: "var(--base)", marginLeft: 8 }}>
-                {new Date(submission.reviewed_at).toLocaleString()}
-              </span>
-            )}
-            {submission.review_notes && (
-              <div style={{ marginTop: 6, color: "var(--text2)", fontStyle: "italic" }}>
-                &ldquo;{submission.review_notes}&rdquo;
-              </div>
-            )}
           </div>
         )}
       </div>
