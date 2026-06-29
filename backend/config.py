@@ -33,6 +33,12 @@ class Settings(BaseSettings):
     IMAP_USERNAME: Optional[str] = None
     IMAP_PASSWORD: Optional[str] = None
 
+    # Email (SMTP) — defaults to IMAP credentials if not set
+    SMTP_HOST: Optional[str] = None
+    SMTP_PORT: int = 587
+    SMTP_USERNAME: Optional[str] = None
+    SMTP_PASSWORD: Optional[str] = None
+
     # Storage
     LOCAL_STORAGE_PATH: str = os.path.join(os.path.dirname(os.path.abspath(__file__)), "storage")
 

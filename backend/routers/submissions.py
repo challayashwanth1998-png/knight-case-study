@@ -285,10 +285,11 @@ async def send_email(request: Request, db: Session = Depends(get_db)):
     if not to_email or not subject:
         raise HTTPException(400, "Missing 'to' or 'subject'")
 
-    # Use the IMAP credentials (same email server)
-    smtp_host = (settings.IMAP_HOST or "").replace("imap.", "smtp.")
-    smtp_user = settings.IMAP_USERNAME
-    smtp_pass = settings.IMAP_PASSWORD
+    # SMTP config: use dedicated SMTP vars, fallback to IMAP credentials
+    smtp_host = settings.SMTP_HOST or (settings.IMAP_HOST or "").replace("imap.", "smtp.")
+    smtp_port = settings.SMTP_PORT or 587
+    smtp_user = settings.SMTP_USERNAME or settings.IMAP_USERNAME
+    smtp_pass = settings.SMTP_PASSWORD or settings.IMAP_PASSWORD
 
     if not smtp_host or not smtp_user or not smtp_pass:
         raise HTTPException(500, "Email not configured: IMAP_HOST, IMAP_USERNAME, IMAP_PASSWORD required")
@@ -300,14 +301,14 @@ async def send_email(request: Request, db: Session = Depends(get_db)):
         msg["Subject"] = subject
         msg.attach(MIMEText(email_body, "plain"))
 
-        # Try SMTP SSL (port 465) first, fallback to STARTTLS (587)
+        # Try STARTTLS (port 587) first for Outlook, fallback to SSL (465)
         try:
-            with smtplib.SMTP_SSL(smtp_host, 465, timeout=10) as server:
+            with smtplib.SMTP(smtp_host, smtp_port, timeout=10) as server:
+                server.starttls()
                 server.login(smtp_user, smtp_pass)
                 server.sendmail(smtp_user, [to_email], msg.as_string())
         except Exception:
-            with smtplib.SMTP(smtp_host, 587, timeout=10) as server:
-                server.starttls()
+            with smtplib.SMTP_SSL(smtp_host, 465, timeout=10) as server:
                 server.login(smtp_user, smtp_pass)
                 server.sendmail(smtp_user, [to_email], msg.as_string())
 
