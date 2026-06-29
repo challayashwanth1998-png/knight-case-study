@@ -262,7 +262,7 @@
       <div class="nodes">
         <div class="node node-wide"><span class="node-icon">📊</span><div class="node-label">Dashboard</div><div class="node-desc">KPIs, decision distribution chart, AI cost tracking, recent submissions feed</div></div>
         <div class="node node-wide"><span class="node-icon">📤</span><div class="node-label">Submission Form</div><div class="node-desc">Multi-file drag & drop upload, supports PDF, Excel, CSV, images</div></div>
-        <div class="node node-wide"><span class="node-icon">📋</span><div class="node-label">Underwriter View</div><div class="node-desc">6-step pipeline progress, documents tab, rules tab with pass/fail</div></div>
+        <div class="node node-wide"><span class="node-icon">📋</span><div class="node-label">Underwriter View</div><div class="node-desc">6-step pipeline, team routing, approve/reject/override workflow, rules tab with pass/fail</div></div>
         <div class="node node-wide"><span class="node-icon">📈</span><div class="node-label">Analytics</div><div class="node-desc">Gemini token usage, processing time trends, rule pass rates</div></div>
         <div class="node node-wide"><span class="node-icon">🔀</span><div class="node-label">Compare</div><div class="node-desc">Side-by-side submission diff with rules & metrics comparison</div></div>
         <div class="node node-wide"><span class="node-icon">🏥</span><div class="node-label">Health Monitor</div><div class="node-desc">DB latency, AI status, disk usage, cumulative API costs</div></div>
@@ -311,7 +311,7 @@
         <div class="node flex-1"><span class="node-icon">🏷️</span><div class="node-label">Document Classifier</div><div class="node-desc">Single batched Gemini call, content-based only (never uses filenames per guidelines)</div></div>
         <div class="node flex-1"><span class="node-icon">🔍</span><div class="node-label">Data Extractor</div><div class="node-desc">Python regex for structured docs (zero AI cost). AI extraction runs in parallel via ThreadPoolExecutor (4 workers)</div></div>
         <div class="node flex-1"><span class="node-icon">🧠</span><div class="node-label">AI Analyzer</div><div class="node-desc">4 parallel Gemini calls: company risk, driver risk, fleet, financial/loss analysis</div></div>
-        <div class="node flex-1"><span class="node-icon">⚖️</span><div class="node-label">Rules Engine</div><div class="node-desc">21 configurable rules across 5 categories, severity levels, produces ACCEPT/REFER/DECLINE</div></div>
+        <div class="node flex-1"><span class="node-icon">⚖️</span><div class="node-label">Rules Engine</div><div class="node-desc">27 rules across 6 categories (eligibility, driver, exposure, submission, IFTA, conflict), team routing</div></div>
       </div>
     </div>
 
@@ -328,7 +328,7 @@
           <div class="layer-title">External Services</div>
         </div>
         <div class="flex-col gap-8">
-          <div class="node w-full"><span class="node-icon">🧠</span><div class="node-label">Google Gemini 2.5 Flash</div><div class="node-desc">Vision + text generation via REST API • Batch CDL OCR, classification, and 4 parallel risk analyses • ~$0.002/submission avg</div></div>
+          <div class="node w-full"><span class="node-icon">🧠</span><div class="node-label">Google Gemini 2.5 Flash</div><div class="node-desc">Vision + text generation via REST API • Batch CDL OCR, classification, and 4 parallel risk analyses • ~$0.05–0.09/submission</div></div>
           <div class="node w-full"><span class="node-icon">📬</span><div class="node-label">IMAP Server</div><div class="node-desc">IMAPS port 993 encrypted • Polls inbox every 30s • Extracts all attachments from new emails automatically</div></div>
         </div>
       </div>
@@ -440,14 +440,15 @@
     <div class="layer layer-red">
       <div class="layer-header">
         <div class="step-badge" style="background:var(--red-50);border-color:var(--red-200);color:var(--red-600);"><div class="step-num" style="background:var(--red-600);">5</div> Rules Engine</div>
-        <span class="layer-subtitle" style="margin-left:auto;">21 configurable business rules</span>
+        <span class="layer-subtitle" style="margin-left:auto;">27 configurable business rules + cross-document conflict detection</span>
       </div>
       <div class="nodes">
         <div class="node flex-1 node-sm"><span class="node-icon">🏢</span><div class="node-label">Eligibility</div><div class="node-desc">4 rules</div></div>
-        <div class="node flex-1 node-sm"><span class="node-icon">👤</span><div class="node-label">Driver</div><div class="node-desc">5 rules</div></div>
-        <div class="node flex-1 node-sm"><span class="node-icon">🚛</span><div class="node-label">Vehicle</div><div class="node-desc">4 rules</div></div>
-        <div class="node flex-1 node-sm"><span class="node-icon">🛡️</span><div class="node-label">Safety</div><div class="node-desc">4 rules</div></div>
-        <div class="node flex-1 node-sm"><span class="node-icon">💰</span><div class="node-label">Financial</div><div class="node-desc">4 rules</div></div>
+        <div class="node flex-1 node-sm"><span class="node-icon">👤</span><div class="node-label">Driver</div><div class="node-desc">7 rules</div></div>
+        <div class="node flex-1 node-sm"><span class="node-icon">⚠️</span><div class="node-label">Exposure</div><div class="node-desc">4 rules</div></div>
+        <div class="node flex-1 node-sm"><span class="node-icon">📋</span><div class="node-label">Submission</div><div class="node-desc">4 rules</div></div>
+        <div class="node flex-1 node-sm"><span class="node-icon">⛽</span><div class="node-label">IFTA</div><div class="node-desc">4 rules</div></div>
+        <div class="node flex-1 node-sm"><span class="node-icon">🔀</span><div class="node-label">Conflict</div><div class="node-desc">6 rules</div></div>
       </div>
     </div>
 
@@ -456,12 +457,15 @@
     <!-- Step 6: Decision -->
     <div class="layer layer-slate">
       <div class="layer-header">
-        <div class="step-badge" style="background:var(--slate-100);border-color:var(--slate-300);color:var(--slate-700);"><div class="step-num" style="background:var(--slate-700);">6</div> Decision</div>
+        <div class="step-badge" style="background:var(--slate-100);border-color:var(--slate-300);color:var(--slate-700);"><div class="step-num" style="background:var(--slate-700);">6</div> Decision + Team Routing</div>
       </div>
       <div class="flex gap-14 justify-center">
-        <div class="node node-filled-green" style="min-width:160px;"><span class="node-icon">✅</span><div class="node-label">ACCEPT</div><div class="node-desc">All rules pass</div></div>
-        <div class="node node-filled-amber" style="min-width:160px;"><span class="node-icon">⚠️</span><div class="node-label">REFER</div><div class="node-desc">Has warnings → manual review</div></div>
-        <div class="node node-filled-red" style="min-width:160px;"><span class="node-icon">❌</span><div class="node-label">DECLINE</div><div class="node-desc">Has failures</div></div>
+        <div class="node node-filled-green" style="min-width:140px;"><span class="node-icon">✅</span><div class="node-label">ACCEPT</div><div class="node-desc">→ Standard Review</div></div>
+        <div class="node node-filled-amber" style="min-width:140px;"><span class="node-icon">⚠️</span><div class="node-label">REFER</div><div class="node-desc">→ Specialty Risk / Driver Review / Operations</div></div>
+        <div class="node node-filled-red" style="min-width:140px;"><span class="node-icon">❌</span><div class="node-label">DECLINE</div><div class="node-desc">→ Senior Underwriting</div></div>
+      </div>
+      <div style="margin-top:12px;text-align:center;font-size:11px;color:var(--slate-500);">
+        <strong>Underwriter Review:</strong> Approve ✅ · Reject ❌ · Override ⚡ (with audit trail)
       </div>
     </div>
 
@@ -526,7 +530,7 @@
             <div class="node w-full"><span class="node-icon">📋</span><div class="node-label">Risk Assessment</div><div class="node-desc">Overall risk score, confidence level per analysis domain</div></div>
             <div class="node w-full"><span class="node-icon">⚠️</span><div class="node-label">Data Conflicts</div><div class="node-desc">11 conflicts detected across document sources</div></div>
             <div class="node w-full"><span class="node-icon">📝</span><div class="node-label">Recommendations</div><div class="node-desc">Premium suggestions, coverage conditions, exclusions</div></div>
-            <div class="node w-full"><span class="node-icon">⚖️</span><div class="node-label">Rules Results</div><div class="node-desc">21 rules — PASS / FAIL / WARNING / INFO</div></div>
+            <div class="node w-full"><span class="node-icon">⚖️</span><div class="node-label">Rules Results</div><div class="node-desc">27 rules — PASS / FAIL / WARNING / INFO + conflict detection</div></div>
             <div class="node node-filled-blue w-full"><span class="node-icon">✅</span><div class="node-label">Decision</div><div class="node-desc">ACCEPT • DECLINE • REFER</div></div>
           </div>
         </div>
@@ -549,71 +553,85 @@
     <div class="connector"><svg width="2" height="16"><line x1="1" y1="0" x2="1" y2="16" stroke="var(--slate-400)" stroke-width="2"/></svg></div>
 
     <div class="layer layer-purple" style="text-align:center;padding-bottom:14px;">
-      <div class="node node-filled-blue" style="display:inline-flex; min-width:320px;"><span class="node-icon">⚖️</span><div class="node-label">Rules Engine — 21 Business Rules</div><div class="node-desc">Configurable severity • Enable/disable per rule</div></div>
+      <div class="node node-filled-blue" style="display:inline-flex; min-width:320px;"><span class="node-icon">⚖️</span><div class="node-label">Rules Engine — 27 Business Rules</div><div class="node-desc">Configurable severity • Enable/disable per rule • Cross-document conflict detection</div></div>
     </div>
 
     <div class="connector"><svg width="2" height="12"><line x1="1" y1="0" x2="1" y2="12" stroke="var(--slate-400)" stroke-width="2"/></svg></div>
 
     <!-- 5 rule categories -->
-    <div class="flex gap-10">
-      <div class="layer layer-blue flex-1" style="margin-bottom:0;">
+    <div class="flex gap-10" style="flex-wrap:wrap;">
+      <div class="layer layer-blue flex-1" style="margin-bottom:0;min-width:160px;">
         <div class="layer-header"><div class="layer-icon">🏢</div><div class="layer-title" style="font-size:10px;">Eligibility</div></div>
         <div class="flex-col gap-4">
-          <div class="node node-sm w-full"><div class="node-label">R-ELIG-001</div><div class="node-desc">Years in business ≥ 2</div></div>
-          <div class="node node-sm w-full"><div class="node-label">R-ELIG-002</div><div class="node-desc">DOT number required</div></div>
-          <div class="node node-sm w-full"><div class="node-label">R-ELIG-003</div><div class="node-desc">Valid operation type</div></div>
-          <div class="node node-sm w-full"><div class="node-label">R-ELIG-004</div><div class="node-desc">Operating radius check</div></div>
+          <div class="node node-sm w-full"><div class="node-label">ELIG-001</div><div class="node-desc">Years in business ≥ 2</div></div>
+          <div class="node node-sm w-full"><div class="node-label">ELIG-002</div><div class="node-desc">Covered vehicle types</div></div>
+          <div class="node node-sm w-full"><div class="node-label">ELIG-003</div><div class="node-desc">Non-covered states</div></div>
+          <div class="node node-sm w-full"><div class="node-label">ELIG-004</div><div class="node-desc">Operating radius check</div></div>
         </div>
       </div>
 
-      <div class="layer layer-purple flex-1" style="margin-bottom:0;">
+      <div class="layer layer-purple flex-1" style="margin-bottom:0;min-width:160px;">
         <div class="layer-header"><div class="layer-icon">👤</div><div class="layer-title" style="font-size:10px;">Driver</div></div>
         <div class="flex-col gap-4">
-          <div class="node node-sm w-full"><div class="node-label">R-DRV-001</div><div class="node-desc">Valid CDL required</div></div>
-          <div class="node node-sm w-full"><div class="node-label">R-DRV-002</div><div class="node-desc">Age range 23–70</div></div>
-          <div class="node node-sm w-full"><div class="node-label">R-DRV-003</div><div class="node-desc">Min 2yr experience</div></div>
-          <div class="node node-sm w-full"><div class="node-label">R-DRV-004</div><div class="node-desc">Violations threshold</div></div>
-          <div class="node node-sm w-full"><div class="node-label">R-DRV-005</div><div class="node-desc">No major violations</div></div>
+          <div class="node node-sm w-full"><div class="node-label">DRV-001</div><div class="node-desc">Valid CDL required</div></div>
+          <div class="node node-sm w-full"><div class="node-label">DRV-002</div><div class="node-desc">Age range 23–70</div></div>
+          <div class="node node-sm w-full"><div class="node-label">DRV-003</div><div class="node-desc">Min 2yr experience</div></div>
+          <div class="node node-sm w-full"><div class="node-label">DRV-004</div><div class="node-desc">Max 3 violations/3yr</div></div>
+          <div class="node node-sm w-full"><div class="node-label">DRV-005</div><div class="node-desc">No major violations</div></div>
+          <div class="node node-sm w-full"><div class="node-label">DRV-006</div><div class="node-desc">Max 2 at-fault accidents</div></div>
+          <div class="node node-sm w-full"><div class="node-label">DRV-007</div><div class="node-desc">MVR check required</div></div>
         </div>
       </div>
 
-      <div class="layer layer-teal flex-1" style="margin-bottom:0;">
-        <div class="layer-header"><div class="layer-icon">🚛</div><div class="layer-title" style="font-size:10px;">Vehicle</div></div>
+      <div class="layer layer-teal flex-1" style="margin-bottom:0;min-width:160px;">
+        <div class="layer-header"><div class="layer-icon">⚠️</div><div class="layer-title" style="font-size:10px;">Exposure</div></div>
         <div class="flex-col gap-4">
-          <div class="node node-sm w-full"><div class="node-label">R-VEH-001</div><div class="node-desc">Age ≤ 15 years</div></div>
-          <div class="node node-sm w-full"><div class="node-label">R-VEH-002</div><div class="node-desc">Valid VIN format</div></div>
-          <div class="node node-sm w-full"><div class="node-label">R-VEH-003</div><div class="node-desc">Approved vehicle types</div></div>
-          <div class="node node-sm w-full"><div class="node-label">R-VEH-004</div><div class="node-desc">Fleet size limits</div></div>
+          <div class="node node-sm w-full"><div class="node-label">EXP-001</div><div class="node-desc">Hazmat restrictions</div></div>
+          <div class="node node-sm w-full"><div class="node-label">EXP-002</div><div class="node-desc">Prohibited commodities</div></div>
+          <div class="node node-sm w-full"><div class="node-label">EXP-003</div><div class="node-desc">Max power units ≤ 26</div></div>
+          <div class="node node-sm w-full"><div class="node-label">EXP-004</div><div class="node-desc">Mexico border ops</div></div>
         </div>
       </div>
 
-      <div class="layer layer-amber flex-1" style="margin-bottom:0;">
-        <div class="layer-header"><div class="layer-icon">🛡️</div><div class="layer-title" style="font-size:10px;">Safety</div></div>
+      <div class="layer layer-amber flex-1" style="margin-bottom:0;min-width:160px;">
+        <div class="layer-header"><div class="layer-icon">📋</div><div class="layer-title" style="font-size:10px;">Submission</div></div>
         <div class="flex-col gap-4">
-          <div class="node node-sm w-full"><div class="node-label">R-SAFE-001</div><div class="node-desc">Loss ratio &lt; 60%</div></div>
-          <div class="node node-sm w-full"><div class="node-label">R-SAFE-002</div><div class="node-desc">No serious accidents</div></div>
-          <div class="node node-sm w-full"><div class="node-label">R-SAFE-003</div><div class="node-desc">Safety program</div></div>
-          <div class="node node-sm w-full"><div class="node-label">R-SAFE-004</div><div class="node-desc">Cargo type allowed</div></div>
+          <div class="node node-sm w-full"><div class="node-label">SEL-001</div><div class="node-desc">FEIN/DOT required</div></div>
+          <div class="node node-sm w-full"><div class="node-label">SEL-002</div><div class="node-desc">Tow trucks excluded</div></div>
+          <div class="node node-sm w-full"><div class="node-label">SEL-003</div><div class="node-desc">Premium per unit min</div></div>
+          <div class="node node-sm w-full"><div class="node-label">SEL-004</div><div class="node-desc">Sole proprietor check</div></div>
         </div>
       </div>
 
-      <div class="layer layer-red flex-1" style="margin-bottom:0;">
-        <div class="layer-header"><div class="layer-icon">💰</div><div class="layer-title" style="font-size:10px;">Financial</div></div>
+      <div class="layer layer-green flex-1" style="margin-bottom:0;min-width:160px;">
+        <div class="layer-header"><div class="layer-icon">⛽</div><div class="layer-title" style="font-size:10px;">IFTA</div></div>
         <div class="flex-col gap-4">
-          <div class="node node-sm w-full"><div class="node-label">R-FIN-001</div><div class="node-desc">Revenue minimums</div></div>
-          <div class="node node-sm w-full"><div class="node-label">R-FIN-002</div><div class="node-desc">Coverage limits</div></div>
-          <div class="node node-sm w-full"><div class="node-label">R-FIN-003</div><div class="node-desc">Premium calculation</div></div>
-          <div class="node node-sm w-full"><div class="node-label">R-FIN-004</div><div class="node-desc">Claims frequency</div></div>
+          <div class="node node-sm w-full"><div class="node-label">IFTA-001</div><div class="node-desc">IFTA filings required</div></div>
+          <div class="node node-sm w-full"><div class="node-label">IFTA-002</div><div class="node-desc">Min annual mileage</div></div>
+          <div class="node node-sm w-full"><div class="node-label">IFTA-003</div><div class="node-desc">Multi-state eligibility</div></div>
+          <div class="node node-sm w-full"><div class="node-label">IFTA-004</div><div class="node-desc">Border state check</div></div>
+        </div>
+      </div>
+
+      <div class="layer layer-red flex-1" style="margin-bottom:0;min-width:160px;">
+        <div class="layer-header"><div class="layer-icon">🔀</div><div class="layer-title" style="font-size:10px;">Conflict Detection</div></div>
+        <div class="flex-col gap-4">
+          <div class="node node-sm w-full"><div class="node-label">CON-001</div><div class="node-desc">Vehicle count mismatch</div></div>
+          <div class="node node-sm w-full"><div class="node-label">CON-002</div><div class="node-desc">Driver count mismatch</div></div>
+          <div class="node node-sm w-full"><div class="node-label">CON-003</div><div class="node-desc">Company name inconsistency</div></div>
+          <div class="node node-sm w-full"><div class="node-label">CON-004</div><div class="node-desc">FEIN/DOT conflict</div></div>
+          <div class="node node-sm w-full"><div class="node-label">CON-005</div><div class="node-desc">Duplicate CDL numbers</div></div>
+          <div class="node node-sm w-full"><div class="node-label">CON-006</div><div class="node-desc">Duplicate VINs</div></div>
         </div>
       </div>
     </div>
 
     <div class="connector"><svg width="2" height="16"><line x1="1" y1="0" x2="1" y2="16" stroke="var(--slate-400)" stroke-width="2"/></svg></div>
 
-    <div class="flex gap-14 justify-center">
-      <div class="node node-filled-green" style="min-width:180px;"><span class="node-icon">✅</span><div class="node-label">ACCEPT</div><div class="node-desc">0 failures, 0 warnings</div></div>
-      <div class="node node-filled-amber" style="min-width:180px;"><span class="node-icon">⚠️</span><div class="node-label">REFER</div><div class="node-desc">0 failures, ≥1 warning</div></div>
-      <div class="node node-filled-red" style="min-width:180px;"><span class="node-icon">❌</span><div class="node-label">DECLINE</div><div class="node-desc">≥1 failure</div></div>
+    <div class="flex gap-10 justify-center">
+      <div class="node node-filled-green" style="min-width:160px;"><span class="node-icon">✅</span><div class="node-label">ACCEPT</div><div class="node-desc">0 failures, 0 warnings<br/>→ Standard Review</div></div>
+      <div class="node node-filled-amber" style="min-width:160px;"><span class="node-icon">⚠️</span><div class="node-label">REFER</div><div class="node-desc">0 failures, ≥1 warning<br/>→ Specialty / Driver / Ops</div></div>
+      <div class="node node-filled-red" style="min-width:160px;"><span class="node-icon">❌</span><div class="node-label">DECLINE</div><div class="node-desc">≥1 failure<br/>→ Senior Underwriting</div></div>
     </div>
 
   </div>
@@ -690,7 +708,7 @@
         <div class="layer-title">External Services <span class="layer-subtitle">— AWS + Third-party APIs</span></div>
       </div>
       <div class="flex gap-10">
-        <div class="node flex-1"><span class="node-icon">🧠</span><div class="node-label">Google Gemini API</div><div class="node-desc">generativelanguage.googleapis.com<br/>Model: gemini-2.5-flash<br/>REST API with API key auth<br/>~$0.002 per submission avg cost</div></div>
+        <div class="node flex-1"><span class="node-icon">🧠</span><div class="node-label">Google Gemini API</div><div class="node-desc">generativelanguage.googleapis.com<br/>Model: gemini-2.5-flash<br/>REST API with API key auth<br/>~$0.05–0.09 per submission</div></div>
         <div class="node flex-1"><span class="node-icon">☁️</span><div class="node-label">AWS S3</div><div class="node-desc">knight-insurance-docs bucket<br/>Server-side encryption (AES-256)<br/>IAM role access from EC2<br/>All documents stored durably</div></div>
         <div class="node flex-1"><span class="node-icon">📬</span><div class="node-label">IMAP Email Server</div><div class="node-desc">Outreach Benefits mail server<br/>IMAPS port 993 (TLS encrypted)<br/>Polls INBOX for new submissions<br/>Marks processed emails as read</div></div>
         <div class="node flex-1"><span class="node-icon">🐙</span><div class="node-label">GitHub Repository</div><div class="node-desc">challayashwanth1998-png/knight-case-study<br/>Main branch • SSH deploy key<br/>Source code, Dockerfile, docker-compose.yml</div></div>
