@@ -7,13 +7,20 @@ interface Props { analysis: AnalysisResult | null; }
 export default function ExtractedDataTab({ analysis }: Props) {
   if (!analysis) return <div className="card" style={{ color: "#9CA3AF" }}>No data yet.</div>;
 
-  const biz = analysis.unified_business_info as Record<string, unknown> | null;
-  const drivers = analysis.unified_drivers as Array<Record<string, unknown>> | null;
-  const vehicles = analysis.unified_vehicles as Array<Record<string, unknown>> | null;
-  const ifta = analysis.unified_ifta as Array<Record<string, unknown>> | null;
-  const completeness = analysis.completeness_report as Record<string, unknown> | null;
-  const risk = analysis.risk_assessment as Record<string, unknown> | null;
-  const bp = analysis.business_profile as Record<string, unknown> | null;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const biz = analysis.unified_business_info as any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const drivers = analysis.unified_drivers as any[] | null;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const vehicles = analysis.unified_vehicles as any[] | null;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const ifta = analysis.unified_ifta as any[] | null;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const completeness = analysis.completeness_report as any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const risk = analysis.risk_assessment as any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const bp = analysis.business_profile as any;
   const effectiveBiz = biz && Object.keys(biz).length > 0 ? biz : bp;
 
   // Helper: render nested objects (like address)
