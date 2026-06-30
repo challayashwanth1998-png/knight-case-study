@@ -24,6 +24,9 @@ python-docx==1.1.2
 
 # Email
 imapclient==3.0.1
+google-auth==2.29.0
+google-auth-oauthlib==1.2.0
+google-api-python-client==2.125.0
 
 # AWS
 boto3==1.35.0

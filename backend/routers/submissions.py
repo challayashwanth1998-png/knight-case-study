@@ -270,12 +270,8 @@ async def get_submitter_submissions(email: str, db: Session = Depends(get_db)):
 
 
 @router.post("/send-email")
-async def send_email(request: Request, db: Session = Depends(get_db)):
-    """Send an email via SMTP using the configured email credentials."""
-    import smtplib
-    from email.mime.text import MIMEText
-    from email.mime.multipart import MIMEMultipart
-
+async def send_email_endpoint(request: Request, db: Session = Depends(get_db)):
+    """Send an email — tries Gmail API first, then SMTP fallback."""
     body = await request.json()
     to_email = body.get("to", "")
     subject = body.get("subject", "")
@@ -285,14 +281,34 @@ async def send_email(request: Request, db: Session = Depends(get_db)):
     if not to_email or not subject:
         raise HTTPException(400, "Missing 'to' or 'subject'")
 
-    # SMTP config: use dedicated SMTP vars, fallback to IMAP credentials
+    # Try Gmail API first
+    try:
+        from services.gmail_service import is_authenticated, send_email as gmail_send
+        if is_authenticated():
+            result = gmail_send(to_email, subject, email_body)
+            if submission_id:
+                db.add(AuditLog(
+                    submission_id=submission_id,
+                    action="email_sent",
+                    details=f"Email sent via Gmail API to {to_email}: {subject}",
+                ))
+                db.commit()
+            return {"status": "sent", "from": "Gmail OAuth2", "to": to_email}
+    except Exception as e:
+        logger.warning(f"Gmail API send failed, trying SMTP: {e}")
+
+    # Fallback to SMTP
+    import smtplib
+    from email.mime.text import MIMEText
+    from email.mime.multipart import MIMEMultipart
+
     smtp_host = settings.SMTP_HOST or (settings.IMAP_HOST or "").replace("imap.", "smtp.")
     smtp_port = settings.SMTP_PORT or 587
     smtp_user = settings.SMTP_USERNAME or settings.IMAP_USERNAME
     smtp_pass = settings.SMTP_PASSWORD or settings.IMAP_PASSWORD
 
     if not smtp_host or not smtp_user or not smtp_pass:
-        raise HTTPException(500, "Email not configured: IMAP_HOST, IMAP_USERNAME, IMAP_PASSWORD required")
+        raise HTTPException(500, "Email not configured — set up Gmail OAuth2 or SMTP credentials")
 
     try:
         msg = MIMEMultipart()
@@ -301,7 +317,6 @@ async def send_email(request: Request, db: Session = Depends(get_db)):
         msg["Subject"] = subject
         msg.attach(MIMEText(email_body, "plain"))
 
-        # Try STARTTLS (port 587) first for Outlook, fallback to SSL (465)
         try:
             with smtplib.SMTP(smtp_host, smtp_port, timeout=10) as server:
                 server.starttls()
@@ -312,23 +327,70 @@ async def send_email(request: Request, db: Session = Depends(get_db)):
                 server.login(smtp_user, smtp_pass)
                 server.sendmail(smtp_user, [to_email], msg.as_string())
 
-        # Log it
         if submission_id:
             db.add(AuditLog(
                 submission_id=submission_id,
                 action="email_sent",
-                details=f"Email sent to {to_email}: {subject}",
+                details=f"Email sent via SMTP to {to_email}: {subject}",
             ))
             db.commit()
 
-        logger.info(f"Email sent from {smtp_user} to {to_email}")
         return {"status": "sent", "from": smtp_user, "to": to_email}
 
-    except smtplib.SMTPAuthenticationError:
-        raise HTTPException(500, "SMTP authentication failed — check email credentials")
     except Exception as e:
         logger.error(f"Failed to send email: {e}")
         raise HTTPException(500, f"Failed to send email: {str(e)}")
+
+
+# ─── Gmail OAuth2 Setup Endpoints ────────────────────────────
+
+@router.get("/gmail/status")
+async def gmail_status():
+    """Check Gmail OAuth2 authentication status."""
+    try:
+        from services.gmail_service import is_authenticated, get_email_address
+        if is_authenticated():
+            return {"authenticated": True, "email": get_email_address()}
+        return {"authenticated": False, "email": None}
+    except Exception as e:
+        return {"authenticated": False, "email": None, "error": str(e)}
+
+
+@router.post("/gmail/auth-url")
+async def gmail_auth_url(request: Request):
+    """Generate Gmail OAuth2 authorization URL."""
+    body = await request.json()
+    client_id = body.get("client_id", "")
+    client_secret = body.get("client_secret", "")
+
+    if not client_id or not client_secret:
+        raise HTTPException(400, "client_id and client_secret required")
+
+    try:
+        from services.gmail_service import get_auth_url
+        url = get_auth_url(client_id, client_secret)
+        return {"auth_url": url}
+    except Exception as e:
+        raise HTTPException(500, f"Failed to generate auth URL: {str(e)}")
+
+
+@router.post("/gmail/exchange-code")
+async def gmail_exchange_code(request: Request):
+    """Exchange authorization code for Gmail OAuth2 tokens."""
+    body = await request.json()
+    client_id = body.get("client_id", "")
+    client_secret = body.get("client_secret", "")
+    code = body.get("code", "")
+
+    if not client_id or not client_secret or not code:
+        raise HTTPException(400, "client_id, client_secret, and code required")
+
+    try:
+        from services.gmail_service import exchange_code
+        result = exchange_code(client_id, client_secret, code)
+        return result
+    except Exception as e:
+        raise HTTPException(500, f"Failed to exchange code: {str(e)}")
 
 
 @router.get("/analytics")

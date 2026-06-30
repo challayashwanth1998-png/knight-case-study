@@ -42,6 +42,13 @@ class EmailWatcher:
 
     @property
     def is_configured(self) -> bool:
+        # Check Gmail OAuth2 first, then IMAP
+        try:
+            from services.gmail_service import is_authenticated
+            if is_authenticated():
+                return True
+        except Exception:
+            pass
         return all([self.host, self.username, self.password])
 
     def start(self):
@@ -70,13 +77,138 @@ class EmailWatcher:
 
     def _watch_loop(self):
         """
-        Main loop: connect → process existing unread → IDLE wait → repeat.
-        Automatically reconnects on failures.
+        Main loop: tries Gmail API polling first, falls back to IMAP IDLE.
         """
+        # Check if Gmail OAuth2 is available
+        gmail_mode = False
+        try:
+            from services.gmail_service import is_authenticated
+            if is_authenticated():
+                gmail_mode = True
+                logger.info("📧 Using Gmail API polling mode")
+        except Exception:
+            pass
+
+        if gmail_mode:
+            self._gmail_poll_loop()
+        else:
+            self._imap_loop()
+
+    def _gmail_poll_loop(self):
+        """Poll Gmail API for new unread emails every 30 seconds."""
+        from services.gmail_service import get_unread_emails, mark_as_read
+
+        while self._running:
+            try:
+                emails = get_unread_emails(max_results=10)
+                if emails:
+                    logger.info(f"📬 Gmail API: {len(emails)} unread email(s) with attachments")
+                    for email_data in emails:
+                        try:
+                            self._process_gmail_email(email_data)
+                            mark_as_read(email_data["id"])
+                        except Exception as e:
+                            logger.error(f"Failed to process Gmail email {email_data['id']}: {e}")
+                            mark_as_read(email_data["id"])  # Still mark read
+            except Exception as e:
+                logger.error(f"Gmail polling error: {e}")
+
+            # Poll every 5 seconds for near-instant pickup
+            for _ in range(5):
+                if not self._running:
+                    return
+                time.sleep(1)
+
+    def _process_gmail_email(self, email_data: dict):
+        """Process a Gmail API email: extract attachments and create submission."""
+        import base64
+        from models.database import get_db, Submission, Document, AuditLog
+
+        email_from = email_data.get("from", "Unknown")
+        email_subject = email_data.get("subject", "No Subject")
+        email_body = email_data.get("body", "")
+        attachments = email_data.get("attachments", [])
+
+        if not attachments:
+            logger.info(f"Skipping email from {email_from}: no attachments")
+            return
+
+        submission_id = str(uuid.uuid4())
+        folder = os.path.join(settings.LOCAL_STORAGE_PATH, submission_id)
+        os.makedirs(folder, exist_ok=True)
+
+        db = next(get_db())
+        try:
+            submission = Submission(
+                id=submission_id,
+                email_from=email_from,
+                email_subject=email_subject,
+                email_body=email_body,
+                status="received",
+                received_at=datetime.now(timezone.utc),
+            )
+            db.add(submission)
+
+            file_count = 0
+            for att in attachments:
+                filename = att.get("filename", f"attachment_{file_count}")
+                data = base64.urlsafe_b64decode(att.get("data", ""))
+                if not data:
+                    continue
+
+                path = os.path.join(folder, filename)
+                with open(path, "wb") as f:
+                    f.write(data)
+
+                ext = os.path.splitext(filename)[1].lower()
+                type_map = {
+                    ".pdf": "pdf", ".xlsx": "xlsx", ".xls": "xls",
+                    ".docx": "docx", ".png": "image", ".jpg": "image",
+                    ".jpeg": "image", ".csv": "csv", ".txt": "text",
+                }
+
+                db.add(Document(
+                    id=str(uuid.uuid4()),
+                    submission_id=submission_id,
+                    filename=filename,
+                    original_filename=filename,
+                    file_path=path,
+                    file_type=type_map.get(ext, "unknown"),
+                    file_size=len(data),
+                    processing_status="uploaded",
+                ))
+                file_count += 1
+
+            db.add(AuditLog(
+                submission_id=submission_id,
+                action="submission_created",
+                details=f"Email from {email_from}: {email_subject} ({file_count} files via Gmail API)",
+                step_number=0,
+            ))
+            db.commit()
+            logger.info(f"✅ Gmail submission created: {submission_id} from {email_from} ({file_count} files)")
+
+            # Auto-trigger processing pipeline
+            threading.Thread(
+                target=self._run_pipeline,
+                args=(submission_id,),
+                daemon=True,
+                name=f"pipeline-{submission_id[:8]}",
+            ).start()
+
+        except Exception as e:
+            db.rollback()
+            logger.error(f"Failed to create Gmail submission: {e}")
+            raise
+        finally:
+            db.close()
+
+    def _imap_loop(self):
+        """Original IMAP IDLE loop."""
         while self._running:
             try:
                 self._connect()
-                self._process_unread()  # Process any emails that arrived while we were disconnected
+                self._process_unread()
                 self._idle_wait()
             except Exception as e:
                 logger.error(f"Email watcher error: {e}")
@@ -89,7 +221,13 @@ class EmailWatcher:
         """Establish IMAP connection with SSL."""
         logger.info(f"Connecting to {self.host}:{self.port}...")
         self._client = IMAPClient(self.host, port=self.port, ssl=True, timeout=30)
-        self._client.login(self.username, self.password)
+        # Force plain LOGIN (disable AUTHENTICATE which Outlook rejects)
+        try:
+            self._client.login(self.username, self.password)
+        except Exception as e:
+            # Fallback: use raw imaplib LOGIN command directly
+            logger.info(f"IMAPClient login failed ({e}), trying raw LOGIN...")
+            self._client._imap.login(self.username, self.password)
         self._client.select_folder("INBOX")
         logger.info(f"✅ Connected to IMAP inbox: {self.username}")
 
